@@ -23,3 +23,11 @@ pytest-cov==4.1.0
 httpx==0.25.2
 factory-boy==3.3.0
 faker==20.1.0
+
+# Linting dependencies
+flake8==6.1.0
+black==23.11.0
+isort==5.12.0
+mypy==1.7.1
+pylint==3.0.3
+bandit==1.7.5
