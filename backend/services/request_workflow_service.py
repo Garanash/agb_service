@@ -93,6 +93,27 @@ class RequestWorkflowService:
         self.db.commit()
         self.db.refresh(request)
         
+        # Отправляем заявку в Telegram чат асинхронно
+        try:
+            import asyncio
+            from services.telegram_bot_service import get_telegram_bot_service
+            
+            async def send_to_telegram():
+                telegram_service = get_telegram_bot_service(self.db)
+                await telegram_service.send_request_to_contractors(request_id)
+            
+            # Запускаем асинхронную отправку в Telegram
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                loop.run_until_complete(send_to_telegram())
+            finally:
+                loop.close()
+                
+        except Exception as e:
+            logger.error(f"❌ Ошибка отправки заявки {request_id} в Telegram: {e}")
+            # Не прерываем workflow из-за ошибки отправки в Telegram
+        
         logger.info(f"✅ Заявка #{request_id} отправлена исполнителям")
         return request
     
@@ -118,6 +139,27 @@ class RequestWorkflowService:
         
         self.db.commit()
         self.db.refresh(request)
+        
+        # Отправляем уведомление исполнителю о назначении
+        try:
+            import asyncio
+            from services.telegram_bot_service import get_telegram_bot_service
+            
+            async def send_assignment_notification():
+                telegram_service = get_telegram_bot_service(self.db)
+                await telegram_service.send_request_assignment_notification(contractor_id, request_id)
+            
+            # Запускаем асинхронную отправку уведомления
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                loop.run_until_complete(send_assignment_notification())
+            finally:
+                loop.close()
+                
+        except Exception as e:
+            logger.error(f"❌ Ошибка отправки уведомления о назначении исполнителю {contractor_id}: {e}")
+            # Не прерываем workflow из-за ошибки отправки уведомления
         
         logger.info(f"✅ Исполнитель {contractor_id} назначен на заявку #{request_id}")
         return request
