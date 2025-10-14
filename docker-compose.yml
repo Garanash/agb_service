@@ -13,7 +13,7 @@ services:
       - agregator_postgres_data:/var/lib/postgresql/data
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      - "15433:5432"
+      - "5435:5432"
     networks:
       - agregator-network
     restart: unless-stopped
@@ -28,7 +28,7 @@ services:
     image: redis:7-alpine
     container_name: agregator_redis
     ports:
-      - "16379:6379"
+      - "6379:6379"
     networks:
       - agregator-network
     restart: unless-stopped
@@ -66,7 +66,7 @@ services:
       agregator-redis:
         condition: service_healthy
     ports:
-      - "8001:8000"
+      - "8000:8000"
     networks:
       - agregator-network
     restart: unless-stopped
@@ -86,13 +86,13 @@ services:
       dockerfile: Dockerfile
     container_name: agregator_frontend
     environment:
-      - REACT_APP_API_URL=http://agregator-backend:8000
+      - REACT_APP_API_URL=http://localhost:8000
       - NODE_ENV=production
     depends_on:
       agregator-backend:
         condition: service_healthy
     ports:
-      - "3001:3000"
+      - "3000:3000"
     networks:
       - agregator-network
     restart: unless-stopped

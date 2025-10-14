@@ -1,52 +1,52 @@
+#!/usr/bin/env python3
 """
-Agregator Service - Создание администратора
+Скрипт для создания администратора
 """
 
 import sys
-from pathlib import Path
-from datetime import datetime
-
-# Добавляем путь к проекту
-project_root = Path(__file__).parent
-sys.path.insert(0, str(project_root))
+import os
+sys.path.append('/app')
 
 from database import SessionLocal
-from models import User, UserRole
-from sqlalchemy import text
-from api.v1.dependencies import get_password_hash
+from models import User
+from passlib.context import CryptContext
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+pwd_context = CryptContext(schemes=['sha256_crypt'], deprecated='auto')
 
 def create_admin():
-    """Создание администратора"""
     db = SessionLocal()
     try:
-        # Проверяем, есть ли уже администратор
-        existing_admin = db.execute(text("SELECT id FROM users WHERE username = 'admin'")).fetchone()
+        # Проверяем, есть ли уже админ
+        admin = db.query(User).filter(User.username == 'admin').first()
+        if admin:
+            logger.info('✅ Администратор уже существует')
+            return
         
-        if existing_admin:
-            print("✅ Администратор уже существует")
-            # Обновляем пароль
-            hashed_password = get_password_hash("admin123")
-            db.execute(text("UPDATE users SET hashed_password = :password WHERE username = 'admin'"), {"password": hashed_password})
-            db.commit()
-            print("✅ Пароль администратора обновлен")
-        else:
-            # Создаем нового администратора
-            hashed_password = get_password_hash("admin123")
-            db.execute(text("""
-                INSERT INTO users (username, email, hashed_password, first_name, last_name, middle_name, role, is_active, created_at)
-                VALUES ('admin', 'admin@agregator.com', :password, 'Администратор', 'Система', 'admin', 'admin', true, NOW())
-            """), {"password": hashed_password})
-            db.commit()
-            print("✅ Администратор создан")
+        # Создаем админа
+        admin = User(
+            username='admin',
+            email='admin@agregator.com',
+            hashed_password=pwd_context.hash('admin123'),
+            first_name='Администратор',
+            last_name='Система',
+            middle_name='admin',
+            role='admin',
+            is_active=True,
+            email_verified=True
+        )
+        db.add(admin)
+        db.commit()
+        logger.info('✅ Администратор создан успешно')
         
-        print("👤 Логин: admin")
-        print("🔑 Пароль: admin123")
-        print("🌐 URL: http://localhost:8001")
     except Exception as e:
+        logger.error(f'❌ Ошибка создания администратора: {e}')
         db.rollback()
-        print(f"❌ Ошибка: {e}")
     finally:
         db.close()
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     create_admin()
