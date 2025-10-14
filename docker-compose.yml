@@ -56,9 +56,10 @@ services:
       - MAIL_PORT=${MAIL_PORT}
       - MAIL_SERVER=${MAIL_SERVER}
       - MAIL_TLS=${MAIL_TLS}
-      - MAIL_SSL=${MAIL_SSL}
-      - USE_CREDENTIALS=${USE_CREDENTIALS}
-      - VALIDATE_CERTS=${VALIDATE_CERTS}
+            - MAIL_SSL=${MAIL_SSL}
+            - USE_CREDENTIALS=${USE_CREDENTIALS}
+            - VALIDATE_CERTS=${VALIDATE_CERTS}
+            - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
     depends_on:
       agregator-db:
         condition: service_healthy
