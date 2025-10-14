@@ -8,7 +8,11 @@ import logging
 
 from database import get_db
 from models import User
-from ..schemas import LoginRequest, LoginResponse, UserCreate, UserResponse, EmailVerificationRequest, EmailVerificationResponse
+from ..schemas import (
+    LoginRequest, LoginResponse, UserCreate, UserResponse, 
+    EmailVerificationRequest, EmailVerificationResponse,
+    CustomerRegistrationRequest, ContractorRegistrationRequest
+)
 from ..dependencies import (
     get_current_user, 
     create_access_token, 
@@ -184,3 +188,176 @@ def verify_email(
         message="Email успешно подтвержден! Теперь вы можете войти в систему.",
         verified=True
     )
+
+@router.post("/register-customer", response_model=UserResponse)
+async def register_customer(
+    customer_data: CustomerRegistrationRequest,
+    db: Session = Depends(get_db)
+):
+    """Регистрация нового заказчика с полями для горнодобывающей техники"""
+    # Проверяем, что пользователь с таким username не существует
+    existing_user = db.query(User).filter(User.username == customer_data.username).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Пользователь с таким именем уже существует"
+        )
+    
+    # Проверяем, что пользователь с таким email не существует
+    existing_email = db.query(User).filter(User.email == customer_data.email).first()
+    if existing_email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Пользователь с таким email уже существует"
+        )
+    
+    # Создаем нового пользователя
+    hashed_password = get_password_hash(customer_data.password)
+    verification_token = generate_email_verification_token()
+    
+    db_user = User(
+        username=customer_data.username,
+        email=customer_data.email,
+        hashed_password=hashed_password,
+        first_name=customer_data.first_name,
+        last_name=customer_data.last_name,
+        middle_name=customer_data.middle_name,
+        phone=customer_data.phone,
+        position=customer_data.position,
+        role="customer",
+        is_active=True,
+        is_password_changed=False,
+        email_verified=False,
+        email_verification_token=verification_token
+    )
+    
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    
+    # Создаем профиль заказчика
+    from models import CustomerProfile
+    customer_profile = CustomerProfile(
+        user_id=db_user.id,
+        company_name=customer_data.company_name,
+        contact_person=customer_data.first_name or customer_data.username,
+        phone=customer_data.phone or "",
+        email=customer_data.email,
+        address=customer_data.region,
+        inn=customer_data.inn_or_ogrn if customer_data.inn_or_ogrn.isdigit() and len(customer_data.inn_or_ogrn) == 10 else None,
+        ogrn=customer_data.inn_or_ogrn if len(customer_data.inn_or_ogrn) == 13 else None,
+        equipment_brands=customer_data.equipment_brands,
+        equipment_types=customer_data.equipment_types,
+        mining_operations=customer_data.mining_operations,
+        service_history=customer_data.service_history
+    )
+    
+    db.add(customer_profile)
+    db.commit()
+    
+    # Отправляем письмо подтверждения email асинхронно
+    try:
+        user_name = f"{customer_data.first_name or ''} {customer_data.last_name or ''}".strip() or customer_data.username
+        email_sent = await email_service.send_email_verification(
+            user_email=customer_data.email,
+            user_name=user_name,
+            verification_token=verification_token
+        )
+        
+        if email_sent:
+            logger.info(f"✅ Письмо подтверждения отправлено заказчику {customer_data.email}")
+        else:
+            logger.warning(f"⚠️ Не удалось отправить письмо подтверждения заказчику {customer_data.email}")
+            
+    except Exception as e:
+        logger.error(f"❌ Ошибка отправки письма подтверждения: {e}")
+        # Не прерываем регистрацию из-за ошибки отправки почты
+    
+    return UserResponse.from_orm(db_user)
+
+@router.post("/register-contractor", response_model=UserResponse)
+async def register_contractor(
+    contractor_data: ContractorRegistrationRequest,
+    db: Session = Depends(get_db)
+):
+    """Регистрация нового исполнителя с полями специализации"""
+    # Проверяем, что пользователь с таким username не существует
+    existing_user = db.query(User).filter(User.username == contractor_data.username).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Пользователь с таким именем уже существует"
+        )
+    
+    # Проверяем, что пользователь с таким email не существует
+    existing_email = db.query(User).filter(User.email == contractor_data.email).first()
+    if existing_email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Пользователь с таким email уже существует"
+        )
+    
+    # Создаем нового пользователя
+    hashed_password = get_password_hash(contractor_data.password)
+    verification_token = generate_email_verification_token()
+    
+    db_user = User(
+        username=contractor_data.username,
+        email=contractor_data.email,
+        hashed_password=hashed_password,
+        first_name=contractor_data.first_name,
+        last_name=contractor_data.last_name,
+        middle_name=contractor_data.middle_name,
+        phone=contractor_data.phone,
+        position=contractor_data.position,
+        role="contractor",
+        is_active=True,
+        is_password_changed=False,
+        email_verified=False,
+        email_verification_token=verification_token
+    )
+    
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    
+    # Создаем профиль исполнителя
+    from models import ContractorProfile
+    contractor_profile = ContractorProfile(
+        user_id=db_user.id,
+        first_name=contractor_data.first_name,
+        last_name=contractor_data.last_name,
+        patronymic=contractor_data.middle_name,
+        phone=contractor_data.phone,
+        email=contractor_data.email,
+        telegram_username=contractor_data.telegram_username,
+        specializations=contractor_data.specializations,
+        equipment_brands_experience=contractor_data.equipment_brands_experience,
+        certifications=contractor_data.certifications,
+        work_regions=contractor_data.work_regions,
+        hourly_rate=contractor_data.hourly_rate,
+        availability_status="available"
+    )
+    
+    db.add(contractor_profile)
+    db.commit()
+    
+    # Отправляем письмо подтверждения email асинхронно
+    try:
+        user_name = f"{contractor_data.first_name or ''} {contractor_data.last_name or ''}".strip() or contractor_data.username
+        email_sent = await email_service.send_email_verification(
+            user_email=contractor_data.email,
+            user_name=user_name,
+            verification_token=verification_token
+        )
+        
+        if email_sent:
+            logger.info(f"✅ Письмо подтверждения отправлено исполнителю {contractor_data.email}")
+        else:
+            logger.warning(f"⚠️ Не удалось отправить письмо подтверждения исполнителю {contractor_data.email}")
+            
+    except Exception as e:
+        logger.error(f"❌ Ошибка отправки письма подтверждения: {e}")
+        # Не прерываем регистрацию из-за ошибки отправки почты
+    
+    return UserResponse.from_orm(db_user)

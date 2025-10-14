@@ -136,6 +136,9 @@ app.include_router(contractors_router, prefix="/api/v1/contractors", tags=["👷
 from api.v1.endpoints.customers import router as customers_router
 app.include_router(customers_router, prefix="/api/v1/customers", tags=["👤 Заказчики"])
 
+from api.v1.endpoints.request_workflow import router as request_workflow_router
+app.include_router(request_workflow_router, prefix="/api/v1/workflow", tags=["🔄 Workflow заявок"])
+
 # Глобальные обработчики исключений
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):

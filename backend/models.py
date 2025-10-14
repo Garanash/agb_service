@@ -11,10 +11,16 @@ class UserRole(str, enum.Enum):
     CUSTOMER = "customer"  # Заказчик (компания)
     CONTRACTOR = "contractor"  # Исполнитель (физлицо)
     SERVICE_ENGINEER = "service_engineer"  # Сервисный инженер
+    MANAGER = "manager"  # Менеджер сервиса
+    SECURITY = "security"  # Служба безопасности
+    HR = "hr"  # Отдел кадров
 
 class RequestStatus(str, enum.Enum):
     NEW = "new"
-    PROCESSING = "processing"
+    MANAGER_REVIEW = "manager_review"
+    CLARIFICATION = "clarification"
+    SENT_TO_CONTRACTORS = "sent_to_contractors"
+    CONTRACTOR_RESPONSES = "contractor_responses"
     ASSIGNED = "assigned"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
@@ -62,6 +68,12 @@ class CustomerProfile(Base):
     inn = Column(String, nullable=True)  # ИНН
     kpp = Column(String, nullable=True)  # КПП
     ogrn = Column(String, nullable=True)  # ОГРН
+    
+    # Новые поля для горнодобывающей техники
+    equipment_brands = Column(JSON, nullable=True)  # Бренды техники
+    equipment_types = Column(JSON, nullable=True)  # Типы оборудования
+    mining_operations = Column(JSON, nullable=True)  # Виды горных работ
+    service_history = Column(Text, nullable=True)  # История обслуживания
 
     # Метаданные
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -107,6 +119,14 @@ class ContractorProfile(Base):
     profile_photo_path = Column(String, nullable=True, default=None)
     portfolio_files = Column(JSON, nullable=True, default=list)
     document_files = Column(JSON, nullable=True, default=list)
+    
+    # Новые поля для специализации по обслуживанию техники
+    specializations = Column(JSON, nullable=True)  # Специализации
+    equipment_brands_experience = Column(JSON, nullable=True)  # Опыт с брендами
+    certifications = Column(JSON, nullable=True)  # Сертификаты
+    work_regions = Column(JSON, nullable=True)  # Регионы работы
+    hourly_rate = Column(Float, nullable=True)  # Почасовая ставка
+    availability_status = Column(String, nullable=True, default="available")  # Статус доступности
 
     # Метаданные
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -139,17 +159,21 @@ class RepairRequest(Base):
     equipment_brand = Column(String, nullable=True)
     equipment_model = Column(String, nullable=True)
     problem_description = Column(String, nullable=True)
-    estimated_cost = Column(Integer, nullable=True)  # в рублях
+    priority = Column(String, nullable=True, default="normal")  # Приоритет заявки
     
-    # Дополнительная информация от менеджера сервиса
+    # Поля для менеджера
     manager_comment = Column(String, nullable=True)
+    clarification_details = Column(Text, nullable=True)  # Уточненные детали от заказчика
+    estimated_cost = Column(Integer, nullable=True)  # в рублях
     final_price = Column(Integer, nullable=True)
     sent_to_bot_at = Column(DateTime(timezone=True), nullable=True)
+    scheduled_date = Column(DateTime, nullable=True)  # Запланированная дата выполнения
 
     # Статусы
     status = Column(String, default=RequestStatus.NEW)
     service_engineer_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     assigned_contractor_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    manager_id = Column(Integer, ForeignKey("users.id"), nullable=True)  # Менеджер, работающий с заявкой
 
     # Метаданные
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -161,6 +185,7 @@ class RepairRequest(Base):
     customer = relationship("CustomerProfile", back_populates="requests", lazy="selectin")
     service_engineer = relationship("User", foreign_keys=[service_engineer_id], lazy="selectin")
     assigned_contractor = relationship("User", foreign_keys=[assigned_contractor_id], lazy="selectin")
+    manager = relationship("User", foreign_keys=[manager_id], lazy="selectin")
     responses = relationship("ContractorResponse", back_populates="request", lazy="selectin")
 
 class ContractorResponse(Base):
@@ -252,3 +277,43 @@ class ContractorRequestItem(Base):
 
     # Связи
     request = relationship("ContractorRequest", back_populates="items", lazy="selectin")
+
+# Новые модели для системы безопасности и HR
+class SecurityVerification(Base):
+    """Проверка исполнителей службой безопасности"""
+    __tablename__ = "security_verifications"
+
+    id = Column(Integer, primary_key=True, index=True)
+    contractor_id = Column(Integer, ForeignKey("contractor_profiles.id"), nullable=False)
+    verification_status = Column(String, nullable=False, default="pending")  # pending, approved, rejected
+    verification_notes = Column(Text, nullable=True)
+    checked_by = Column(Integer, ForeignKey("users.id"), nullable=True)  # ID сотрудника службы безопасности
+    checked_at = Column(DateTime(timezone=True), nullable=True)
+    
+    # Метаданные
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Связи
+    contractor = relationship("ContractorProfile", lazy="selectin")
+    security_officer = relationship("User", lazy="selectin")
+
+class HRDocument(Base):
+    """Документы HR для исполнителей"""
+    __tablename__ = "hr_documents"
+
+    id = Column(Integer, primary_key=True, index=True)
+    contractor_id = Column(Integer, ForeignKey("contractor_profiles.id"), nullable=False)
+    document_type = Column(String, nullable=False)  # Тип документа
+    document_status = Column(String, nullable=False, default="pending")  # Статус документа
+    generated_by = Column(Integer, ForeignKey("users.id"), nullable=True)  # ID сотрудника HR
+    generated_at = Column(DateTime(timezone=True), nullable=True)
+    document_path = Column(String, nullable=True)  # Путь к файлу документа
+    
+    # Метаданные
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Связи
+    contractor = relationship("ContractorProfile", lazy="selectin")
+    hr_officer = relationship("User", lazy="selectin")

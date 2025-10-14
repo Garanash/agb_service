@@ -8,10 +8,16 @@ class UserRole(str, Enum):
     CUSTOMER = "customer"
     CONTRACTOR = "contractor"
     SERVICE_ENGINEER = "service_engineer"
+    MANAGER = "manager"
+    SECURITY = "security"
+    HR = "hr"
 
 class RequestStatus(str, Enum):
     NEW = "new"
-    PROCESSING = "processing"
+    MANAGER_REVIEW = "manager_review"
+    CLARIFICATION = "clarification"
+    SENT_TO_CONTRACTORS = "sent_to_contractors"
+    CONTRACTOR_RESPONSES = "contractor_responses"
     ASSIGNED = "assigned"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
@@ -30,6 +36,28 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str = Field(..., min_length=6)
     role: UserRole
+
+# Расширенные схемы для регистрации
+class CustomerRegistrationRequest(UserBase):
+    password: str = Field(..., min_length=6)
+    company_name: str = Field(..., min_length=1, max_length=200)
+    region: str = Field(..., min_length=1, max_length=100)
+    inn_or_ogrn: str = Field(..., min_length=10, max_length=15)
+    # Новые поля для горнодобывающей техники
+    equipment_brands: Optional[List[str]] = Field(None)
+    equipment_types: Optional[List[str]] = Field(None)
+    mining_operations: Optional[List[str]] = Field(None)
+    service_history: Optional[str] = Field(None, max_length=1000)
+
+class ContractorRegistrationRequest(UserBase):
+    password: str = Field(..., min_length=6)
+    # Новые поля для специализации
+    specializations: Optional[List[str]] = Field(None)
+    equipment_brands_experience: Optional[List[str]] = Field(None)
+    certifications: Optional[List[str]] = Field(None)
+    work_regions: Optional[List[str]] = Field(None)
+    hourly_rate: Optional[float] = Field(None, ge=0)
+    telegram_username: Optional[str] = Field(None, max_length=100)
 
 class UserResponse(UserBase):
     class Config:
@@ -54,6 +82,11 @@ class CustomerProfileBase(BaseModel):
     inn: Optional[str] = Field(None, max_length=12)
     kpp: Optional[str] = Field(None, max_length=9)
     ogrn: Optional[str] = Field(None, max_length=15)
+    # Новые поля для горнодобывающей техники
+    equipment_brands: Optional[List[str]] = Field(None, description="Бренды техники (Алмазгеобур, Эпирог, Бортлангир и т.д.)")
+    equipment_types: Optional[List[str]] = Field(None, description="Типы оборудования")
+    mining_operations: Optional[List[str]] = Field(None, description="Виды горных работ")
+    service_history: Optional[str] = Field(None, max_length=1000, description="История обслуживания")
 
 class CustomerProfileCreate(CustomerProfileBase):
     pass
@@ -85,6 +118,13 @@ class ContractorProfileBase(BaseModel):
     profile_photo_path: Optional[str] = None
     portfolio_files: Optional[List[str]] = Field(default_factory=list)
     document_files: Optional[List[str]] = Field(default_factory=list)
+    # Новые поля для специализации по обслуживанию техники
+    specializations: Optional[List[str]] = Field(None, description="Специализации (электрика, ходовая часть, гидравлика и т.д.)")
+    equipment_brands_experience: Optional[List[str]] = Field(None, description="Опыт работы с брендами техники")
+    certifications: Optional[List[str]] = Field(None, description="Сертификаты и квалификации")
+    work_regions: Optional[List[str]] = Field(None, description="Регионы работы")
+    hourly_rate: Optional[float] = Field(None, description="Почасовая ставка")
+    availability_status: Optional[str] = Field("available", description="Статус доступности")
 
 class ContractorProfileCreate(ContractorProfileBase):
     pass
@@ -107,6 +147,12 @@ class RepairRequestBase(BaseModel):
     address: Optional[str] = Field(None, max_length=500)
     city: Optional[str] = Field(None, max_length=100)
     region: Optional[str] = Field(None, max_length=100)
+    # Новые поля для горнодобывающей техники
+    equipment_type: Optional[str] = Field(None, max_length=200, description="Тип оборудования")
+    equipment_brand: Optional[str] = Field(None, max_length=200, description="Бренд оборудования")
+    equipment_model: Optional[str] = Field(None, max_length=200, description="Модель оборудования")
+    problem_description: Optional[str] = Field(None, max_length=2000, description="Описание неисправности")
+    priority: Optional[str] = Field("normal", description="Приоритет заявки")
 
 class RepairRequestCreate(RepairRequestBase):
     pass
@@ -123,9 +169,14 @@ class RepairRequestUpdate(BaseModel):
     equipment_brand: Optional[str] = Field(None, max_length=200)
     equipment_model: Optional[str] = Field(None, max_length=200)
     problem_description: Optional[str] = Field(None, max_length=2000)
-    estimated_cost: Optional[int] = Field(None, ge=0)
-    manager_comment: Optional[str] = Field(None, max_length=2000)
-    final_price: Optional[int] = Field(None, ge=0)
+    priority: Optional[str] = Field(None, description="Приоритет заявки")
+    # Поля для менеджера
+    manager_comment: Optional[str] = Field(None, max_length=2000, description="Комментарий менеджера")
+    clarification_details: Optional[str] = Field(None, max_length=2000, description="Уточненные детали от заказчика")
+    estimated_cost: Optional[int] = Field(None, ge=0, description="Предварительная стоимость")
+    final_price: Optional[int] = Field(None, ge=0, description="Итоговая стоимость")
+    assigned_contractor_id: Optional[int] = Field(None, description="Назначенный исполнитель")
+    scheduled_date: Optional[datetime] = Field(None, description="Запланированная дата выполнения")
     status: Optional[RequestStatus] = None
 
 class RepairRequestResponse(RepairRequestBase):
@@ -264,6 +315,66 @@ class EmailVerificationRequest(BaseModel):
 class EmailVerificationResponse(BaseModel):
     message: str
     verified: bool
+
+# Новые схемы для системы безопасности
+class SecurityVerificationBase(BaseModel):
+    contractor_id: int
+    verification_status: str = Field(..., description="pending, approved, rejected")
+    verification_notes: Optional[str] = Field(None, max_length=2000)
+    checked_by: Optional[int] = Field(None, description="ID сотрудника службы безопасности")
+    checked_at: Optional[datetime] = None
+
+class SecurityVerificationCreate(SecurityVerificationBase):
+    pass
+
+class SecurityVerificationResponse(SecurityVerificationBase):
+    class Config:
+        orm_mode = True
+    
+    id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+# Схемы для HR документов
+class HRDocumentBase(BaseModel):
+    contractor_id: int
+    document_type: str = Field(..., description="Тип документа")
+    document_status: str = Field("pending", description="Статус документа")
+    generated_by: Optional[int] = Field(None, description="ID сотрудника HR")
+    generated_at: Optional[datetime] = None
+    document_path: Optional[str] = Field(None, description="Путь к файлу документа")
+
+class HRDocumentCreate(HRDocumentBase):
+    pass
+
+class HRDocumentResponse(HRDocumentBase):
+    class Config:
+        orm_mode = True
+    
+    id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+# Схемы для откликов исполнителей
+class ContractorResponseBase(BaseModel):
+    request_id: int
+    contractor_id: int
+    response_text: str = Field(..., max_length=2000)
+    proposed_price: Optional[int] = Field(None, ge=0)
+    estimated_duration: Optional[str] = Field(None, max_length=100)
+    availability_date: Optional[datetime] = None
+
+class ContractorResponseCreate(ContractorResponseBase):
+    pass
+
+class ContractorResponseResponse(ContractorResponseBase):
+    class Config:
+        orm_mode = True
+    
+    id: int
+    status: str = Field("pending", description="pending, accepted, rejected")
+    created_at: datetime
+    updated_at: Optional[datetime] = None
 
 # Обновляем forward references
 # Убираем model_rebuild() для Pydantic v1
