@@ -327,6 +327,11 @@ class SecurityVerificationBase(BaseModel):
 class SecurityVerificationCreate(SecurityVerificationBase):
     pass
 
+class SecurityVerificationUpdate(BaseModel):
+    verification_status: Optional[str] = None
+    verification_notes: Optional[str] = None
+    verified_by: Optional[int] = None
+
 class SecurityVerificationResponse(SecurityVerificationBase):
     class Config:
         orm_mode = True

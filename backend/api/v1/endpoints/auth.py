@@ -339,35 +339,35 @@ async def register_contractor(
         availability_status="available"
     )
     
-           db.add(contractor_profile)
-           db.commit()
-           
-           # Создаем заявку на проверку службой безопасности
-           try:
-               from services.security_verification_service import get_security_verification_service
-               security_service = get_security_verification_service(db)
-               security_service.create_verification_request(contractor_profile.id)
-               logger.info(f"✅ Создана заявка на проверку для исполнителя {contractor_profile.id}")
-           except Exception as e:
-               logger.error(f"❌ Ошибка создания заявки на проверку: {e}")
-               # Не прерываем регистрацию из-за ошибки создания заявки на проверку
-           
-           # Отправляем письмо подтверждения email асинхронно
-           try:
-               user_name = f"{contractor_data.first_name or ''} {contractor_data.last_name or ''}".strip() or contractor_data.username
-               email_sent = await email_service.send_email_verification(
-                   user_email=contractor_data.email,
-                   user_name=user_name,
-                   verification_token=verification_token
-               )
-               
-               if email_sent:
-                   logger.info(f"✅ Письмо подтверждения отправлено исполнителю {contractor_data.email}")
-               else:
-                   logger.warning(f"⚠️ Не удалось отправить письмо подтверждения исполнителю {contractor_data.email}")
-                   
-           except Exception as e:
-               logger.error(f"❌ Ошибка отправки письма подтверждения: {e}")
-               # Не прерываем регистрацию из-за ошибки отправки почты
-           
-           return UserResponse.from_orm(db_user)
+    db.add(contractor_profile)
+    db.commit()
+    
+    # Создаем заявку на проверку службой безопасности
+    try:
+        from services.security_verification_service import get_security_verification_service
+        security_service = get_security_verification_service(db)
+        security_service.create_verification_request(contractor_profile.id)
+        logger.info(f"✅ Создана заявка на проверку для исполнителя {contractor_profile.id}")
+    except Exception as e:
+        logger.error(f"❌ Ошибка создания заявки на проверку: {e}")
+        # Не прерываем регистрацию из-за ошибки создания заявки на проверку
+    
+    # Отправляем письмо подтверждения email асинхронно
+    try:
+        user_name = f"{contractor_data.first_name or ''} {contractor_data.last_name or ''}".strip() or contractor_data.username
+        email_sent = await email_service.send_email_verification(
+            user_email=contractor_data.email,
+            user_name=user_name,
+            verification_token=verification_token
+        )
+        
+        if email_sent:
+            logger.info(f"✅ Письмо подтверждения отправлено исполнителю {contractor_data.email}")
+        else:
+            logger.warning(f"⚠️ Не удалось отправить письмо подтверждения исполнителю {contractor_data.email}")
+            
+    except Exception as e:
+        logger.error(f"❌ Ошибка отправки письма подтверждения: {e}")
+        # Не прерываем регистрацию из-за ошибки отправки почты
+    
+    return UserResponse.from_orm(db_user)
