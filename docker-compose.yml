@@ -1,0 +1,111 @@
+version: '3.8'
+
+services:
+  # База данных для агрегатора услуг
+  agregator-db:
+    image: postgres:15
+    container_name: agregator_postgres
+    environment:
+      POSTGRES_DB: agregator_db
+      POSTGRES_USER: agregator_user
+      POSTGRES_PASSWORD: agregator_password_2024
+    volumes:
+      - agregator_postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "15433:5432"
+    networks:
+      - agregator-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agregator_user -d agregator_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis для кеширования
+  agregator-redis:
+    image: redis:7-alpine
+    container_name: agregator_redis
+    ports:
+      - "16379:6379"
+    networks:
+      - agregator-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Бекенд агрегатора
+  agregator-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: agregator_backend
+    environment:
+      - DATABASE_URL=postgresql://agregator_user:agregator_password_2024@agregator-db:5432/agregator_db
+      - REDIS_URL=redis://agregator-redis:6379
+      - SECRET_KEY=agregator_secret_key_2024
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - MAIL_FROM=${MAIL_FROM}
+      - MAIL_FROM_NAME=${MAIL_FROM_NAME}
+      - MAIL_PORT=${MAIL_PORT}
+      - MAIL_SERVER=${MAIL_SERVER}
+      - MAIL_TLS=${MAIL_TLS}
+      - MAIL_SSL=${MAIL_SSL}
+      - USE_CREDENTIALS=${USE_CREDENTIALS}
+      - VALIDATE_CERTS=${VALIDATE_CERTS}
+    depends_on:
+      agregator-db:
+        condition: service_healthy
+      agregator-redis:
+        condition: service_healthy
+    ports:
+      - "8001:8000"
+    networks:
+      - agregator-network
+    restart: unless-stopped
+    volumes:
+      - ./backend:/app
+      - agregator_uploads:/app/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Фронтенд агрегатора
+  agregator-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: agregator_frontend
+    environment:
+      - REACT_APP_API_URL=http://localhost:8001
+      - NODE_ENV=production
+    depends_on:
+      agregator-backend:
+        condition: service_healthy
+    ports:
+      - "3001:3000"
+    networks:
+      - agregator-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+volumes:
+  agregator_postgres_data:
+  agregator_uploads:
+
+networks:
+  agregator-network:
+    driver: bridge
