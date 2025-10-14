@@ -154,6 +154,9 @@ app.include_router(telegram_bot_router, prefix="/api/v1/telegram", tags=["🤖 T
 from api.v1.endpoints.customer_cabinet import router as customer_cabinet_router
 app.include_router(customer_cabinet_router, prefix="/api/v1/customer", tags=["👤 Личный кабинет заказчика"])
 
+from api.v1.endpoints.admin_panel import router as admin_panel_router
+app.include_router(admin_panel_router, prefix="/api/v1/admin", tags=["⚙️ Админ панель"])
+
 # Глобальные обработчики исключений
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
