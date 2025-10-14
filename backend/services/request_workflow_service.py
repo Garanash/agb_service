@@ -105,6 +105,13 @@ class RequestWorkflowService:
         if request.manager_id != manager_id:
             raise ValueError("Только назначенный менеджер может назначать исполнителя")
         
+        # Проверяем, что исполнитель проверен службой безопасности
+        from services.security_verification_service import get_security_verification_service
+        security_service = get_security_verification_service(self.db)
+        
+        if not security_service.check_contractor_can_respond(contractor_id):
+            raise ValueError("Исполнитель не может быть назначен: не прошел проверку службы безопасности")
+        
         request.assigned_contractor_id = contractor_id
         request.status = RequestStatus.ASSIGNED
         request.assigned_at = datetime.now(timezone.utc)

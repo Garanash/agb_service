@@ -142,6 +142,9 @@ app.include_router(request_workflow_router, prefix="/api/v1/workflow", tags=["�
 from api.v1.endpoints.manager_dashboard import router as manager_dashboard_router
 app.include_router(manager_dashboard_router, prefix="/api/v1/manager", tags=["📊 Дашборд менеджера"])
 
+from api.v1.endpoints.security_verification import router as security_verification_router
+app.include_router(security_verification_router, prefix="/api/v1/security", tags=["🔒 Служба безопасности"])
+
 # Глобальные обработчики исключений
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
