@@ -34,7 +34,17 @@ async def get_pending_verifications(
     verification_service = get_security_verification_service(db)
     pending_verifications = verification_service.get_pending_verifications()
     
-    return [SecurityVerificationResponse.from_orm(ver) for ver in pending_verifications]
+    result = []
+    for ver in pending_verifications:
+        verification_data = SecurityVerificationResponse.from_orm(ver)
+        # Добавляем информацию об исполнителе
+        if hasattr(ver, 'contractor') and ver.contractor:
+            verification_data.contractor_name = f"{ver.contractor.first_name} {ver.contractor.last_name}"
+            verification_data.contractor_email = ver.contractor.email
+            verification_data.contractor_phone = ver.contractor.phone
+        result.append(verification_data)
+    
+    return result
 
 @router.get("/verified", response_model=List[Dict[str, Any]])
 async def get_verified_contractors(

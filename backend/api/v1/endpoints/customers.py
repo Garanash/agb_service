@@ -4,7 +4,7 @@ from sqlalchemy import text
 from typing import List, Optional
 
 from database import get_db
-from models import CustomerProfile, User
+from models import CustomerProfile, User, RepairRequest, ContractorResponse
 from ..schemas import (
     CustomerProfileCreate, 
     CustomerProfileResponse,
@@ -275,7 +275,7 @@ def get_customer_requests(
             )
         
         # Получаем профиль заказчика
-        customer_profile = db.execute(text("SELECT id FROM customer_profiles WHERE user_id = %s"), [current_user.id]).fetchone()
+        customer_profile = db.query(CustomerProfile).filter(CustomerProfile.user_id == current_user.id).first()
         
         if not customer_profile:
             raise HTTPException(
@@ -283,41 +283,30 @@ def get_customer_requests(
                 detail="Профиль заказчика не найден"
             )
         
-        customer_id = customer_profile[0]
-        
-        # Получаем заявки
-        query = """
-            SELECT r.id, r.title, r.description, r.urgency, r.preferred_date,
-                   r.address, r.city, r.region, r.status, r.created_at,
-                   r.updated_at, r.processed_at, r.assigned_at,
-                   COUNT(cr.id) as responses_count
-            FROM repair_requests r
-            LEFT JOIN contractor_responses cr ON r.id = cr.request_id
-            WHERE r.customer_id = %s
-            GROUP BY r.id
-            ORDER BY r.created_at DESC
-            LIMIT %s OFFSET %s
-        """
-        
-        result = db.execute(text(query), [customer_id, limit, skip]).fetchall()
+        # Получаем заявки через ORM
+        requests_query = db.query(RepairRequest).filter(RepairRequest.customer_id == customer_profile.id)
+        requests = requests_query.order_by(RepairRequest.created_at.desc()).offset(skip).limit(limit).all()
         
         requests_list = []
-        for row in result:
+        for request in requests:
+            # Получаем количество откликов
+            responses_count = db.query(ContractorResponse).filter(ContractorResponse.request_id == request.id).count()
+            
             request_dict = {
-                "id": row[0],
-                "title": row[1],
-                "description": row[2],
-                "urgency": row[3],
-                "preferred_date": row[4].isoformat() if row[4] else None,
-                "address": row[5],
-                "city": row[6],
-                "region": row[7],
-                "status": row[8],
-                "created_at": row[9].isoformat() if row[9] else None,
-                "updated_at": row[10].isoformat() if row[10] else None,
-                "processed_at": row[11].isoformat() if row[11] else None,
-                "assigned_at": row[12].isoformat() if row[12] else None,
-                "responses_count": row[13]
+                "id": request.id,
+                "title": request.title,
+                "description": request.description,
+                "urgency": request.urgency,
+                "preferred_date": request.preferred_date.isoformat() if request.preferred_date else None,
+                "address": request.address,
+                "city": request.city,
+                "region": request.region,
+                "status": request.status,
+                "created_at": request.created_at.isoformat() if request.created_at else None,
+                "updated_at": request.updated_at.isoformat() if request.updated_at else None,
+                "processed_at": request.processed_at.isoformat() if request.processed_at else None,
+                "assigned_at": request.assigned_at.isoformat() if request.assigned_at else None,
+                "responses_count": responses_count
             }
             requests_list.append(request_dict)
         

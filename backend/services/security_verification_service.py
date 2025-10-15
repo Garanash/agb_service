@@ -23,7 +23,11 @@ class SecurityVerificationService:
     
     def get_pending_verifications(self) -> List[SecurityVerification]:
         """Получение заявок на проверку, ожидающих рассмотрения"""
-        return self.db.query(SecurityVerification).filter(
+        return self.db.query(SecurityVerification).join(
+            ContractorProfile, SecurityVerification.contractor_id == ContractorProfile.id
+        ).join(
+            User, ContractorProfile.user_id == User.id
+        ).filter(
             SecurityVerification.verification_status == "pending"
         ).order_by(SecurityVerification.created_at.desc()).all()
     

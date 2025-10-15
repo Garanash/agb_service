@@ -107,8 +107,8 @@ class ContractorProfileBase(BaseModel):
     patronymic: Optional[str] = Field(None, max_length=100)
     phone: Optional[str] = Field(None, max_length=20)
     email: Optional[str] = Field(None, pattern=r'^[^@]+@[^@]+\.[^@]+$')
-    professional_info: Optional[List[Dict[str, Any]]] = Field(default_factory=list)
-    education: Optional[List[Dict[str, Any]]] = Field(default_factory=list)
+    professional_info: Optional[str] = None
+    education: Optional[str] = None
     bank_name: Optional[str] = Field(None, max_length=200)
     bank_account: Optional[str] = Field(None, max_length=20)
     bank_bik: Optional[str] = Field(None, max_length=9)
@@ -205,7 +205,7 @@ class RepairRequestResponse(RepairRequestBase):
     customer: Optional[CustomerProfileResponse] = None
     service_engineer: Optional[UserResponse] = None
     assigned_contractor: Optional[UserResponse] = None
-    responses: Optional[List['ContractorResponseResponse']] = None
+    # responses: Optional[List['ContractorResponseResponse']] = None  # Временно отключено из-за проблем с forward references
 
 # Отклики исполнителей
 class ContractorResponseBase(BaseModel):
@@ -339,6 +339,11 @@ class SecurityVerificationResponse(SecurityVerificationBase):
     id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
+    
+    # Информация об исполнителе
+    contractor_name: Optional[str] = None
+    contractor_email: Optional[str] = None
+    contractor_phone: Optional[str] = None
 
 # Схемы для HR документов
 class HRDocumentBase(BaseModel):
@@ -357,27 +362,6 @@ class HRDocumentResponse(HRDocumentBase):
         orm_mode = True
     
     id: int
-    created_at: datetime
-    updated_at: Optional[datetime] = None
-
-# Схемы для откликов исполнителей
-class ContractorResponseBase(BaseModel):
-    request_id: int
-    contractor_id: int
-    response_text: str = Field(..., max_length=2000)
-    proposed_price: Optional[int] = Field(None, ge=0)
-    estimated_duration: Optional[str] = Field(None, max_length=100)
-    availability_date: Optional[datetime] = None
-
-class ContractorResponseCreate(ContractorResponseBase):
-    pass
-
-class ContractorResponseResponse(ContractorResponseBase):
-    class Config:
-        orm_mode = True
-    
-    id: int
-    status: str = Field("pending", description="pending, accepted, rejected")
     created_at: datetime
     updated_at: Optional[datetime] = None
 

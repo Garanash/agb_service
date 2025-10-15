@@ -123,6 +123,9 @@ async def health_check():
             "timestamp": datetime.now().isoformat()
         }
 
+# Обновляем forward references для Pydantic моделей (Pydantic v2)
+from api.v1.schemas import RepairRequestResponse, ContractorResponseResponse
+
 # Подключение роутеров
 from api.v1.endpoints.auth import router as auth_router
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["🔐 Аутентификация"])

@@ -56,7 +56,7 @@ class ManagerDashboardService:
         completed_requests = self.db.query(RepairRequest).filter(
             and_(
                 RepairRequest.manager_id == manager_id,
-                RepairRequest.status == RequestStatus.COMPLETED,
+                RepairRequest.status == "completed",
                 RepairRequest.processed_at.isnot(None),
                 RepairRequest.assigned_at.isnot(None)
             )
@@ -81,16 +81,18 @@ class ManagerDashboardService:
         ).count()
         
         # Заказчики с активными заявками
-        active_customers = self.db.query(CustomerProfile).join(RepairRequest).filter(
+        active_customers = self.db.query(CustomerProfile.id).join(
+            RepairRequest, CustomerProfile.id == RepairRequest.customer_id
+        ).filter(
             and_(
                 RepairRequest.manager_id == manager_id,
                 RepairRequest.status.in_([
-                    RequestStatus.MANAGER_REVIEW,
-                    RequestStatus.CLARIFICATION,
-                    RequestStatus.SENT_TO_CONTRACTORS,
-                    RequestStatus.CONTRACTOR_RESPONSES,
-                    RequestStatus.ASSIGNED,
-                    RequestStatus.IN_PROGRESS
+                    "manager_review",
+                    "clarification",
+                    "sent_to_contractors",
+                    "contractor_responses",
+                    "assigned",
+                    "in_progress"
                 ])
             )
         ).distinct().count()
@@ -104,7 +106,7 @@ class ManagerDashboardService:
             'active_contractors': active_contractors,
             'active_customers': active_customers,
             'completion_rate': round(
-                (status_counts.get(RequestStatus.COMPLETED, 0) / total_requests * 100) 
+                (status_counts.get("completed", 0) / total_requests * 100) 
                 if total_requests > 0 else 0, 1
             )
         }
@@ -120,8 +122,8 @@ class ManagerDashboardService:
                 RepairRequest.manager_id == manager_id,
                 RepairRequest.scheduled_date.between(start_date, end_date),
                 RepairRequest.status.in_([
-                    RequestStatus.ASSIGNED,
-                    RequestStatus.IN_PROGRESS
+                    "assigned",
+                    "in_progress"
                 ])
             )
         ).all()
@@ -148,9 +150,9 @@ class ManagerDashboardService:
                 RepairRequest.manager_id == manager_id,
                 RepairRequest.preferred_date.between(start_date, end_date),
                 RepairRequest.status.in_([
-                    RequestStatus.MANAGER_REVIEW,
-                    RequestStatus.CLARIFICATION,
-                    RequestStatus.SENT_TO_CONTRACTORS
+                    "manager_review",
+                    "clarification",
+                    "sent_to_contractors"
                 ])
             )
         ).all()
@@ -189,8 +191,8 @@ class ManagerDashboardService:
                 and_(
                     RepairRequest.assigned_contractor_id == contractor.user_id,
                     RepairRequest.status.in_([
-                        RequestStatus.ASSIGNED,
-                        RequestStatus.IN_PROGRESS
+                        "assigned",
+                        "in_progress"
                     ])
                 )
             ).count()
@@ -200,7 +202,7 @@ class ManagerDashboardService:
             completed_requests = self.db.query(RepairRequest).filter(
                 and_(
                     RepairRequest.assigned_contractor_id == contractor.user_id,
-                    RepairRequest.status == RequestStatus.COMPLETED,
+                    RepairRequest.status == "completed",
                     RepairRequest.assigned_at >= month_ago
                 )
             ).count()
@@ -261,9 +263,9 @@ class ManagerDashboardService:
                 RepairRequest.preferred_date <= seven_days_later,
                 RepairRequest.preferred_date >= datetime.now(timezone.utc),
                 RepairRequest.status.in_([
-                    RequestStatus.MANAGER_REVIEW,
-                    RequestStatus.CLARIFICATION,
-                    RequestStatus.SENT_TO_CONTRACTORS
+                    "manager_review",
+                    "clarification",
+                    "sent_to_contractors"
                 ])
             )
         ).order_by(RepairRequest.preferred_date).all()
@@ -289,44 +291,44 @@ class ManagerDashboardService:
     def _get_status_color(self, status: str) -> str:
         """Получение цвета для статуса"""
         colors = {
-            RequestStatus.NEW: '#2196f3',
-            RequestStatus.MANAGER_REVIEW: '#ff9800',
-            RequestStatus.CLARIFICATION: '#ff5722',
-            RequestStatus.SENT_TO_CONTRACTORS: '#9c27b0',
-            RequestStatus.CONTRACTOR_RESPONSES: '#673ab7',
-            RequestStatus.ASSIGNED: '#4caf50',
-            RequestStatus.IN_PROGRESS: '#00bcd4',
-            RequestStatus.COMPLETED: '#8bc34a',
-            RequestStatus.CANCELLED: '#f44336'
+            "new": '#2196f3',
+            "manager_review": '#ff9800',
+            "clarification": '#ff5722',
+            "sent_to_contractors": '#9c27b0',
+            "contractor_responses": '#673ab7',
+            "assigned": '#4caf50',
+            "in_progress": '#00bcd4',
+            "completed": '#8bc34a',
+            "cancelled": '#f44336'
         }
         return colors.get(status, '#757575')
     
     def _get_status_text(self, status: str) -> str:
         """Получение текста статуса"""
         texts = {
-            RequestStatus.NEW: 'Новая',
-            RequestStatus.MANAGER_REVIEW: 'На рассмотрении',
-            RequestStatus.CLARIFICATION: 'Уточнение',
-            RequestStatus.SENT_TO_CONTRACTORS: 'Отправлена исполнителям',
-            RequestStatus.CONTRACTOR_RESPONSES: 'Отклики получены',
-            RequestStatus.ASSIGNED: 'Назначена',
-            RequestStatus.IN_PROGRESS: 'В работе',
-            RequestStatus.COMPLETED: 'Завершена',
-            RequestStatus.CANCELLED: 'Отменена'
+            "new": 'Новая',
+            "manager_review": 'На рассмотрении',
+            "clarification": 'Уточнение',
+            "sent_to_contractors": 'Отправлена исполнителям',
+            "contractor_responses": 'Отклики получены',
+            "assigned": 'Назначена',
+            "in_progress": 'В работе',
+            "completed": 'Завершена',
+            "cancelled": 'Отменена'
         }
         return texts.get(status, status)
     
     def _get_activity_type(self, request: RepairRequest) -> str:
         """Определение типа активности"""
-        if request.status == RequestStatus.COMPLETED:
+        if request.status == "completed":
             return 'completed'
-        elif request.status == RequestStatus.IN_PROGRESS:
+        elif request.status == "in_progress":
             return 'in_progress'
-        elif request.status == RequestStatus.ASSIGNED:
+        elif request.status == "assigned":
             return 'assigned'
-        elif request.status == RequestStatus.SENT_TO_CONTRACTORS:
+        elif request.status == "sent_to_contractors":
             return 'sent_to_contractors'
-        elif request.status == RequestStatus.CLARIFICATION:
+        elif request.status == "clarification":
             return 'clarification'
         else:
             return 'updated'

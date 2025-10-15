@@ -261,9 +261,8 @@ def create_contractor_response(
         request_id=request_id,
         contractor_id=contractor_profile.id,
         proposed_price=response_data.proposed_price,
-        estimated_duration=response_data.estimated_duration,
-        message=response_data.message,
-        status="pending"
+        estimated_time=response_data.estimated_time,
+        comment=response_data.comment
     )
     
     db.add(db_response)

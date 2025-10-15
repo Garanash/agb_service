@@ -192,6 +192,92 @@ async def get_user_details(
     
     return UserResponse.from_orm(user)
 
+@router.post("/users", response_model=UserResponse)
+async def create_user(
+    user_data: Dict[str, Any],
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Создание нового пользователя администратором"""
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Доступ разрешен только администраторам"
+        )
+    
+    try:
+        # Проверяем, что обязательные поля заполнены
+        required_fields = ['username', 'email', 'password', 'first_name', 'last_name', 'role']
+        for field in required_fields:
+            if not user_data.get(field):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Поле '{field}' обязательно для заполнения"
+                )
+        
+        # Проверяем уникальность username и email
+        existing_user = db.query(User).filter(
+            or_(User.username == user_data['username'], User.email == user_data['email'])
+        ).first()
+        
+        if existing_user:
+            if existing_user.username == user_data['username']:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Пользователь с таким именем уже существует"
+                )
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Пользователь с таким email уже существует"
+                )
+        
+        # Проверяем валидность роли
+        valid_roles = [role.value for role in UserRole]
+        if user_data['role'] not in valid_roles:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Недопустимая роль. Доступные роли: {', '.join(valid_roles)}"
+            )
+        
+        # Хешируем пароль
+        from passlib.context import CryptContext
+        pwd_context = CryptContext(schemes=['sha256_crypt'], deprecated='auto')
+        hashed_password = pwd_context.hash(user_data['password'])
+        
+        # Создаем пользователя
+        new_user = User(
+            username=user_data['username'],
+            email=user_data['email'],
+            hashed_password=hashed_password,
+            first_name=user_data['first_name'],
+            last_name=user_data['last_name'],
+            middle_name=user_data.get('middle_name', ''),
+            phone=user_data.get('phone', ''),
+            role=user_data['role'],
+            is_active=user_data.get('is_active', True),
+            email_verified=user_data.get('email_verified', False),
+            is_password_changed=False
+        )
+        
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+        
+        logger.info(f"✅ Администратор {current_user.id} создал пользователя {new_user.username} с ролью {new_user.role}")
+        
+        return UserResponse.from_orm(new_user)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"❌ Ошибка создания пользователя: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Ошибка создания пользователя: {str(e)}"
+        )
+
 @router.put("/users/{user_id}/status")
 async def update_user_status(
     user_id: int,
