@@ -73,11 +73,11 @@ services:
     volumes:
       - ./backend:/app
       - agregator_uploads:/app/uploads
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 3
 
   # Фронтенд агрегатора
   agregator-frontend:
@@ -89,8 +89,7 @@ services:
       - REACT_APP_API_URL=http://localhost:8000
       - NODE_ENV=production
     depends_on:
-      agregator-backend:
-        condition: service_healthy
+      - agregator-backend
     ports:
       - "3000:3000"
     networks:

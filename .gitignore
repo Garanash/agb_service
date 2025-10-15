@@ -76,3 +76,4 @@ backend/uploads/
 
 # Migration files (keep the script but ignore generated files)
 backend/migrate_email_verification.py
+cookies.txt
