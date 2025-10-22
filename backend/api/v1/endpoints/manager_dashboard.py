@@ -3,13 +3,15 @@ API endpoints для дашборда менеджера
 """
 
 import logging
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
+from sqlalchemy import and_, or_, desc, func, text
 from database import get_db
 from models import User
 from api.v1.dependencies import get_current_user
+from api.v1.schemas import UserResponse
 from services.manager_dashboard_service import get_manager_dashboard_service, ManagerDashboardService
 
 logger = logging.getLogger(__name__)
@@ -232,3 +234,46 @@ async def get_performance_metrics(
         'avg_processing_time_hours': round(avg_processing_time, 1),
         'daily_stats': daily_stats
     }
+
+@router.get("/users", response_model=List[UserResponse])
+async def get_manager_users(
+    role_filter: Optional[str] = Query(None, description="Фильтр по роли"),
+    status_filter: Optional[str] = Query(None, description="Фильтр по статусу (active/inactive)"),
+    search: Optional[str] = Query(None, description="Поиск по имени, email или username"),
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Получение списка пользователей для менеджера"""
+    if current_user.role not in ["manager", "admin"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Только менеджеры могут просматривать пользователей"
+        )
+    
+    query = db.query(User)
+    
+    # Фильтр по роли
+    if role_filter:
+        query = query.filter(User.role == role_filter)
+    
+    # Фильтр по статусу
+    if status_filter == "active":
+        query = query.filter(User.is_active == True)
+    elif status_filter == "inactive":
+        query = query.filter(User.is_active == False)
+    
+    # Поиск
+    if search:
+        search_filter = or_(
+            User.username.ilike(f"%{search}%"),
+            User.email.ilike(f"%{search}%"),
+            User.first_name.ilike(f"%{search}%"),
+            User.last_name.ilike(f"%{search}%")
+        )
+        query = query.filter(search_filter)
+    
+    users = query.order_by(desc(User.created_at)).offset(offset).limit(limit).all()
+    
+    return [UserResponse.from_orm(user) for user in users]

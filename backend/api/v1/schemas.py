@@ -65,7 +65,7 @@ class UserResponse(UserBase):
     
     id: int
     role: str
-    is_active: bool
+    is_active: Optional[bool] = True
     is_password_changed: Optional[bool] = False
     email_verified: Optional[bool] = False
     avatar_url: Optional[str] = None
