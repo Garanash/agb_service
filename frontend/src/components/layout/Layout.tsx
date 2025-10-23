@@ -166,31 +166,64 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   }
 
   const drawer = (
-    <div>
-      <Toolbar>
+    <Box sx={{ 
+      height: '100%', 
+      display: 'flex', 
+      flexDirection: 'column',
+      background: 'linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%)'
+    }}>
+      <Toolbar sx={{ 
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        color: 'white'
+      }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Logo size={32} color="#FCB813" />
-          <Typography variant="h6" noWrap component="div">
+          <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 'bold' }}>
             AGB SERVICE
           </Typography>
         </Box>
       </Toolbar>
       <Divider />
-      <List>
+      <List sx={{ flex: 1, py: 2 }}>
         {menuItems.map((item) => (
-          <ListItem key={item.text} disablePadding>
+          <ListItem key={item.text} disablePadding sx={{ px: 2, mb: 0.5 }}>
             <ListItemButton
               selected={location.pathname === item.path}
               onClick={() => navigate(item.path)}
+              sx={{
+                borderRadius: 2,
+                mx: 1,
+                '&.Mui-selected': {
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  color: 'white',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
+                  },
+                  '& .MuiListItemIcon-root': {
+                    color: 'white',
+                  },
+                },
+                '&:hover': {
+                  background: 'rgba(102, 126, 234, 0.1)',
+                  transform: 'translateX(4px)',
+                  transition: 'all 0.2s ease-in-out'
+                },
+                transition: 'all 0.2s ease-in-out'
+              }}
             >
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} />
+              <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
+              <ListItemText 
+                primary={item.text} 
+                primaryTypographyProps={{ 
+                  fontWeight: location.pathname === item.path ? 'bold' : 'normal' 
+                }}
+              />
             </ListItemButton>
           </ListItem>
         ))}
       </List>
       
-      {/* Профиль пользователя внизу сайдбара */}
+      {/* Современный профиль пользователя внизу сайдбара */}
       <Box sx={{ mt: 'auto', p: 2 }}>
         <Divider sx={{ mb: 2 }} />
         <Box 
@@ -198,20 +231,31 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             display: 'flex', 
             alignItems: 'center', 
             gap: 1, 
-            p: 1,
-            borderRadius: 1,
+            p: 2,
+            borderRadius: 2,
             cursor: 'pointer',
+            background: 'rgba(255,255,255,0.8)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255,255,255,0.2)',
             '&:hover': {
-              backgroundColor: 'action.hover',
-            }
+              backgroundColor: 'rgba(102, 126, 234, 0.1)',
+              transform: 'translateY(-2px)',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+            },
+            transition: 'all 0.3s ease-in-out'
           }}
           onClick={handleProfileClick}
         >
-          <Avatar sx={{ width: 32, height: 32 }}>
+          <Avatar sx={{ 
+            width: 40, 
+            height: 40,
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            color: 'white'
+          }}>
             <AccountCircle />
           </Avatar>
           <Box sx={{ flex: 1 }}>
-            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+            <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'text.primary' }}>
               {user?.first_name} {user?.last_name}
             </Typography>
             <Typography variant="caption" color="text.secondary">
@@ -226,7 +270,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </Box>
         </Box>
       </Box>
-    </div>
+    </Box>
   );
 
   return (
@@ -296,6 +340,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           flexGrow: 1,
           p: 3,
           width: { sm: `calc(100% - ${drawerWidth}px)` },
+          background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+          minHeight: '100vh'
         }}
       >
         {children}

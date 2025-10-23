@@ -13,6 +13,10 @@ import {
   ListItemSecondaryAction,
   Chip,
   IconButton,
+  Avatar,
+  Divider,
+  LinearProgress,
+  Badge,
 } from '@mui/material';
 import {
   Add,
@@ -22,6 +26,12 @@ import {
   TrendingUp,
   Assignment,
   AccountCircle,
+  ArrowUpward,
+  ArrowDownward,
+  MoreVert,
+  Star,
+  Schedule,
+  LocationOn,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from 'hooks/useAuth';
@@ -171,161 +181,403 @@ const DashboardPage: React.FC = () => {
       {getRoleSpecificActions()}
 
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        {/* Статистика */}
-        <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-          <Box sx={{ flex: '1 1 200px', minWidth: '200px' }}>
-            <Card>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Build color="primary" sx={{ mr: 2 }} />
-                  <Box>
-                    <Typography color="textSecondary" gutterBottom>
-                      Всего заявок
-                    </Typography>
-                    <Typography variant="h4">
-                      {analytics?.overview?.total_requests || 0}
+      {/* Современная статистика */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{ 
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            color: 'white',
+            position: 'relative',
+            overflow: 'hidden',
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              width: '100px',
+              height: '100px',
+              background: 'rgba(255,255,255,0.1)',
+              borderRadius: '50%',
+              transform: 'translate(30px, -30px)',
+            }
+          }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box>
+                  <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
+                    {analytics?.overview?.total_requests || 0}
+                  </Typography>
+                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                    Всего заявок
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                    <ArrowUpward sx={{ fontSize: 16, mr: 0.5 }} />
+                    <Typography variant="caption">
+                      +{analytics?.overview?.recent_requests_7d || 0} за неделю
                     </Typography>
                   </Box>
                 </Box>
-              </CardContent>
-            </Card>
-          </Box>
+                <Avatar sx={{ 
+                  bgcolor: 'rgba(255,255,255,0.2)', 
+                  width: 56, 
+                  height: 56,
+                  backdropFilter: 'blur(10px)'
+                }}>
+                  <Build sx={{ fontSize: 28 }} />
+                </Avatar>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
 
-          <Box sx={{ flex: '1 1 200px', minWidth: '200px' }}>
-            <Card>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <TrendingUp color="success" sx={{ mr: 2 }} />
-                  <Box>
-                    <Typography color="textSecondary" gutterBottom>
-                      Активные
-                    </Typography>
-                    <Typography variant="h4">
-                      {analytics?.overview?.active_requests || 0}
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{ 
+            background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+            color: 'white',
+            position: 'relative',
+            overflow: 'hidden',
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              width: '100px',
+              height: '100px',
+              background: 'rgba(255,255,255,0.1)',
+              borderRadius: '50%',
+              transform: 'translate(30px, -30px)',
+            }
+          }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box>
+                  <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
+                    {analytics?.overview?.active_requests || 0}
+                  </Typography>
+                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                    Активные заявки
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                    <TrendingUp sx={{ fontSize: 16, mr: 0.5 }} />
+                    <Typography variant="caption">
+                      В работе
                     </Typography>
                   </Box>
                 </Box>
-              </CardContent>
-            </Card>
-          </Box>
+                <Avatar sx={{ 
+                  bgcolor: 'rgba(255,255,255,0.2)', 
+                  width: 56, 
+                  height: 56,
+                  backdropFilter: 'blur(10px)'
+                }}>
+                  <TrendingUp sx={{ fontSize: 28 }} />
+                </Avatar>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
 
-          <Box sx={{ flex: '1 1 200px', minWidth: '200px' }}>
-            <Card>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <People color="info" sx={{ mr: 2 }} />
-                  <Box>
-                    <Typography color="textSecondary" gutterBottom>
-                      Исполнители
-                    </Typography>
-                    <Typography variant="h4">
-                      {analytics?.overview?.total_contractors || 0}
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{ 
+            background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+            color: 'white',
+            position: 'relative',
+            overflow: 'hidden',
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              width: '100px',
+              height: '100px',
+              background: 'rgba(255,255,255,0.1)',
+              borderRadius: '50%',
+              transform: 'translate(30px, -30px)',
+            }
+          }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box>
+                  <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
+                    {analytics?.overview?.total_contractors || 0}
+                  </Typography>
+                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                    Исполнители
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                    <People sx={{ fontSize: 16, mr: 0.5 }} />
+                    <Typography variant="caption">
+                      Зарегистрированы
                     </Typography>
                   </Box>
                 </Box>
-              </CardContent>
-            </Card>
-          </Box>
+                <Avatar sx={{ 
+                  bgcolor: 'rgba(255,255,255,0.2)', 
+                  width: 56, 
+                  height: 56,
+                  backdropFilter: 'blur(10px)'
+                }}>
+                  <People sx={{ fontSize: 28 }} />
+                </Avatar>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
 
-          <Box sx={{ flex: '1 1 200px', minWidth: '200px' }}>
-            <Card>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Business color="warning" sx={{ mr: 2 }} />
-                  <Box>
-                    <Typography color="textSecondary" gutterBottom>
-                      Заказчики
-                    </Typography>
-                    <Typography variant="h4">
-                      {analytics?.overview?.total_customers || 0}
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{ 
+            background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+            color: 'white',
+            position: 'relative',
+            overflow: 'hidden',
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              width: '100px',
+              height: '100px',
+              background: 'rgba(255,255,255,0.1)',
+              borderRadius: '50%',
+              transform: 'translate(30px, -30px)',
+            }
+          }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box>
+                  <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
+                    {analytics?.overview?.total_customers || 0}
+                  </Typography>
+                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                    Заказчики
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                    <Business sx={{ fontSize: 16, mr: 0.5 }} />
+                    <Typography variant="caption">
+                      Компании
                     </Typography>
                   </Box>
                 </Box>
-              </CardContent>
-            </Card>
-          </Box>
-        </Box>
+                <Avatar sx={{ 
+                  bgcolor: 'rgba(255,255,255,0.2)', 
+                  width: 56, 
+                  height: 56,
+                  backdropFilter: 'blur(10px)'
+                }}>
+                  <Business sx={{ fontSize: 28 }} />
+                </Avatar>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
 
         {/* Основной контент */}
         <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-          {/* Последние заявки */}
+          {/* Современные последние заявки */}
           <Box sx={{ flex: '2 1 400px', minWidth: '400px' }}>
-            <Paper sx={{ p: 2 }}>
-              <Typography variant="h6" gutterBottom>
-                Последние заявки
-              </Typography>
-              <List>
-                {recentRequests?.map((request) => (
-                  <ListItem key={request.id} divider>
-                    <ListItemText
-                      primary={request.title}
-                      secondary={
-                        <Box>
-                          <Typography variant="body2" color="text.secondary">
-                            {request.description}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {new Date(request.created_at).toLocaleDateString('ru-RU')}
-                          </Typography>
-                        </Box>
-                      }
-                    />
-                    <ListItemSecondaryAction>
-                      <Chip
-                        label={getStatusText(request.status)}
-                        color={getStatusColor(request.status)}
-                        size="small"
-                      />
-                    </ListItemSecondaryAction>
-                  </ListItem>
-                ))}
-                {(!recentRequests || recentRequests.length === 0) && (
-                  <ListItem>
-                    <ListItemText
-                      primary="Нет заявок"
-                      secondary="Создайте первую заявку или дождитесь новых"
-                    />
-                  </ListItem>
-                )}
-              </List>
-            </Paper>
+            <Card sx={{ 
+              borderRadius: 3,
+              boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255,255,255,0.2)'
+            }}>
+              <CardContent sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'text.primary' }}>
+                    Последние заявки
+                  </Typography>
+                  <Badge badgeContent={recentRequests?.length || 0} color="primary">
+                    <Assignment sx={{ color: 'primary.main' }} />
+                  </Badge>
+                </Box>
+                
+                <List sx={{ p: 0 }}>
+                  {recentRequests?.map((request, index) => (
+                    <React.Fragment key={request.id}>
+                      <ListItem sx={{ 
+                        p: 2,
+                        borderRadius: 2,
+                        mb: 1,
+                        bgcolor: 'rgba(0,0,0,0.02)',
+                        '&:hover': {
+                          bgcolor: 'rgba(0,0,0,0.05)',
+                          transform: 'translateY(-2px)',
+                          transition: 'all 0.2s ease-in-out'
+                        }
+                      }}>
+                        <Avatar sx={{ 
+                          bgcolor: getStatusColor(request.status) === 'success' ? '#4caf50' : 
+                                   getStatusColor(request.status) === 'warning' ? '#ff9800' :
+                                   getStatusColor(request.status) === 'error' ? '#f44336' : '#2196f3',
+                          mr: 2,
+                          width: 40,
+                          height: 40
+                        }}>
+                          <Build sx={{ fontSize: 20 }} />
+                        </Avatar>
+                        
+                        <ListItemText
+                          primary={
+                            <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                              {request.title}
+                            </Typography>
+                          }
+                          secondary={
+                            <Box>
+                              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                                {request.description}
+                              </Typography>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                  <Schedule sx={{ fontSize: 14, mr: 0.5, color: 'text.secondary' }} />
+                                  <Typography variant="caption" color="text.secondary">
+                                    {new Date(request.created_at).toLocaleDateString('ru-RU')}
+                                  </Typography>
+                                </Box>
+                                {request.address && (
+                                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                    <LocationOn sx={{ fontSize: 14, mr: 0.5, color: 'text.secondary' }} />
+                                    <Typography variant="caption" color="text.secondary">
+                                      {request.address}
+                                    </Typography>
+                                  </Box>
+                                )}
+                              </Box>
+                            </Box>
+                          }
+                        />
+                        
+                        <ListItemSecondaryAction>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Chip
+                              label={getStatusText(request.status)}
+                              color={getStatusColor(request.status)}
+                              size="small"
+                              sx={{ 
+                                fontWeight: 'bold',
+                                borderRadius: 2
+                              }}
+                            />
+                            <IconButton size="small">
+                              <MoreVert />
+                            </IconButton>
+                          </Box>
+                        </ListItemSecondaryAction>
+                      </ListItem>
+                      {index < recentRequests.length - 1 && <Divider sx={{ mx: 2 }} />}
+                    </React.Fragment>
+                  ))}
+                  
+                  {(!recentRequests || recentRequests.length === 0) && (
+                    <ListItem sx={{ p: 3, textAlign: 'center' }}>
+                      <Box sx={{ width: '100%' }}>
+                        <Avatar sx={{ 
+                          bgcolor: 'grey.100', 
+                          width: 64, 
+                          height: 64, 
+                          mx: 'auto', 
+                          mb: 2 
+                        }}>
+                          <Build sx={{ fontSize: 32, color: 'grey.400' }} />
+                        </Avatar>
+                        <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
+                          Нет заявок
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Создайте первую заявку или дождитесь новых
+                        </Typography>
+                      </Box>
+                    </ListItem>
+                  )}
+                </List>
+              </CardContent>
+            </Card>
           </Box>
 
-          {/* Быстрые действия */}
+          {/* Современные быстрые действия */}
           <Box sx={{ flex: '1 1 300px', minWidth: '300px' }}>
-            <Paper sx={{ p: 2 }}>
-              <Typography variant="h6" gutterBottom>
-                Быстрые действия
-              </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <Button
-                  variant="outlined"
-                  startIcon={<Build />}
-                  onClick={() => navigate('/repair-requests')}
-                  fullWidth
-                >
-                  Все заявки
-                </Button>
-                {user?.role === UserRole.CUSTOMER && (
+            <Card sx={{ 
+              borderRadius: 3,
+              boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255,255,255,0.2)'
+            }}>
+              <CardContent sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                  <Star sx={{ color: 'primary.main', mr: 1 }} />
+                  <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'text.primary' }}>
+                    Быстрые действия
+                  </Typography>
+                </Box>
+                
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <Button
+                    variant="contained"
+                    startIcon={<Build />}
+                    onClick={() => navigate('/repair-requests')}
+                    fullWidth
+                    sx={{ 
+                      borderRadius: 2,
+                      py: 1.5,
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 8px 25px rgba(102, 126, 234, 0.3)'
+                      },
+                      transition: 'all 0.3s ease-in-out'
+                    }}
+                  >
+                    Все заявки
+                  </Button>
+                  
+                  {user?.role === UserRole.CUSTOMER && (
+                    <Button
+                      variant="contained"
+                      startIcon={<Add />}
+                      onClick={() => navigate('/repair-requests/new')}
+                      fullWidth
+                      sx={{ 
+                        borderRadius: 2,
+                        py: 1.5,
+                        background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                        '&:hover': {
+                          background: 'linear-gradient(135deg, #e881f0 0%, #f3455a 100%)',
+                          transform: 'translateY(-2px)',
+                          boxShadow: '0 8px 25px rgba(240, 147, 251, 0.3)'
+                        },
+                        transition: 'all 0.3s ease-in-out'
+                      }}
+                    >
+                      Новая заявка
+                    </Button>
+                  )}
+                  
                   <Button
                     variant="outlined"
-                    startIcon={<Add />}
-                    onClick={() => navigate('/repair-requests/new')}
+                    startIcon={<AccountCircle />}
+                    onClick={() => navigate('/profile')}
                     fullWidth
+                    sx={{ 
+                      borderRadius: 2,
+                      py: 1.5,
+                      borderColor: 'primary.main',
+                      color: 'primary.main',
+                      '&:hover': {
+                        borderColor: 'primary.dark',
+                        backgroundColor: 'primary.light',
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 8px 25px rgba(25, 118, 210, 0.2)'
+                      },
+                      transition: 'all 0.3s ease-in-out'
+                    }}
                   >
-                    Новая заявка
+                    Мой профиль
                   </Button>
-                )}
-                <Button
-                  variant="outlined"
-                  startIcon={<AccountCircle />}
-                  onClick={() => navigate('/profile')}
-                  fullWidth
-                >
-                  Мой профиль
-                </Button>
-              </Box>
-            </Paper>
+                </Box>
+              </CardContent>
+            </Card>
           </Box>
         </Box>
       </Box>
