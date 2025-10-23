@@ -33,6 +33,7 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  Avatar,
 } from '@mui/material';
 import {
   Security,
