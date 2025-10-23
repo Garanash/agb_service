@@ -9,6 +9,12 @@ from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 from models import RepairRequest, User, RequestStatus
 from api.v1.schemas import RepairRequestUpdate
+from kafka import kafka_producer
+from kafka.kafka_events import (
+    RequestCreatedEvent, RequestUpdatedEvent, RequestCancelledEvent,
+    WorkflowManagerAssignedEvent, WorkflowContractorAssignedEvent, 
+    WorkflowWorkCompletedEvent
+)
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +46,32 @@ class RequestWorkflowService:
         self.db.add(request)
         self.db.commit()
         self.db.refresh(request)
+        
+        # Публикуем событие создания заявки
+        try:
+            event = RequestCreatedEvent(
+                request_id=request.id,
+                customer_id=customer_id,
+                title=request.title,
+                description=request.description,
+                urgency=request.urgency or "medium",
+                region=request.region or "unknown",
+                city=request.city or "",
+                address=request.address or "",
+                equipment_type=request.equipment_type,
+                priority=request.priority
+            )
+            
+            success = kafka_producer.publish_event("request-events", event)
+            
+            if success:
+                logger.info(f"✅ Событие создания заявки #{request.id} опубликовано")
+            else:
+                logger.error(f"❌ Не удалось опубликовать событие для заявки #{request.id}")
+                
+        except Exception as e:
+            logger.error(f"❌ Ошибка публикации события создания заявки #{request.id}: {e}")
+            # Не прерываем основной процесс из-за ошибки Kafka
         
         logger.info(f"✅ Создана новая заявка #{request.id} от заказчика {customer_id}")
         return request
@@ -133,6 +165,7 @@ class RequestWorkflowService:
         if not security_service.check_contractor_can_respond(contractor_id):
             raise ValueError("Исполнитель не может быть назначен: не прошел проверку службы безопасности")
         
+        previous_status = request.status
         request.assigned_contractor_id = contractor_id
         request.status = RequestStatus.ASSIGNED
         request.assigned_at = datetime.now(timezone.utc)
@@ -140,26 +173,27 @@ class RequestWorkflowService:
         self.db.commit()
         self.db.refresh(request)
         
-        # Отправляем уведомление исполнителю о назначении
+        # Публикуем событие назначения исполнителя
         try:
-            import asyncio
-            from services.telegram_bot_service import get_telegram_bot_service
+            event = WorkflowContractorAssignedEvent(
+                request_id=request_id,
+                contractor_id=contractor_id,
+                manager_id=manager_id,
+                previous_status=previous_status,
+                new_status=RequestStatus.ASSIGNED,
+                assignment_reason="Manager assignment"
+            )
             
-            async def send_assignment_notification():
-                telegram_service = get_telegram_bot_service(self.db)
-                await telegram_service.send_request_assignment_notification(contractor_id, request_id)
+            success = kafka_producer.publish_event("workflow-events", event)
             
-            # Запускаем асинхронную отправку уведомления
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            try:
-                loop.run_until_complete(send_assignment_notification())
-            finally:
-                loop.close()
+            if success:
+                logger.info(f"✅ Событие назначения исполнителя для заявки #{request_id} опубликовано")
+            else:
+                logger.error(f"❌ Не удалось опубликовать событие назначения для заявки #{request_id}")
                 
         except Exception as e:
-            logger.error(f"❌ Ошибка отправки уведомления о назначении исполнителю {contractor_id}: {e}")
-            # Не прерываем workflow из-за ошибки отправки уведомления
+            logger.error(f"❌ Ошибка публикации события назначения исполнителя для заявки #{request_id}: {e}")
+            # Не прерываем основной процесс из-за ошибки Kafka
         
         logger.info(f"✅ Исполнитель {contractor_id} назначен на заявку #{request_id}")
         return request
@@ -196,6 +230,29 @@ class RequestWorkflowService:
         
         self.db.commit()
         self.db.refresh(request)
+        
+        # Публикуем событие завершения работ
+        try:
+            event = WorkflowWorkCompletedEvent(
+                request_id=request_id,
+                contractor_id=contractor_id,
+                completion_data={
+                    "final_price": final_price,
+                    "completed_at": datetime.now(timezone.utc).isoformat()
+                },
+                completion_notes=f"Работы завершены исполнителем {contractor_id}"
+            )
+            
+            success = kafka_producer.publish_event("workflow-events", event)
+            
+            if success:
+                logger.info(f"✅ Событие завершения работ для заявки #{request_id} опубликовано")
+            else:
+                logger.error(f"❌ Не удалось опубликовать событие завершения для заявки #{request_id}")
+                
+        except Exception as e:
+            logger.error(f"❌ Ошибка публикации события завершения работ для заявки #{request_id}: {e}")
+            # Не прерываем основной процесс из-за ошибки Kafka
         
         logger.info(f"✅ Работы по заявке #{request_id} завершены исполнителем {contractor_id}")
         return request
