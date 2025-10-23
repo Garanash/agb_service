@@ -11,6 +11,7 @@ from database import get_db
 from models import User, RepairRequest, CustomerProfile, RequestStatus
 from api.v1.schemas import RepairRequestCreate, RepairRequestUpdate, RepairRequestResponse
 from api.v1.dependencies import get_current_user
+from services.analytics_service import analytics_service
 
 logger = logging.getLogger(__name__)
 
@@ -207,6 +208,20 @@ async def create_customer_request(
     db.refresh(new_request)
     
     logger.info(f"✅ Новая заявка #{new_request.id} создана заказчиком {current_user.id}")
+    
+    # Отправляем событие создания заявки в аналитику
+    try:
+        analytics_service.track_request_created(
+            request_id=new_request.id,
+            customer_id=customer_profile.id,
+            equipment_type=request_data.equipment_type,
+            equipment_brand=request_data.equipment_brand,
+            urgency=request_data.urgency,
+            region=request_data.region,
+            estimated_cost=None  # Можно добавить позже
+        )
+    except Exception as e:
+        logger.warning(f"Failed to track request created: {e}")
     
     return RepairRequestResponse.from_orm(new_request)
 

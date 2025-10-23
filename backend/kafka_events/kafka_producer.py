@@ -22,6 +22,10 @@ class KafkaEventProducer:
     
     def _initialize_producer(self):
         """Инициализация Kafka producer"""
+        if not kafka_config.enabled:
+            logger.info("Kafka отключен в конфигурации")
+            return
+            
         try:
             producer_config = {
                 'bootstrap_servers': kafka_config.bootstrap_servers.split(','),
@@ -72,7 +76,13 @@ class KafkaEventProducer:
             bool: True если событие успешно отправлено
         """
         try:
-            # Генерируем уникальный ID события если не задан
+            if not kafka_config.enabled:
+                logger.info(f"Kafka отключен, событие {event.event_type} не отправлено")
+                return True
+                
+            if not self.producer:
+                logger.error("Kafka producer не инициализирован")
+                return False
             if not event.event_id:
                 event.event_id = str(uuid.uuid4())
             

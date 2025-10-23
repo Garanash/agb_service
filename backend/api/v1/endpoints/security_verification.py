@@ -268,3 +268,91 @@ async def check_contractor_access(
         "can_respond": can_respond,
         "status_info": status_info
     }
+
+@router.get("/contractor/{contractor_id}/details")
+async def get_contractor_details(
+    contractor_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Получение детальной информации об исполнителе для службы безопасности"""
+    if current_user.role not in ["security", "admin"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Только сотрудники службы безопасности могут просматривать детали исполнителей"
+        )
+    
+    verification_service = get_security_verification_service(db)
+    
+    # Получаем профиль исполнителя
+    contractor_profile = db.query(ContractorProfile).filter(
+        ContractorProfile.id == contractor_id
+    ).first()
+    
+    if not contractor_profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Исполнитель не найден"
+        )
+    
+    # Получаем пользователя
+    user = db.query(User).filter(User.id == contractor_profile.user_id).first()
+    
+    # Получаем информацию о проверке
+    verification = verification_service.get_verification_by_contractor(contractor_id)
+    
+    # Получаем статистику заявок
+    requests_count = db.query(RepairRequest).filter(
+        RepairRequest.assigned_contractor_id == contractor_profile.user_id
+    ).count()
+    
+    return {
+        "contractor_id": contractor_id,
+        "user_id": contractor_profile.user_id,
+        "personal_info": {
+            "first_name": contractor_profile.first_name or user.first_name,
+            "last_name": contractor_profile.last_name or user.last_name,
+            "patronymic": contractor_profile.patronymic,
+            "phone": contractor_profile.phone or user.phone,
+            "email": contractor_profile.email or user.email,
+            "telegram_username": contractor_profile.telegram_username
+        },
+        "professional_info": {
+            "specializations": contractor_profile.specializations or [],
+            "equipment_brands_experience": contractor_profile.equipment_brands_experience or [],
+            "certifications": contractor_profile.certifications or [],
+            "work_regions": contractor_profile.work_regions or [],
+            "hourly_rate": contractor_profile.hourly_rate,
+            "availability_status": contractor_profile.availability_status or "unknown",
+            "general_description": contractor_profile.general_description
+        },
+        "verification_info": {
+            "status": verification.verification_status if verification else "not_verified",
+            "created_at": verification.created_at.isoformat() if verification and verification.created_at else None,
+            "checked_at": verification.checked_at.isoformat() if verification and verification.checked_at else None,
+            "checked_by": verification.checked_by,
+            "verification_notes": verification.verification_notes if verification else None
+        },
+        "activity_info": {
+            "requests_count": requests_count,
+            "registration_date": user.created_at.isoformat(),
+            "is_active": user.is_active
+        }
+    }
+
+@router.get("/statistics")
+async def get_security_statistics(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Получение статистики службы безопасности"""
+    if current_user.role not in ["security", "admin"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Только сотрудники службы безопасности могут просматривать статистику"
+        )
+    
+    verification_service = get_security_verification_service(db)
+    stats = verification_service.get_security_statistics()
+    
+    return stats

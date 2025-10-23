@@ -345,6 +345,8 @@ const SecurityVerificationPage: React.FC = () => {
                 <TableCell>Исполнитель</TableCell>
                 <TableCell>Контактная информация</TableCell>
                 <TableCell>Специализации</TableCell>
+                <TableCell>Оборудование</TableCell>
+                <TableCell>Регионы работы</TableCell>
                 <TableCell>Статус</TableCell>
                 <TableCell>Дата подачи</TableCell>
                 <TableCell>Действия</TableCell>
@@ -372,6 +374,22 @@ const SecurityVerificationPage: React.FC = () => {
                     ))}
                     {verification.contractor?.specializations && verification.contractor.specializations.length > 2 && (
                       <Chip label={`+${verification.contractor.specializations.length - 2}`} size="small" />
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {verification.contractor?.equipment_brands_experience?.slice(0, 2).map((brand) => (
+                      <Chip key={brand} label={brand} size="small" color="secondary" sx={{ mr: 1, mb: 1 }} />
+                    ))}
+                    {verification.contractor?.equipment_brands_experience && verification.contractor.equipment_brands_experience.length > 2 && (
+                      <Chip label={`+${verification.contractor.equipment_brands_experience.length - 2}`} size="small" color="secondary" />
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {verification.contractor?.work_regions?.slice(0, 2).map((region) => (
+                      <Chip key={region} label={region} size="small" color="info" sx={{ mr: 1, mb: 1 }} />
+                    ))}
+                    {verification.contractor?.work_regions && verification.contractor.work_regions.length > 2 && (
+                      <Chip label={`+${verification.contractor.work_regions.length - 2}`} size="small" color="info" />
                     )}
                   </TableCell>
                   <TableCell>
@@ -410,6 +428,8 @@ const SecurityVerificationPage: React.FC = () => {
                 <TableCell>Исполнитель</TableCell>
                 <TableCell>Контактная информация</TableCell>
                 <TableCell>Специализации</TableCell>
+                <TableCell>Оборудование</TableCell>
+                <TableCell>Регионы работы</TableCell>
                 <TableCell>Дата одобрения</TableCell>
                 <TableCell>Действия</TableCell>
               </TableRow>
@@ -436,6 +456,22 @@ const SecurityVerificationPage: React.FC = () => {
                     ))}
                     {contractor.specializations && contractor.specializations.length > 2 && (
                       <Chip label={`+${contractor.specializations.length - 2}`} size="small" />
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {contractor.equipment_brands_experience?.slice(0, 2).map((brand) => (
+                      <Chip key={brand} label={brand} size="small" color="secondary" sx={{ mr: 1, mb: 1 }} />
+                    ))}
+                    {contractor.equipment_brands_experience && contractor.equipment_brands_experience.length > 2 && (
+                      <Chip label={`+${contractor.equipment_brands_experience.length - 2}`} size="small" color="secondary" />
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {contractor.work_regions?.slice(0, 2).map((region) => (
+                      <Chip key={region} label={region} size="small" color="info" sx={{ mr: 1, mb: 1 }} />
+                    ))}
+                    {contractor.work_regions && contractor.work_regions.length > 2 && (
+                      <Chip label={`+${contractor.work_regions.length - 2}`} size="small" color="info" />
                     )}
                   </TableCell>
                   <TableCell>

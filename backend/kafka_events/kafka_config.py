@@ -8,6 +8,9 @@ from pydantic import BaseSettings
 class KafkaConfig(BaseSettings):
     """Конфигурация Kafka"""
     
+    # Включение/отключение Kafka
+    enabled: bool = False
+    
     # Брокеры Kafka
     bootstrap_servers: str = "localhost:9092,localhost:9093,localhost:9094"
     

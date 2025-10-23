@@ -13,7 +13,7 @@ services:
       - agregator_postgres_data:/var/lib/postgresql/data
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      - "5432:5432"
+      - "5435:5432"
     networks:
       - agregator-network
     restart: unless-stopped

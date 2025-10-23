@@ -160,6 +160,9 @@ app.include_router(customer_cabinet_router, prefix="/api/v1/customer", tags=["�
 from api.v1.endpoints.admin_panel import router as admin_panel_router
 app.include_router(admin_panel_router, prefix="/api/v1/admin", tags=["⚙️ Админ панель"])
 
+from api.v1.endpoints.dashboard import router as dashboard_router
+app.include_router(dashboard_router, prefix="/api/v1/dashboard", tags=["📊 Главная страница"])
+
 # Глобальные обработчики исключений
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):

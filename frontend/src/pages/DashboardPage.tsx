@@ -32,22 +32,29 @@ const DashboardPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [recentRequests, setRecentRequests] = useState<RepairRequest[]>([]);
+  const [analytics, setAnalytics] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchRecentRequests = async () => {
+    const fetchDashboardData = async () => {
       try {
-        const response = await apiService.getRepairRequests(1, 5);
-        setRecentRequests(response.items || []);
+        const [requestsResponse, analyticsData] = await Promise.all([
+          apiService.getRepairRequests(1, 5),
+          apiService.getDashboardAnalytics()
+        ]);
+        
+        setRecentRequests(requestsResponse.items || []);
+        setAnalytics(analyticsData);
       } catch (error) {
-        console.error('Failed to fetch recent requests:', error);
+        console.error('Failed to fetch dashboard data:', error);
         setRecentRequests([]);
+        setAnalytics(null);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchRecentRequests();
+    fetchDashboardData();
   }, []);
 
   const getStatusColor = (status: RequestStatus) => {
@@ -176,7 +183,7 @@ const DashboardPage: React.FC = () => {
                       Всего заявок
                     </Typography>
                     <Typography variant="h4">
-                      {recentRequests?.length || 0}
+                      {analytics?.overview?.total_requests || 0}
                     </Typography>
                   </Box>
                 </Box>
@@ -194,14 +201,7 @@ const DashboardPage: React.FC = () => {
                       Активные
                     </Typography>
                     <Typography variant="h4">
-                      {recentRequests?.filter(r => 
-                        r.status === RequestStatus.MANAGER_REVIEW || 
-                        r.status === RequestStatus.CLARIFICATION ||
-                        r.status === RequestStatus.SENT_TO_CONTRACTORS ||
-                        r.status === RequestStatus.CONTRACTOR_RESPONSES ||
-                        r.status === RequestStatus.ASSIGNED ||
-                        r.status === RequestStatus.IN_PROGRESS
-                      ).length || 0}
+                      {analytics?.overview?.active_requests || 0}
                     </Typography>
                   </Box>
                 </Box>
@@ -219,7 +219,7 @@ const DashboardPage: React.FC = () => {
                       Исполнители
                     </Typography>
                     <Typography variant="h4">
-                      -
+                      {analytics?.overview?.total_contractors || 0}
                     </Typography>
                   </Box>
                 </Box>
@@ -237,7 +237,7 @@ const DashboardPage: React.FC = () => {
                       Заказчики
                     </Typography>
                     <Typography variant="h4">
-                      -
+                      {analytics?.overview?.total_customers || 0}
                     </Typography>
                   </Box>
                 </Box>

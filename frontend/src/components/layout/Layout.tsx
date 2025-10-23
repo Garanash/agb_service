@@ -82,12 +82,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       icon: <Dashboard />,
       path: '/',
     },
-    {
+  ];
+
+  // Добавляем "Заявки на ремонт" только для не-админов
+  if (user?.role !== UserRole.ADMIN) {
+    menuItems.push({
       text: 'Заявки на ремонт',
       icon: <Build />,
       path: '/repair-requests',
-    },
-  ];
+    });
+  }
 
   // Добавляем пункты меню в зависимости от роли пользователя
   if (user?.role === UserRole.CONTRACTOR || user?.role === UserRole.ADMIN) {

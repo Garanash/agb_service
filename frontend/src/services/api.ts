@@ -499,6 +499,12 @@ class ApiService {
     return response.data;
   }
 
+  // Аналитика для главной страницы
+  async getDashboardAnalytics(): Promise<any> {
+    const response: AxiosResponse<any> = await this.api.get('/api/v1/dashboard/analytics');
+    return response.data;
+  }
+
   async createContractorProfile(data: ContractorProfileCreate): Promise<ContractorProfile> {
     const response: AxiosResponse<ContractorProfile> = await this.api.post('/api/v1/contractors/register', data);
     return response.data;

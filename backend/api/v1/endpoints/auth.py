@@ -22,6 +22,7 @@ from ..dependencies import (
     verify_email_verification_token,
     ACCESS_TOKEN_EXPIRE_MINUTES
 )
+from services.analytics_service import analytics_service
 from services.email_service import email_service
 
 logger = logging.getLogger(__name__)
@@ -54,6 +55,16 @@ def login(
     access_token = create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
+    
+    # Отправляем событие входа в аналитику
+    try:
+        analytics_service.track_user_login(
+            user_id=user.id,
+            user_role=user.role,
+            login_method="web"
+        )
+    except Exception as e:
+        logger.warning(f"Failed to track user login: {e}")
     
     return LoginResponse(
         access_token=access_token,
@@ -125,6 +136,16 @@ async def register(
     except Exception as e:
         logger.error(f"❌ Ошибка отправки письма подтверждения: {e}")
         # Не прерываем регистрацию из-за ошибки отправки почты
+    
+    # Отправляем событие регистрации в аналитику
+    try:
+        analytics_service.track_user_registration(
+            user_id=db_user.id,
+            user_role=db_user.role,
+            registration_source="web"
+        )
+    except Exception as e:
+        logger.warning(f"Failed to track user registration: {e}")
     
     return UserResponse.from_orm(db_user)
 

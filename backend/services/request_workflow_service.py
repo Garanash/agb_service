@@ -9,8 +9,8 @@ from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 from models import RepairRequest, User, RequestStatus
 from api.v1.schemas import RepairRequestUpdate
-from kafka import kafka_producer
-from kafka.kafka_events import (
+from kafka_events import kafka_producer
+from kafka_events.kafka_events import (
     RequestCreatedEvent, RequestUpdatedEvent, RequestCancelledEvent,
     WorkflowManagerAssignedEvent, WorkflowContractorAssignedEvent, 
     WorkflowWorkCompletedEvent
