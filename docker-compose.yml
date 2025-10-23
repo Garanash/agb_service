@@ -84,9 +84,10 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        REACT_APP_API_URL: /api
     container_name: agregator_frontend
     environment:
-      - REACT_APP_API_URL=http://localhost:8000
       - NODE_ENV=production
     depends_on:
       - agregator-backend

@@ -14,6 +14,10 @@ RUN npm install --silent
 # Копируем исходный код
 COPY . ./
 
+# Передаем переменные окружения для сборки
+ARG REACT_APP_API_URL
+ENV REACT_APP_API_URL=$REACT_APP_API_URL
+
 # Сборка приложения для продакшена
 RUN DISABLE_ESLINT_PLUGIN=true TSC_COMPILE_ON_ERROR=true npm run build
 
