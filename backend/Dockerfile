@@ -16,8 +16,8 @@ ENV PATH="/opt/venv/bin:$PATH"
 COPY backend/requirements.txt /tmp/requirements.txt
 
 # Устанавливаем зависимости
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r /tmp/requirements.txt
+RUN pip install --no-cache-dir --upgrade pip --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org && \
+    pip install --no-cache-dir -r /tmp/requirements.txt --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org
 
 # Этап 2: Production образ
 FROM python:3.11-slim as production

@@ -153,6 +153,8 @@ class RepairRequest(Base):
     address = Column(String, nullable=True)
     city = Column(String, nullable=True)
     region = Column(String, nullable=True)
+    latitude = Column(Float, nullable=True)  # Широта места выполнения работ
+    longitude = Column(Float, nullable=True)  # Долгота места выполнения работ
 
     # Технические детали (заполняются сервисным инженером)
     equipment_type = Column(String, nullable=True)

@@ -40,7 +40,7 @@ import { ContractorProfile, ContractorProfileCreate, UserRole, User } from 'type
 
 const ContractorsPage: React.FC = () => {
   const { user } = useAuth();
-  const [contractors, setContractors] = useState<User[]>([]);
+  const [contractors, setContractors] = useState<ContractorProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
   const [editingContractor, setEditingContractor] = useState<ContractorProfile | null>(null);
@@ -63,8 +63,28 @@ const ContractorsPage: React.FC = () => {
   const fetchContractors = async () => {
     try {
       setLoading(true);
-      const users = await apiService.getAllContractors(100, 0); // Получаем всех исполнителей
-      setContractors(users);
+      console.log('Fetching contractor profiles...');
+      // Временно используем старый API, который работает
+      const users = await apiService.getAllContractors(100, 0);
+      console.log('Received users:', users);
+      
+      // Преобразуем User[] в ContractorProfile[] для отображения
+      const profiles: ContractorProfile[] = users.map(user => ({
+        id: 0, // Будет установлен на бэкенде
+        user_id: user.id,
+        last_name: user.last_name || '',
+        first_name: user.first_name || '',
+        patronymic: user.middle_name || '',
+        phone: user.phone || '',
+        email: user.email || '',
+        telegram_username: '', // Будет загружено отдельно
+        website: '',
+        general_description: '',
+        created_at: user.created_at,
+        updated_at: user.updated_at,
+      }));
+      
+      setContractors(profiles);
     } catch (error) {
       console.error('Failed to fetch contractors:', error);
     } finally {
@@ -87,7 +107,13 @@ const ContractorsPage: React.FC = () => {
     if (!editingContractor) return;
     
     try {
-      await apiService.updateContractorProfile(data);
+      if (user?.role === UserRole.ADMIN) {
+        // Для администратора используем специальный endpoint
+        await apiService.updateContractorProfileByAdmin(editingContractor.user_id, data);
+      } else {
+        // Для исполнителя используем обычный endpoint
+        await apiService.updateContractorProfile(data);
+      }
       setOpenDialog(false);
       setEditingContractor(null);
       reset();
@@ -215,11 +241,13 @@ const ContractorsPage: React.FC = () => {
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2">-</Typography>
+                    <Typography variant="body2">
+                      {contractor.telegram_username || '-'}
+                    </Typography>
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" noWrap sx={{ maxWidth: 300 }}>
-                      -
+                      {contractor.general_description || '-'}
                     </Typography>
                   </TableCell>
                   <TableCell>

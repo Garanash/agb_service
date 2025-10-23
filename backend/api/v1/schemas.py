@@ -107,8 +107,8 @@ class ContractorProfileBase(BaseModel):
     patronymic: Optional[str] = Field(None, max_length=100)
     phone: Optional[str] = Field(None, max_length=20)
     email: Optional[str] = Field(None, pattern=r'^[^@]+@[^@]+\.[^@]+$')
-    professional_info: Optional[str] = None
-    education: Optional[str] = None
+    professional_info: Optional[List[Dict[str, Any]]] = Field(default_factory=list)
+    education: Optional[List[Dict[str, Any]]] = Field(default_factory=list)
     bank_name: Optional[str] = Field(None, max_length=200)
     bank_account: Optional[str] = Field(None, max_length=20)
     bank_bik: Optional[str] = Field(None, max_length=9)
@@ -152,7 +152,8 @@ class RepairRequestBase(BaseModel):
     equipment_brand: Optional[str] = Field(None, max_length=200, description="Бренд оборудования")
     equipment_model: Optional[str] = Field(None, max_length=200, description="Модель оборудования")
     problem_description: Optional[str] = Field(None, max_length=2000, description="Описание неисправности")
-    priority: Optional[str] = Field("normal", description="Приоритет заявки")
+    latitude: Optional[float] = Field(None, description="Широта места выполнения работ")
+    longitude: Optional[float] = Field(None, description="Долгота места выполнения работ")
 
 class RepairRequestCreate(RepairRequestBase):
     pass

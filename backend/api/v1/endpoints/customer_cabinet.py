@@ -196,6 +196,8 @@ async def create_customer_request(
         equipment_brand=request_data.equipment_brand,
         equipment_model=request_data.equipment_model,
         problem_description=request_data.problem_description,
+        latitude=request_data.latitude,
+        longitude=request_data.longitude,
         priority=request_data.priority or "normal",
         status=RequestStatus.NEW
     )

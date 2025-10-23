@@ -387,6 +387,59 @@ async def delete_user(
     
     return {"message": "Пользователь успешно удален"}
 
+@router.put("/contractors/{user_id}/profile")
+async def update_contractor_profile_by_admin(
+    user_id: int,
+    profile_data: Dict[str, Any],
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Обновление профиля исполнителя администратором"""
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Доступ разрешен только администраторам"
+        )
+    
+    # Проверяем, что пользователь существует и является исполнителем
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Пользователь не найден"
+        )
+    
+    if user.role != "contractor":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Пользователь не является исполнителем"
+        )
+    
+    # Получаем профиль исполнителя
+    contractor_profile = db.query(ContractorProfile).filter(
+        ContractorProfile.user_id == user_id
+    ).first()
+    
+    if not contractor_profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Профиль исполнителя не найден"
+        )
+    
+    # Обновляем поля профиля
+    for field, value in profile_data.items():
+        if hasattr(contractor_profile, field) and value is not None:
+            setattr(contractor_profile, field, value)
+    
+    contractor_profile.updated_at = datetime.utcnow()
+    
+    db.commit()
+    db.refresh(contractor_profile)
+    
+    logger.info(f"✅ Профиль исполнителя {user_id} обновлен администратором {current_user.id}")
+    
+    return {"message": "Профиль исполнителя успешно обновлен"}
+
 @router.get("/requests", response_model=List[RepairRequestResponse])
 async def get_all_requests(
     status_filter: Optional[str] = Query(None, description="Фильтр по статусу"),

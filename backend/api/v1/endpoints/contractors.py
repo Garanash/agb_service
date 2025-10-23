@@ -18,6 +18,23 @@ from ..dependencies import get_current_user
 
 router = APIRouter()
 
+@router.get("/profiles", response_model=List[ContractorProfileResponse])
+def get_all_contractor_profiles(
+    limit: int = 20,
+    offset: int = 0,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Получение всех профилей исполнителей (только для администраторов)"""
+    if current_user.role not in ["admin", "manager"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Доступ разрешен только администраторам и менеджерам"
+        )
+    
+    profiles = db.query(ContractorProfile).offset(offset).limit(limit).all()
+    return profiles
+
 # Настройки загрузки файлов
 UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
@@ -136,7 +153,7 @@ def get_contractor_profile(
 ):
     """Получение профиля исполнителя"""
     try:
-        if current_user.role != "contractor":
+        if current_user.role not in ["contractor", "admin"]:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Доступ запрещен"
@@ -199,7 +216,7 @@ def update_contractor_profile(
 ):
     """Обновление профиля исполнителя"""
     try:
-        if current_user.role != "contractor":
+        if current_user.role not in ["contractor", "admin"]:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Доступ запрещен"
@@ -319,7 +336,7 @@ def upload_file(
 ):
     """Загрузка файла для профиля исполнителя"""
     try:
-        if current_user.role != "contractor":
+        if current_user.role not in ["contractor", "admin"]:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Доступ запрещен"
@@ -411,7 +428,7 @@ def get_telegram_link(
 ):
     """Получение ссылки для подключения Telegram бота"""
     try:
-        if current_user.role != "contractor":
+        if current_user.role not in ["contractor", "admin"]:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Доступ запрещен"

@@ -87,17 +87,19 @@ async def send_notification_to_contractor(
                 "success": True
             }
         else:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Не удалось отправить уведомление исполнителю"
-            )
+            return {
+                "message": f"Не удалось отправить уведомление исполнителю {contractor_id}. Возможно, Telegram бот не настроен или исполнитель не взаимодействовал с ботом.",
+                "success": False,
+                "warning": True
+            }
             
     except Exception as e:
         logger.error(f"❌ Ошибка отправки уведомления исполнителю {contractor_id}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Ошибка отправки уведомления: {str(e)}"
-        )
+        return {
+            "message": f"Ошибка отправки уведомления: {str(e)}",
+            "success": False,
+            "error": True
+        }
 
 @router.post("/assign-notification/{contractor_id}/{request_id}")
 async def send_assignment_notification(

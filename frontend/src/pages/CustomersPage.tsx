@@ -39,6 +39,7 @@ import { CustomerProfile, CustomerProfileCreate, UserRole, User } from 'types/ap
 const CustomersPage: React.FC = () => {
   const { user } = useAuth();
   const [customers, setCustomers] = useState<User[]>([]);
+  const [customerProfiles, setCustomerProfiles] = useState<CustomerProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<CustomerProfile | null>(null);
@@ -61,8 +62,18 @@ const CustomersPage: React.FC = () => {
   const fetchCustomers = async () => {
     try {
       setLoading(true);
-      const users = await apiService.getAllCustomers(100, 0); // Получаем всех заказчиков
+      // Получаем пользователей-заказчиков
+      const users = await apiService.getAllCustomers(100, 0);
       setCustomers(users);
+      
+      // Получаем профили заказчиков
+      try {
+        const profiles = await apiService.getAllCustomerProfiles(100, 0);
+        setCustomerProfiles(profiles);
+      } catch (error) {
+        console.warn('Failed to fetch customer profiles:', error);
+        // Не критично, если профили не загрузились
+      }
     } catch (error) {
       console.error('Failed to fetch customers:', error);
     } finally {
@@ -167,7 +178,9 @@ const CustomersPage: React.FC = () => {
             <TableHead>
               <TableRow>
                 <TableCell>ID</TableCell>
+                <TableCell>Логин</TableCell>
                 <TableCell>Имя</TableCell>
+                <TableCell>Компания</TableCell>
                 <TableCell>Контактное лицо</TableCell>
                 <TableCell>Телефон</TableCell>
                 <TableCell>Email</TableCell>
@@ -194,6 +207,11 @@ const CustomersPage: React.FC = () => {
                     </Typography>
                   </TableCell>
                   <TableCell>
+                    <Typography variant="body2" fontWeight="medium" color="primary">
+                      @{customer.username}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                       <Avatar sx={{ mr: 2, width: 32, height: 32 }}>
                         <Business />
@@ -204,29 +222,72 @@ const CustomersPage: React.FC = () => {
                     </Box>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2">
-                      {customer.first_name} {customer.last_name}
-                    </Typography>
+                    {(() => {
+                      const profile = customerProfiles.find(cp => cp.user_id === customer.id);
+                      return profile ? (
+                        <Typography variant="body2" fontWeight="medium">
+                          {profile.company_name}
+                        </Typography>
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">
+                          Не указано
+                        </Typography>
+                      );
+                    })()}
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2">
-                      {customer.phone || '-'}
-                    </Typography>
+                    {(() => {
+                      const profile = customerProfiles.find(cp => cp.user_id === customer.id);
+                      return profile ? (
+                        <Typography variant="body2">
+                          {profile.contact_person}
+                        </Typography>
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">
+                          {customer.first_name} {customer.last_name}
+                        </Typography>
+                      );
+                    })()}
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2">
-                      {customer.email}
-                    </Typography>
+                    {(() => {
+                      const profile = customerProfiles.find(cp => cp.user_id === customer.id);
+                      return (
+                        <Typography variant="body2">
+                          {profile?.phone || customer.phone || '-'}
+                        </Typography>
+                      );
+                    })()}
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2" noWrap sx={{ maxWidth: 200 }}>
-                      -
-                    </Typography>
+                    {(() => {
+                      const profile = customerProfiles.find(cp => cp.user_id === customer.id);
+                      return (
+                        <Typography variant="body2">
+                          {profile?.email || customer.email}
+                        </Typography>
+                      );
+                    })()}
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2">
-                      -
-                    </Typography>
+                    {(() => {
+                      const profile = customerProfiles.find(cp => cp.user_id === customer.id);
+                      return (
+                        <Typography variant="body2" noWrap sx={{ maxWidth: 200 }}>
+                          {profile?.address || '-'}
+                        </Typography>
+                      );
+                    })()}
+                  </TableCell>
+                  <TableCell>
+                    {(() => {
+                      const profile = customerProfiles.find(cp => cp.user_id === customer.id);
+                      return (
+                        <Typography variant="body2">
+                          {profile?.inn || '-'}
+                        </Typography>
+                      );
+                    })()}
                   </TableCell>
                   <TableCell>
                     {canEdit() && (

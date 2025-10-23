@@ -15,6 +15,23 @@ from ..dependencies import get_current_user
 
 router = APIRouter()
 
+@router.get("/profiles", response_model=List[CustomerProfileResponse])
+def get_all_customer_profiles(
+    limit: int = 20,
+    offset: int = 0,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Получение всех профилей заказчиков (только для администраторов и менеджеров)"""
+    if current_user.role not in ["admin", "manager"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Доступ разрешен только администраторам и менеджерам"
+        )
+    
+    profiles = db.query(CustomerProfile).offset(offset).limit(limit).all()
+    return profiles
+
 @router.post("/register", response_model=UserResponse)
 def register_customer(
     user_data: UserCreate,

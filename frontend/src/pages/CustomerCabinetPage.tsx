@@ -54,9 +54,11 @@ import {
   ExpandMore,
   Save,
   Close,
+  LocationOn,
 } from '@mui/icons-material';
 import { useAuth } from 'hooks/useAuth';
 import { apiService } from 'services/api';
+import LocationPicker from 'components/LocationPicker';
 import { RequestStatus } from 'types/api';
 
 interface CustomerProfile {
@@ -99,7 +101,8 @@ interface CustomerRequest {
   equipment_brand?: string;
   equipment_model?: string;
   problem_description?: string;
-  priority?: string;
+  latitude?: number;
+  longitude?: number;
   status: RequestStatus;
   created_at: string;
   updated_at?: string;
@@ -149,6 +152,8 @@ const CustomerCabinetPage: React.FC = () => {
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [requestDialogOpen, setRequestDialogOpen] = useState(false);
   const [viewRequestDialogOpen, setViewRequestDialogOpen] = useState(false);
+  const [mapOpen, setMapOpen] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number; address: string } | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<CustomerRequest | null>(null);
   const [editingProfile, setEditingProfile] = useState<Partial<CustomerProfile>>({});
   const [newRequest, setNewRequest] = useState({
@@ -162,8 +167,7 @@ const CustomerCabinetPage: React.FC = () => {
     equipment_type: '',
     equipment_brand: '',
     equipment_model: '',
-    problem_description: '',
-    priority: 'normal'
+    problem_description: ''
   });
 
   useEffect(() => {
@@ -205,7 +209,15 @@ const CustomerCabinetPage: React.FC = () => {
 
   const handleCreateRequest = async () => {
     try {
-      await apiService.createCustomerRequest(newRequest);
+      // Добавляем координаты к данным заявки
+      const requestData = {
+        ...newRequest,
+        latitude: selectedLocation?.lat,
+        longitude: selectedLocation?.lng,
+        address: selectedLocation?.address || newRequest.address
+      };
+      
+      await apiService.createCustomerRequest(requestData);
       setRequestDialogOpen(false);
       setNewRequest({
         title: '',
@@ -218,14 +230,18 @@ const CustomerCabinetPage: React.FC = () => {
         equipment_type: '',
         equipment_brand: '',
         equipment_model: '',
-        problem_description: '',
-        priority: 'normal'
+        problem_description: ''
       });
+      setSelectedLocation(null);
       await loadCustomerData();
       setSuccess('Заявка успешно создана');
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Ошибка создания заявки');
     }
+  };
+
+  const handleLocationSelect = (location: { lat: number; lng: number; address: string }) => {
+    setSelectedLocation(location);
   };
 
   const handleCancelRequest = async (requestId: number) => {
@@ -791,9 +807,25 @@ const CustomerCabinetPage: React.FC = () => {
               <TextField
                 fullWidth
                 label="Адрес"
-                value={newRequest.address}
+                value={selectedLocation?.address || newRequest.address}
                 onChange={(e) => setNewRequest({ ...newRequest, address: e.target.value })}
               />
+            </Grid>
+            <Grid item xs={12}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Button
+                  variant="outlined"
+                  startIcon={<LocationOn />}
+                  onClick={() => setMapOpen(true)}
+                >
+                  Выбрать на карте
+                </Button>
+                {selectedLocation && (
+                  <Typography variant="caption" color="text.secondary">
+                    Место выбрано: {selectedLocation.address}
+                  </Typography>
+                )}
+              </Box>
             </Grid>
             <Grid item xs={12}>
               <TextField
@@ -886,6 +918,13 @@ const CustomerCabinetPage: React.FC = () => {
           <Button onClick={() => setViewRequestDialogOpen(false)}>Закрыть</Button>
         </DialogActions>
       </Dialog>
+
+      {/* Компонент выбора места на карте */}
+      <LocationPicker
+        open={mapOpen}
+        onClose={() => setMapOpen(false)}
+        onLocationSelect={handleLocationSelect}
+      />
     </Box>
   );
 };

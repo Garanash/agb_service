@@ -71,8 +71,8 @@ class TelegramBotService:
         request_id: Optional[int] = None
     ) -> bool:
         """Отправка уведомления конкретному исполнителю"""
-        if not self.bot_token:
-            logger.error("❌ Telegram бот не настроен")
+        if not self.bot_token or self.bot_token == "dummy_token_for_testing":
+            logger.warning("⚠️ Telegram бот не настроен или использует тестовый токен")
             return False
         
         try:
@@ -91,7 +91,7 @@ class TelegramBotService:
             if success:
                 logger.info(f"✅ Уведомление отправлено исполнителю {contractor_id}")
             else:
-                logger.error(f"❌ Не удалось отправить уведомление исполнителю {contractor_id}")
+                logger.warning(f"⚠️ Не удалось отправить уведомление исполнителю {contractor_id} (возможно, пользователь не взаимодействовал с ботом)")
             
             return success
             
@@ -337,11 +337,11 @@ class TelegramBotService:
                         logger.warning(f"⚠️ Пользователь {username} не найден в обновлениях бота")
                         return None
                     else:
-                        logger.error(f"❌ Ошибка получения обновлений: {response.status}")
+                        logger.warning(f"⚠️ Ошибка получения обновлений: {response.status}")
                         return None
                         
         except Exception as e:
-            logger.error(f"❌ Ошибка получения chat_id для {username}: {e}")
+            logger.warning(f"⚠️ Ошибка получения chat_id для {username}: {e}")
             return None
     
     async def test_bot_connection(self) -> Dict[str, Any]:

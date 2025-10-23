@@ -14,10 +14,11 @@ import {
   Alert,
   CircularProgress,
 } from '@mui/material';
-import { Save, Send } from '@mui/icons-material';
+import { Save, Send, LocationOn } from '@mui/icons-material';
 import { useForm } from 'react-hook-form';
 import { useAuth } from 'hooks/useAuth';
 import { apiService } from 'services/api';
+import LocationPicker from 'components/LocationPicker';
 
 interface RequestForm {
   title: string;
@@ -31,7 +32,8 @@ interface RequestForm {
   equipment_brand: string;
   equipment_model: string;
   problem_description: string;
-  priority: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 const urgencyOptions = [
@@ -39,13 +41,6 @@ const urgencyOptions = [
   { value: 'medium', label: 'Средняя' },
   { value: 'high', label: 'Высокая' },
   { value: 'critical', label: 'Критическая' },
-];
-
-const priorityOptions = [
-  { value: 'low', label: 'Низкий' },
-  { value: 'normal', label: 'Обычный' },
-  { value: 'high', label: 'Высокий' },
-  { value: 'urgent', label: 'Срочный' },
 ];
 
 const equipmentTypes = [
@@ -76,6 +71,8 @@ const CreateRequestPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [mapOpen, setMapOpen] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number; address: string } | null>(null);
 
   const {
     register,
@@ -91,14 +88,27 @@ const CreateRequestPage: React.FC = () => {
     setSuccess(false);
 
     try {
-      await apiService.createWorkflowRequest(data);
+      // Добавляем координаты к данным заявки
+      const requestData = {
+        ...data,
+        latitude: selectedLocation?.lat,
+        longitude: selectedLocation?.lng,
+        address: selectedLocation?.address || data.address
+      };
+      
+      await apiService.createWorkflowRequest(requestData);
       setSuccess(true);
       reset();
+      setSelectedLocation(null);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Ошибка создания заявки');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleLocationSelect = (location: { lat: number; lng: number; address: string }) => {
+    setSelectedLocation(location);
   };
 
   if (success) {
@@ -280,7 +290,26 @@ const CreateRequestPage: React.FC = () => {
                   {...register('address')}
                   error={!!errors.address}
                   helperText={errors.address?.message}
+                  value={selectedLocation?.address || ''}
                 />
+              </Grid>
+
+              <Grid item xs={12} md={4}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, height: '100%' }}>
+                  <Button
+                    variant="outlined"
+                    startIcon={<LocationOn />}
+                    onClick={() => setMapOpen(true)}
+                    sx={{ height: '56px' }}
+                  >
+                    Выбрать на карте
+                  </Button>
+                  {selectedLocation && (
+                    <Typography variant="caption" color="text.secondary">
+                      Место выбрано
+                    </Typography>
+                  )}
+                </Box>
               </Grid>
 
               {/* Дополнительные параметры */}
@@ -290,22 +319,6 @@ const CreateRequestPage: React.FC = () => {
                 </Typography>
               </Grid>
 
-              <Grid item xs={12} md={6}>
-                <FormControl fullWidth error={!!errors.priority}>
-                  <InputLabel>Приоритет</InputLabel>
-                  <Select
-                    {...register('priority')}
-                    label="Приоритет"
-                    defaultValue="normal"
-                  >
-                    {priorityOptions.map((option) => (
-                      <MenuItem key={option.value} value={option.value}>
-                        {option.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
 
               <Grid item xs={12} md={6}>
                 <TextField
@@ -345,6 +358,13 @@ const CreateRequestPage: React.FC = () => {
           </form>
         </CardContent>
       </Card>
+
+      {/* Компонент выбора места на карте */}
+      <LocationPicker
+        open={mapOpen}
+        onClose={() => setMapOpen(false)}
+        onLocationSelect={handleLocationSelect}
+      />
     </Box>
   );
 };

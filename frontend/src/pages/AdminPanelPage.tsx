@@ -75,7 +75,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from 'hooks/useAuth';
 import { apiService } from 'services/api';
-import { UserRole, RequestStatus } from 'types/api';
+import { UserRole, RequestStatus, CustomerProfile } from 'types/api';
 
 interface AdminDashboard {
   user_stats: {
@@ -162,6 +162,7 @@ const AdminPanelPage: React.FC = () => {
   const { user } = useAuth();
   const [dashboard, setDashboard] = useState<AdminDashboard | null>(null);
   const [users, setUsers] = useState<User[]>([]);
+  const [customerProfiles, setCustomerProfiles] = useState<CustomerProfile[]>([]);
   const [requests, setRequests] = useState<RepairRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -228,6 +229,16 @@ const AdminPanelPage: React.FC = () => {
       const usersData = await apiService.getAdminUsers(userFilters);
       console.log('Users loaded:', usersData);
       setUsers(usersData);
+      
+      // Загружаем профили заказчиков
+      try {
+        const customerProfilesData = await apiService.getAllCustomerProfiles(100, 0);
+        console.log('Customer profiles loaded:', customerProfilesData);
+        setCustomerProfiles(customerProfilesData);
+      } catch (err: any) {
+        console.warn('Error loading customer profiles:', err);
+        // Не показываем ошибку, так как это не критично
+      }
     } catch (err: any) {
       console.error('Error loading users:', err);
       setError(err.response?.data?.detail || 'Ошибка загрузки пользователей');
@@ -581,6 +592,7 @@ const AdminPanelPage: React.FC = () => {
                 <TableCell>Роль</TableCell>
                 <TableCell>Статус</TableCell>
                 <TableCell>Email</TableCell>
+                <TableCell>Компания</TableCell>
                 <TableCell>Дата регистрации</TableCell>
                 <TableCell>Действия</TableCell>
               </TableRow>
@@ -626,6 +638,33 @@ const AdminPanelPage: React.FC = () => {
                     </Box>
                   </TableCell>
                   <TableCell>{user.email}</TableCell>
+                  <TableCell>
+                    {user.role === 'customer' ? (
+                      (() => {
+                        const customerProfile = customerProfiles.find(cp => cp.user_id === user.id);
+                        return customerProfile ? (
+                          <Box>
+                            <Typography variant="body2" fontWeight="medium">
+                              {customerProfile.company_name}
+                            </Typography>
+                            {customerProfile.inn && (
+                              <Typography variant="caption" color="text.secondary">
+                                ИНН: {customerProfile.inn}
+                              </Typography>
+                            )}
+                          </Box>
+                        ) : (
+                          <Typography variant="body2" color="text.secondary">
+                            Профиль не заполнен
+                          </Typography>
+                        );
+                      })()
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">
+                        -
+                      </Typography>
+                    )}
+                  </TableCell>
                   <TableCell>
                     {new Date(user.created_at).toLocaleDateString()}
                   </TableCell>

@@ -25,6 +25,7 @@ import {
   Save,
   Cancel,
   AccountCircle,
+  CheckCircle,
 } from '@mui/icons-material';
 import { useForm } from 'react-hook-form';
 import { useAuth } from 'hooks/useAuth';
@@ -246,6 +247,37 @@ const ProfilePage: React.FC = () => {
                   <ListItemText
                     primary="Статус"
                     secondary={user.is_active ? 'Активен' : 'Неактивен'}
+                  />
+                </ListItem>
+                <ListItem>
+                  <ListItemIcon>
+                    <Email />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary="Email подтвержден"
+                    secondary={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        {user.email_verified ? (
+                          <>
+                            <Chip
+                              label="Подтвержден"
+                              color="success"
+                              size="small"
+                              icon={<CheckCircle />}
+                            />
+                          </>
+                        ) : (
+                          <>
+                            <Chip
+                              label="Не подтвержден"
+                              color="error"
+                              size="small"
+                              icon={<Cancel />}
+                            />
+                          </>
+                        )}
+                      </Box>
+                    }
                   />
                 </ListItem>
                 <ListItem>

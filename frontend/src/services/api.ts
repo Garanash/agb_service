@@ -494,6 +494,11 @@ class ApiService {
     return response.data;
   }
 
+  async updateContractorProfileByAdmin(userId: number, data: ContractorProfileCreate): Promise<{ message: string }> {
+    const response: AxiosResponse<{ message: string }> = await this.api.put(`/api/v1/admin/contractors/${userId}/profile`, data);
+    return response.data;
+  }
+
   async createContractorProfile(data: ContractorProfileCreate): Promise<ContractorProfile> {
     const response: AxiosResponse<ContractorProfile> = await this.api.post('/api/v1/contractors/register', data);
     return response.data;
@@ -537,6 +542,16 @@ class ApiService {
 
   async getAllContractors(limit = 20, offset = 0): Promise<User[]> {
     return this.getAllUsers('contractor', limit, offset);
+  }
+
+  async getAllContractorProfiles(limit = 20, offset = 0): Promise<ContractorProfile[]> {
+    const response: AxiosResponse<ContractorProfile[]> = await this.api.get(`/api/v1/contractors/profiles?limit=${limit}&offset=${offset}`);
+    return response.data;
+  }
+
+  async getAllCustomerProfiles(limit = 20, offset = 0): Promise<CustomerProfile[]> {
+    const response: AxiosResponse<CustomerProfile[]> = await this.api.get(`/api/v1/customers/profiles?limit=${limit}&offset=${offset}`);
+    return response.data;
   }
 }
 

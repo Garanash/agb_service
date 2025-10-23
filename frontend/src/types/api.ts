@@ -10,6 +10,7 @@ export interface User {
   role: UserRole;
   is_active: boolean;
   is_password_changed: boolean;
+  email_verified: boolean;
   avatar_url?: string;
   phone?: string;
   position?: string;
@@ -189,6 +190,40 @@ export interface CustomerProfileCreate {
   inn?: string;
   kpp?: string;
   ogrn?: string;
+}
+
+export interface CustomerProfile {
+  id: number;
+  user_id: number;
+  company_name: string;
+  contact_person: string;
+  phone: string;
+  email: string;
+  address?: string;
+  inn?: string;
+  kpp?: string;
+  ogrn?: string;
+  equipment_brands?: string[];
+  equipment_types?: string[];
+  mining_operations?: string[];
+  service_history?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface CustomerProfileCreate {
+  company_name: string;
+  contact_person: string;
+  phone: string;
+  email: string;
+  address?: string;
+  inn?: string;
+  kpp?: string;
+  ogrn?: string;
+  equipment_brands?: string[];
+  equipment_types?: string[];
+  mining_operations?: string[];
+  service_history?: string;
 }
 
 export interface ContractorProfile {
