@@ -19,13 +19,13 @@ export interface User {
 }
 
 export enum UserRole {
-  ADMIN = "admin",
-  CUSTOMER = "customer",
-  CONTRACTOR = "contractor",
-  SERVICE_ENGINEER = "service_engineer",
-  MANAGER = "manager",
-  SECURITY = "security",
-  HR = "hr"
+  ADMIN = 'admin',
+  CUSTOMER = 'customer',
+  CONTRACTOR = 'contractor',
+  SERVICE_ENGINEER = 'service_engineer',
+  MANAGER = 'manager',
+  SECURITY = 'security',
+  HR = 'hr',
 }
 
 export interface LoginRequest {
@@ -127,15 +127,15 @@ export interface RepairRequest {
 }
 
 export enum RequestStatus {
-  NEW = "new",
-  MANAGER_REVIEW = "manager_review",
-  CLARIFICATION = "clarification",
-  SENT_TO_CONTRACTORS = "sent_to_contractors",
-  CONTRACTOR_RESPONSES = "contractor_responses",
-  ASSIGNED = "assigned",
-  IN_PROGRESS = "in_progress",
-  COMPLETED = "completed",
-  CANCELLED = "cancelled"
+  NEW = 'new',
+  MANAGER_REVIEW = 'manager_review',
+  CLARIFICATION = 'clarification',
+  SENT_TO_CONTRACTORS = 'sent_to_contractors',
+  CONTRACTOR_RESPONSES = 'contractor_responses',
+  ASSIGNED = 'assigned',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled',
 }
 
 export interface RepairRequestCreate {

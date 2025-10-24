@@ -147,7 +147,7 @@ function TabPanel(props: TabPanelProps) {
   const { children, value, index, ...other } = props;
   return (
     <div
-      role="tabpanel"
+      role='tabpanel'
       hidden={value !== index}
       id={`hr-tabpanel-${index}`}
       aria-labelledby={`hr-tab-${index}`}
@@ -160,20 +160,28 @@ function TabPanel(props: TabPanelProps) {
 
 const HRDocumentsPage: React.FC = () => {
   const { user } = useAuth();
-  const [verifiedContractors, setVerifiedContractors] = useState<VerifiedContractor[]>([]);
-  const [contractorDocuments, setContractorDocuments] = useState<HRDocument[]>([]);
+  const [verifiedContractors, setVerifiedContractors] = useState<
+    VerifiedContractor[]
+  >([]);
+  const [contractorDocuments, setContractorDocuments] = useState<HRDocument[]>(
+    [],
+  );
   const [stats, setStats] = useState<HRStats | null>(null);
   const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tabValue, setTabValue] = useState(0);
-  
+
   // Диалоги
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
-  const [createDocumentDialogOpen, setCreateDocumentDialogOpen] = useState(false);
+  const [createDocumentDialogOpen, setCreateDocumentDialogOpen] =
+    useState(false);
   const [viewDocumentDialogOpen, setViewDocumentDialogOpen] = useState(false);
-  const [selectedContractor, setSelectedContractor] = useState<ContractorDetails | null>(null);
-  const [selectedDocument, setSelectedDocument] = useState<HRDocument | null>(null);
+  const [selectedContractor, setSelectedContractor] =
+    useState<ContractorDetails | null>(null);
+  const [selectedDocument, setSelectedDocument] = useState<HRDocument | null>(
+    null,
+  );
   const [documentContent, setDocumentContent] = useState('');
   const [newDocumentType, setNewDocumentType] = useState('');
   const [customDocumentContent, setCustomDocumentContent] = useState('');
@@ -185,19 +193,20 @@ const HRDocumentsPage: React.FC = () => {
   const loadHRData = async () => {
     try {
       setLoading(true);
-      
+
       const [contractorsData, statsData, typesData] = await Promise.all([
         apiService.getVerifiedContractorsForHR(),
         apiService.getHRStatistics(),
-        apiService.getAvailableDocumentTypes()
+        apiService.getAvailableDocumentTypes(),
       ]);
-      
+
       setVerifiedContractors(contractorsData);
       setStats(statsData);
       setDocumentTypes(typesData);
-      
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Ошибка загрузки данных HR отдела');
+      setError(
+        err.response?.data?.detail || 'Ошибка загрузки данных HR отдела',
+      );
     } finally {
       setLoading(false);
     }
@@ -209,7 +218,9 @@ const HRDocumentsPage: React.FC = () => {
       setSelectedContractor(details);
       setDetailsDialogOpen(true);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Ошибка загрузки деталей исполнителя');
+      setError(
+        err.response?.data?.detail || 'Ошибка загрузки деталей исполнителя',
+      );
     }
   };
 
@@ -219,18 +230,20 @@ const HRDocumentsPage: React.FC = () => {
       setContractorDocuments(documents);
       setTabValue(1); // Переключаемся на вкладку документов
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Ошибка загрузки документов исполнителя');
+      setError(
+        err.response?.data?.detail || 'Ошибка загрузки документов исполнителя',
+      );
     }
   };
 
   const handleCreateDocument = async () => {
     if (!selectedContractor || !newDocumentType) return;
-    
+
     try {
       await apiService.createDocumentRequest(selectedContractor.contractor_id, {
-        document_type: newDocumentType
+        document_type: newDocumentType,
       });
-      
+
       setCreateDocumentDialogOpen(false);
       setNewDocumentType('');
       await loadHRData();
@@ -243,9 +256,9 @@ const HRDocumentsPage: React.FC = () => {
   const handleGenerateDocument = async (documentId: number) => {
     try {
       await apiService.generateDocument(documentId, {
-        document_content: customDocumentContent || undefined
+        document_content: customDocumentContent || undefined,
       });
-      
+
       await loadHRData();
       if (selectedContractor) {
         await handleViewDocuments(selectedContractor.contractor_id);
@@ -258,7 +271,7 @@ const HRDocumentsPage: React.FC = () => {
   const handleCompleteDocument = async (documentId: number) => {
     try {
       await apiService.completeDocument(documentId);
-      
+
       await loadHRData();
       if (selectedContractor) {
         await handleViewDocuments(selectedContractor.contractor_id);
@@ -274,14 +287,16 @@ const HRDocumentsPage: React.FC = () => {
       setDocumentContent(response.content);
       setViewDocumentDialogOpen(true);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Ошибка загрузки содержимого документа');
+      setError(
+        err.response?.data?.detail || 'Ошибка загрузки содержимого документа',
+      );
     }
   };
 
   const handleDownloadDocument = async (documentId: number) => {
     try {
       const response = await apiService.downloadDocument(documentId);
-      
+
       // Создаем blob и скачиваем файл
       const blob = new Blob([response], { type: 'text/plain' });
       const url = window.URL.createObjectURL(blob);
@@ -299,18 +314,18 @@ const HRDocumentsPage: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     const colors: { [key: string]: string } = {
-      'pending': 'warning',
-      'generated': 'info',
-      'completed': 'success'
+      pending: 'warning',
+      generated: 'info',
+      completed: 'success',
     };
     return colors[status] || 'default';
   };
 
   const getStatusText = (status: string) => {
     const texts: { [key: string]: string } = {
-      'pending': 'Ожидает генерации',
-      'generated': 'Сгенерирован',
-      'completed': 'Завершен'
+      pending: 'Ожидает генерации',
+      generated: 'Сгенерирован',
+      completed: 'Завершен',
     };
     return texts[status] || status;
   };
@@ -322,7 +337,12 @@ const HRDocumentsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <Box
+        display='flex'
+        justifyContent='center'
+        alignItems='center'
+        minHeight='400px'
+      >
         <CircularProgress />
       </Box>
     );
@@ -330,12 +350,12 @@ const HRDocumentsPage: React.FC = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom>
+      <Typography variant='h4' gutterBottom>
         HR документы
       </Typography>
-      
+
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+        <Alert severity='error' sx={{ mb: 2 }} onClose={() => setError(null)}>
           {error}
         </Alert>
       )}
@@ -346,53 +366,65 @@ const HRDocumentsPage: React.FC = () => {
           <Grid item xs={12} sm={6} md={3}>
             <Card>
               <CardContent>
-                <Box display="flex" alignItems="center">
-                  <Description color="primary" sx={{ mr: 2 }} />
+                <Box display='flex' alignItems='center'>
+                  <Description color='primary' sx={{ mr: 2 }} />
                   <Box>
-                    <Typography variant="h4">{stats.total_documents}</Typography>
-                    <Typography color="text.secondary">Всего документов</Typography>
+                    <Typography variant='h4'>
+                      {stats.total_documents}
+                    </Typography>
+                    <Typography color='text.secondary'>
+                      Всего документов
+                    </Typography>
                   </Box>
                 </Box>
               </CardContent>
             </Card>
           </Grid>
-          
+
           <Grid item xs={12} sm={6} md={3}>
             <Card>
               <CardContent>
-                <Box display="flex" alignItems="center">
-                  <Pending color="warning" sx={{ mr: 2 }} />
+                <Box display='flex' alignItems='center'>
+                  <Pending color='warning' sx={{ mr: 2 }} />
                   <Box>
-                    <Typography variant="h4">{stats.pending_count}</Typography>
-                    <Typography color="text.secondary">Ожидают генерации</Typography>
+                    <Typography variant='h4'>{stats.pending_count}</Typography>
+                    <Typography color='text.secondary'>
+                      Ожидают генерации
+                    </Typography>
                   </Box>
                 </Box>
               </CardContent>
             </Card>
           </Grid>
-          
+
           <Grid item xs={12} sm={6} md={3}>
             <Card>
               <CardContent>
-                <Box display="flex" alignItems="center">
-                  <CheckCircle color="success" sx={{ mr: 2 }} />
+                <Box display='flex' alignItems='center'>
+                  <CheckCircle color='success' sx={{ mr: 2 }} />
                   <Box>
-                    <Typography variant="h4">{stats.completed_count}</Typography>
-                    <Typography color="text.secondary">Завершены</Typography>
+                    <Typography variant='h4'>
+                      {stats.completed_count}
+                    </Typography>
+                    <Typography color='text.secondary'>Завершены</Typography>
                   </Box>
                 </Box>
               </CardContent>
             </Card>
           </Grid>
-          
+
           <Grid item xs={12} sm={6} md={3}>
             <Card>
               <CardContent>
-                <Box display="flex" alignItems="center">
-                  <TrendingUp color="info" sx={{ mr: 2 }} />
+                <Box display='flex' alignItems='center'>
+                  <TrendingUp color='info' sx={{ mr: 2 }} />
                   <Box>
-                    <Typography variant="h4">{stats.completion_rate}%</Typography>
-                    <Typography color="text.secondary">Процент завершения</Typography>
+                    <Typography variant='h4'>
+                      {stats.completion_rate}%
+                    </Typography>
+                    <Typography color='text.secondary'>
+                      Процент завершения
+                    </Typography>
                   </Box>
                 </Box>
               </CardContent>
@@ -403,8 +435,13 @@ const HRDocumentsPage: React.FC = () => {
 
       {/* Табы */}
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-        <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)}>
-          <Tab label={`Проверенные исполнители (${verifiedContractors.length})`} />
+        <Tabs
+          value={tabValue}
+          onChange={(e, newValue) => setTabValue(newValue)}
+        >
+          <Tab
+            label={`Проверенные исполнители (${verifiedContractors.length})`}
+          />
           <Tab label={`Документы (${contractorDocuments.length})`} />
         </Tabs>
       </Box>
@@ -424,57 +461,75 @@ const HRDocumentsPage: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {verifiedContractors.map((contractor) => (
+              {verifiedContractors.map(contractor => (
                 <TableRow key={contractor.contractor_id}>
                   <TableCell>
-                    <Typography variant="subtitle2">
+                    <Typography variant='subtitle2'>
                       {contractor.name}
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2">
-                      {contractor.phone}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant='body2'>{contractor.phone}</Typography>
+                    <Typography variant='body2' color='text.secondary'>
                       {contractor.email}
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    {contractor.specializations.slice(0, 2).map((spec) => (
-                      <Chip key={spec} label={spec} size="small" sx={{ mr: 1, mb: 1 }} />
+                    {contractor.specializations.slice(0, 2).map(spec => (
+                      <Chip
+                        key={spec}
+                        label={spec}
+                        size='small'
+                        sx={{ mr: 1, mb: 1 }}
+                      />
                     ))}
                     {contractor.specializations.length > 2 && (
-                      <Chip label={`+${contractor.specializations.length - 2}`} size="small" />
+                      <Chip
+                        label={`+${contractor.specializations.length - 2}`}
+                        size='small'
+                      />
                     )}
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2">
+                    <Typography variant='body2'>
                       Всего: {contractor.documents_count}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant='body2' color='text.secondary'>
                       Ожидают: {contractor.pending_documents}
                     </Typography>
                   </TableCell>
                   <TableCell>
                     <Chip
-                      label={contractor.availability_status === 'available' ? 'Доступен' : 'Занят'}
-                      color={contractor.availability_status === 'available' ? 'success' : 'warning'}
-                      size="small"
+                      label={
+                        contractor.availability_status === 'available'
+                          ? 'Доступен'
+                          : 'Занят'
+                      }
+                      color={
+                        contractor.availability_status === 'available'
+                          ? 'success'
+                          : 'warning'
+                      }
+                      size='small'
                     />
                   </TableCell>
                   <TableCell>
-                    <Tooltip title="Просмотреть детали">
+                    <Tooltip title='Просмотреть детали'>
                       <IconButton
-                        size="small"
-                        onClick={() => handleViewDetails(contractor.contractor_id)}
+                        size='small'
+                        onClick={() =>
+                          handleViewDetails(contractor.contractor_id)
+                        }
                       >
                         <Visibility />
                       </IconButton>
                     </Tooltip>
-                    <Tooltip title="Документы">
+                    <Tooltip title='Документы'>
                       <IconButton
-                        size="small"
-                        onClick={() => handleViewDocuments(contractor.contractor_id)}
+                        size='small'
+                        onClick={() =>
+                          handleViewDocuments(contractor.contractor_id)
+                        }
                       >
                         <Description />
                       </IconButton>
@@ -501,10 +556,10 @@ const HRDocumentsPage: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {contractorDocuments.map((document) => (
+              {contractorDocuments.map(document => (
                 <TableRow key={document.id}>
                   <TableCell>
-                    <Typography variant="subtitle2">
+                    <Typography variant='subtitle2'>
                       {getDocumentTypeName(document.document_type)}
                     </Typography>
                   </TableCell>
@@ -512,20 +567,22 @@ const HRDocumentsPage: React.FC = () => {
                     <Chip
                       label={getStatusText(document.document_status)}
                       color={getStatusColor(document.document_status) as any}
-                      size="small"
+                      size='small'
                     />
                   </TableCell>
                   <TableCell>
                     {new Date(document.created_at).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
-                    {document.generated_at ? new Date(document.generated_at).toLocaleDateString() : '-'}
+                    {document.generated_at
+                      ? new Date(document.generated_at).toLocaleDateString()
+                      : '-'}
                   </TableCell>
                   <TableCell>
                     {document.document_status === 'pending' && (
-                      <Tooltip title="Генерировать документ">
+                      <Tooltip title='Генерировать документ'>
                         <IconButton
-                          size="small"
+                          size='small'
                           onClick={() => handleGenerateDocument(document.id)}
                         >
                           <Add />
@@ -534,25 +591,27 @@ const HRDocumentsPage: React.FC = () => {
                     )}
                     {document.document_status === 'generated' && (
                       <>
-                        <Tooltip title="Просмотреть содержимое">
+                        <Tooltip title='Просмотреть содержимое'>
                           <IconButton
-                            size="small"
-                            onClick={() => handleViewDocumentContent(document.id)}
+                            size='small'
+                            onClick={() =>
+                              handleViewDocumentContent(document.id)
+                            }
                           >
                             <Visibility />
                           </IconButton>
                         </Tooltip>
-                        <Tooltip title="Скачать документ">
+                        <Tooltip title='Скачать документ'>
                           <IconButton
-                            size="small"
+                            size='small'
                             onClick={() => handleDownloadDocument(document.id)}
                           >
                             <FileDownload />
                           </IconButton>
                         </Tooltip>
-                        <Tooltip title="Завершить документ">
+                        <Tooltip title='Завершить документ'>
                           <IconButton
-                            size="small"
+                            size='small'
                             onClick={() => handleCompleteDocument(document.id)}
                           >
                             <CheckCircle />
@@ -569,28 +628,48 @@ const HRDocumentsPage: React.FC = () => {
       </TabPanel>
 
       {/* Диалог деталей исполнителя */}
-      <Dialog open={detailsDialogOpen} onClose={() => setDetailsDialogOpen(false)} maxWidth="md" fullWidth>
+      <Dialog
+        open={detailsDialogOpen}
+        onClose={() => setDetailsDialogOpen(false)}
+        maxWidth='md'
+        fullWidth
+      >
         <DialogTitle>Детальная информация об исполнителе</DialogTitle>
         <DialogContent>
           {selectedContractor && (
             <Box>
               <Accordion defaultExpanded>
                 <AccordionSummary expandIcon={<ExpandMore />}>
-                  <Typography variant="h6">Личная информация</Typography>
+                  <Typography variant='h6'>Личная информация</Typography>
                 </AccordionSummary>
                 <AccordionDetails>
                   <Grid container spacing={2}>
                     <Grid item xs={12} md={6}>
-                      <Typography variant="body2"><strong>ФИО:</strong> {selectedContractor.personal_info.first_name} {selectedContractor.personal_info.last_name} {selectedContractor.personal_info.patronymic}</Typography>
+                      <Typography variant='body2'>
+                        <strong>ФИО:</strong>{' '}
+                        {selectedContractor.personal_info.first_name}{' '}
+                        {selectedContractor.personal_info.last_name}{' '}
+                        {selectedContractor.personal_info.patronymic}
+                      </Typography>
                     </Grid>
                     <Grid item xs={12} md={6}>
-                      <Typography variant="body2"><strong>Телефон:</strong> {selectedContractor.personal_info.phone}</Typography>
+                      <Typography variant='body2'>
+                        <strong>Телефон:</strong>{' '}
+                        {selectedContractor.personal_info.phone}
+                      </Typography>
                     </Grid>
                     <Grid item xs={12} md={6}>
-                      <Typography variant="body2"><strong>Email:</strong> {selectedContractor.personal_info.email}</Typography>
+                      <Typography variant='body2'>
+                        <strong>Email:</strong>{' '}
+                        {selectedContractor.personal_info.email}
+                      </Typography>
                     </Grid>
                     <Grid item xs={12} md={6}>
-                      <Typography variant="body2"><strong>Telegram:</strong> {selectedContractor.personal_info.telegram_username || 'Не указан'}</Typography>
+                      <Typography variant='body2'>
+                        <strong>Telegram:</strong>{' '}
+                        {selectedContractor.personal_info.telegram_username ||
+                          'Не указан'}
+                      </Typography>
                     </Grid>
                   </Grid>
                 </AccordionDetails>
@@ -598,39 +677,79 @@ const HRDocumentsPage: React.FC = () => {
 
               <Accordion>
                 <AccordionSummary expandIcon={<ExpandMore />}>
-                  <Typography variant="h6">Профессиональная информация</Typography>
+                  <Typography variant='h6'>
+                    Профессиональная информация
+                  </Typography>
                 </AccordionSummary>
                 <AccordionDetails>
                   <Grid container spacing={2}>
                     <Grid item xs={12}>
-                      <Typography variant="body2"><strong>Специализации:</strong></Typography>
+                      <Typography variant='body2'>
+                        <strong>Специализации:</strong>
+                      </Typography>
                       <Box sx={{ mt: 1 }}>
-                        {selectedContractor.professional_info.specializations.map((spec) => (
-                          <Chip key={spec} label={spec} size="small" sx={{ mr: 1, mb: 1 }} />
-                        ))}
+                        {selectedContractor.professional_info.specializations.map(
+                          spec => (
+                            <Chip
+                              key={spec}
+                              label={spec}
+                              size='small'
+                              sx={{ mr: 1, mb: 1 }}
+                            />
+                          ),
+                        )}
                       </Box>
                     </Grid>
                     <Grid item xs={12}>
-                      <Typography variant="body2"><strong>Опыт с брендами:</strong></Typography>
+                      <Typography variant='body2'>
+                        <strong>Опыт с брендами:</strong>
+                      </Typography>
                       <Box sx={{ mt: 1 }}>
-                        {selectedContractor.professional_info.equipment_brands_experience.map((brand) => (
-                          <Chip key={brand} label={brand} size="small" sx={{ mr: 1, mb: 1 }} />
-                        ))}
+                        {selectedContractor.professional_info.equipment_brands_experience.map(
+                          brand => (
+                            <Chip
+                              key={brand}
+                              label={brand}
+                              size='small'
+                              sx={{ mr: 1, mb: 1 }}
+                            />
+                          ),
+                        )}
                       </Box>
                     </Grid>
                     <Grid item xs={12}>
-                      <Typography variant="body2"><strong>Регионы работы:</strong></Typography>
+                      <Typography variant='body2'>
+                        <strong>Регионы работы:</strong>
+                      </Typography>
                       <Box sx={{ mt: 1 }}>
-                        {selectedContractor.professional_info.work_regions.map((region) => (
-                          <Chip key={region} label={region} size="small" sx={{ mr: 1, mb: 1 }} />
-                        ))}
+                        {selectedContractor.professional_info.work_regions.map(
+                          region => (
+                            <Chip
+                              key={region}
+                              label={region}
+                              size='small'
+                              sx={{ mr: 1, mb: 1 }}
+                            />
+                          ),
+                        )}
                       </Box>
                     </Grid>
                     <Grid item xs={12} md={6}>
-                      <Typography variant="body2"><strong>Почасовая ставка:</strong> {selectedContractor.professional_info.hourly_rate || 'Не указана'} руб/час</Typography>
+                      <Typography variant='body2'>
+                        <strong>Почасовая ставка:</strong>{' '}
+                        {selectedContractor.professional_info.hourly_rate ||
+                          'Не указана'}{' '}
+                        руб/час
+                      </Typography>
                     </Grid>
                     <Grid item xs={12} md={6}>
-                      <Typography variant="body2"><strong>Статус доступности:</strong> {selectedContractor.professional_info.availability_status}</Typography>
+                      <Typography variant='body2'>
+                        <strong>Статус доступности:</strong>{' '}
+                        {
+                          selectedContractor.professional_info
+                            .availability_status
+                        }
+                      </Typography>
                     </Grid>
                   </Grid>
                 </AccordionDetails>
@@ -638,11 +757,11 @@ const HRDocumentsPage: React.FC = () => {
 
               <Accordion>
                 <AccordionSummary expandIcon={<ExpandMore />}>
-                  <Typography variant="h6">HR документы</Typography>
+                  <Typography variant='h6'>HR документы</Typography>
                 </AccordionSummary>
                 <AccordionDetails>
                   <List dense>
-                    {selectedContractor.hr_documents.map((doc) => (
+                    {selectedContractor.hr_documents.map(doc => (
                       <ListItem key={doc.id}>
                         <ListItemText
                           primary={getDocumentTypeName(doc.document_type)}
@@ -652,7 +771,7 @@ const HRDocumentsPage: React.FC = () => {
                           <Chip
                             label={getStatusText(doc.document_status)}
                             color={getStatusColor(doc.document_status) as any}
-                            size="small"
+                            size='small'
                           />
                         </ListItemSecondaryAction>
                       </ListItem>
@@ -666,7 +785,7 @@ const HRDocumentsPage: React.FC = () => {
         <DialogActions>
           <Button onClick={() => setDetailsDialogOpen(false)}>Закрыть</Button>
           <Button
-            variant="contained"
+            variant='contained'
             onClick={() => {
               setDetailsDialogOpen(false);
               setCreateDocumentDialogOpen(true);
@@ -679,21 +798,26 @@ const HRDocumentsPage: React.FC = () => {
       </Dialog>
 
       {/* Диалог создания документа */}
-      <Dialog open={createDocumentDialogOpen} onClose={() => setCreateDocumentDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog
+        open={createDocumentDialogOpen}
+        onClose={() => setCreateDocumentDialogOpen(false)}
+        maxWidth='sm'
+        fullWidth
+      >
         <DialogTitle>Создать документ</DialogTitle>
         <DialogContent>
-          <FormControl fullWidth margin="dense">
+          <FormControl fullWidth margin='dense'>
             <InputLabel>Тип документа</InputLabel>
             <Select
               value={newDocumentType}
-              onChange={(e) => setNewDocumentType(e.target.value)}
-              label="Тип документа"
+              onChange={e => setNewDocumentType(e.target.value)}
+              label='Тип документа'
             >
-              {documentTypes.map((type) => (
+              {documentTypes.map(type => (
                 <MenuItem key={type.type} value={type.type}>
                   <Box>
-                    <Typography variant="body2">{type.name}</Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant='body2'>{type.name}</Typography>
+                    <Typography variant='caption' color='text.secondary'>
                       {type.description}
                     </Typography>
                   </Box>
@@ -703,10 +827,12 @@ const HRDocumentsPage: React.FC = () => {
           </FormControl>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setCreateDocumentDialogOpen(false)}>Отмена</Button>
+          <Button onClick={() => setCreateDocumentDialogOpen(false)}>
+            Отмена
+          </Button>
           <Button
             onClick={handleCreateDocument}
-            variant="contained"
+            variant='contained'
             disabled={!newDocumentType}
           >
             Создать
@@ -715,7 +841,12 @@ const HRDocumentsPage: React.FC = () => {
       </Dialog>
 
       {/* Диалог просмотра содержимого документа */}
-      <Dialog open={viewDocumentDialogOpen} onClose={() => setViewDocumentDialogOpen(false)} maxWidth="md" fullWidth>
+      <Dialog
+        open={viewDocumentDialogOpen}
+        onClose={() => setViewDocumentDialogOpen(false)}
+        maxWidth='md'
+        fullWidth
+      >
         <DialogTitle>Содержимое документа</DialogTitle>
         <DialogContent>
           <TextField
@@ -726,13 +857,15 @@ const HRDocumentsPage: React.FC = () => {
             InputProps={{
               readOnly: true,
             }}
-            variant="outlined"
+            variant='outlined'
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setViewDocumentDialogOpen(false)}>Закрыть</Button>
+          <Button onClick={() => setViewDocumentDialogOpen(false)}>
+            Закрыть
+          </Button>
           <Button
-            variant="contained"
+            variant='contained'
             onClick={() => {
               const blob = new Blob([documentContent], { type: 'text/plain' });
               const url = window.URL.createObjectURL(blob);

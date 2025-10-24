@@ -43,7 +43,8 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [profileMenuAnchor, setProfileMenuAnchor] = useState<null | HTMLElement>(null);
+  const [profileMenuAnchor, setProfileMenuAnchor] =
+    useState<null | HTMLElement>(null);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -110,24 +111,24 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     });
   }
 
-        // Меню для менеджера
-        if (user?.role === UserRole.MANAGER || user?.role === UserRole.ADMIN) {
-          menuItems.push({
-            text: 'Управление заявками',
-            icon: <Build />,
-            path: '/manager/requests',
-          });
-          menuItems.push({
-            text: 'Календарь',
-            icon: <Dashboard />,
-            path: '/manager/calendar',
-          });
-          menuItems.push({
-            text: 'Telegram бот',
-            icon: <Telegram />,
-            path: '/telegram/bot',
-          });
-        }
+  // Меню для менеджера
+  if (user?.role === UserRole.MANAGER || user?.role === UserRole.ADMIN) {
+    menuItems.push({
+      text: 'Управление заявками',
+      icon: <Build />,
+      path: '/manager/requests',
+    });
+    menuItems.push({
+      text: 'Календарь',
+      icon: <Dashboard />,
+      path: '/manager/calendar',
+    });
+    menuItems.push({
+      text: 'Telegram бот',
+      icon: <Telegram />,
+      path: '/telegram/bot',
+    });
+  }
 
   // Меню для службы безопасности
   if (user?.role === UserRole.SECURITY || user?.role === UserRole.ADMIN) {
@@ -160,15 +161,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     <div>
       <Toolbar>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Logo size={32} color="#FCB813" />
-          <Typography variant="h6" noWrap component="div">
+          <Logo size={32} color='#FCB813' />
+          <Typography variant='h6' noWrap component='div'>
             AGB SERVICE
           </Typography>
         </Box>
       </Toolbar>
       <Divider />
       <List>
-        {menuItems.map((item) => (
+        {menuItems.map(item => (
           <ListItem key={item.text} disablePadding>
             <ListItemButton
               selected={location.pathname === item.path}
@@ -180,21 +181,21 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </ListItem>
         ))}
       </List>
-      
+
       {/* Профиль пользователя внизу сайдбара */}
       <Box sx={{ mt: 'auto', p: 2 }}>
         <Divider sx={{ mb: 2 }} />
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: 1, 
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
             p: 1,
             borderRadius: 1,
             cursor: 'pointer',
             '&:hover': {
               backgroundColor: 'action.hover',
-            }
+            },
           }}
           onClick={handleProfileClick}
         >
@@ -202,17 +203,25 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <AccountCircle />
           </Avatar>
           <Box sx={{ flex: 1 }}>
-            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+            <Typography variant='body2' sx={{ fontWeight: 'bold' }}>
               {user?.first_name} {user?.last_name}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {user?.role === UserRole.ADMIN ? 'Администратор' :
-               user?.role === UserRole.CUSTOMER ? 'Заказчик' :
-               user?.role === UserRole.CONTRACTOR ? 'Исполнитель' :
-               user?.role === UserRole.SERVICE_ENGINEER ? 'Сервисный инженер' :
-               user?.role === UserRole.MANAGER ? 'Менеджер' :
-               user?.role === UserRole.SECURITY ? 'Служба безопасности' :
-               user?.role === UserRole.HR ? 'Отдел кадров' : 'Пользователь'}
+            <Typography variant='caption' color='text.secondary'>
+              {user?.role === UserRole.ADMIN
+                ? 'Администратор'
+                : user?.role === UserRole.CUSTOMER
+                  ? 'Заказчик'
+                  : user?.role === UserRole.CONTRACTOR
+                    ? 'Исполнитель'
+                    : user?.role === UserRole.SERVICE_ENGINEER
+                      ? 'Сервисный инженер'
+                      : user?.role === UserRole.MANAGER
+                        ? 'Менеджер'
+                        : user?.role === UserRole.SECURITY
+                          ? 'Служба безопасности'
+                          : user?.role === UserRole.HR
+                            ? 'Отдел кадров'
+                            : 'Пользователь'}
             </Typography>
           </Box>
         </Box>
@@ -224,7 +233,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
       <AppBar
-        position="fixed"
+        position='fixed'
         sx={{
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           ml: { sm: `${drawerWidth}px` },
@@ -233,17 +242,19 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       >
         <Toolbar>
           <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            edge="start"
+            color='inherit'
+            aria-label='open drawer'
+            edge='start'
             onClick={handleDrawerToggle}
             sx={{ mr: 2 }}
           >
             <MenuIcon />
           </IconButton>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}>
-            <Logo size={32} color="#FCB813" />
-            <Typography variant="h6" noWrap component="div">
+          <Box
+            sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}
+          >
+            <Logo size={32} color='#FCB813' />
+            <Typography variant='h6' noWrap component='div'>
               AGB SERVICE
             </Typography>
           </Box>
@@ -251,12 +262,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       </AppBar>
 
       <Box
-        component="nav"
+        component='nav'
         sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
-        aria-label="mailbox folders"
+        aria-label='mailbox folders'
       >
         <Drawer
-          variant="temporary"
+          variant='temporary'
           open={mobileOpen}
           onClose={handleDrawerToggle}
           ModalProps={{
@@ -264,25 +275,31 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           }}
           sx={{
             display: { xs: 'block', sm: 'none' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            '& .MuiDrawer-paper': {
+              boxSizing: 'border-box',
+              width: drawerWidth,
+            },
           }}
         >
           {drawer}
         </Drawer>
         <Drawer
-          variant="permanent"
+          variant='permanent'
           sx={{
             display: { xs: 'none', sm: 'block' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            '& .MuiDrawer-paper': {
+              boxSizing: 'border-box',
+              width: drawerWidth,
+            },
           }}
           open
         >
           {drawer}
         </Drawer>
       </Box>
-      
+
       <Box
-        component="main"
+        component='main'
         sx={{
           flexGrow: 1,
           p: 3,
@@ -308,13 +325,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       >
         <MenuItem onClick={handleEditProfile}>
           <ListItemIcon>
-            <Edit fontSize="small" />
+            <Edit fontSize='small' />
           </ListItemIcon>
           <ListItemText>Изменить профиль</ListItemText>
         </MenuItem>
         <MenuItem onClick={handleLogoutClick}>
           <ListItemIcon>
-            <Logout fontSize="small" />
+            <Logout fontSize='small' />
           </ListItemIcon>
           <ListItemText>Выйти из профиля</ListItemText>
         </MenuItem>

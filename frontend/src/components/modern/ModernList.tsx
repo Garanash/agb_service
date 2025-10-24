@@ -46,8 +46,8 @@ interface ModernListProps {
 const ModernList: React.FC<ModernListProps> = ({
   title,
   items,
-  emptyMessage = "Нет элементов",
-  emptyIcon
+  emptyMessage = 'Нет элементов',
+  emptyIcon,
 }) => {
   return (
     <Card
@@ -56,15 +56,25 @@ const ModernList: React.FC<ModernListProps> = ({
         boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
         backdropFilter: 'blur(10px)',
         border: '1px solid rgba(255,255,255,0.2)',
-        background: 'rgba(255,255,255,0.9)'
+        background: 'rgba(255,255,255,0.9)',
       }}
     >
       <CardContent sx={{ p: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-          <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'text.primary' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            mb: 3,
+          }}
+        >
+          <Typography
+            variant='h6'
+            sx={{ fontWeight: 'bold', color: 'text.primary' }}
+          >
             {title}
           </Typography>
-          <Badge badgeContent={items.length} color="primary">
+          <Badge badgeContent={items.length} color='primary'>
             <Box />
           </Badge>
         </Box>
@@ -81,8 +91,8 @@ const ModernList: React.FC<ModernListProps> = ({
                   '&:hover': {
                     bgcolor: 'rgba(0,0,0,0.05)',
                     transform: 'translateY(-2px)',
-                    transition: 'all 0.2s ease-in-out'
-                  }
+                    transition: 'all 0.2s ease-in-out',
+                  },
                 }}
               >
                 {item.avatar && (
@@ -91,7 +101,7 @@ const ModernList: React.FC<ModernListProps> = ({
                       bgcolor: item.avatar.color || 'primary.main',
                       mr: 2,
                       width: 40,
-                      height: 40
+                      height: 40,
                     }}
                   >
                     {item.avatar.icon}
@@ -100,28 +110,53 @@ const ModernList: React.FC<ModernListProps> = ({
 
                 <ListItemText
                   primary={
-                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                    <Typography
+                      variant='subtitle1'
+                      sx={{ fontWeight: 'bold', mb: 0.5 }}
+                    >
                       {item.title}
                     </Typography>
                   }
                   secondary={
                     <Box>
                       {item.subtitle && (
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        <Typography
+                          variant='body2'
+                          color='text.secondary'
+                          sx={{ mb: 1 }}
+                        >
                           {item.subtitle}
                         </Typography>
                       )}
                       {item.description && (
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        <Typography
+                          variant='body2'
+                          color='text.secondary'
+                          sx={{ mb: 1 }}
+                        >
                           {item.description}
                         </Typography>
                       )}
                       {item.metadata && (
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 2,
+                            flexWrap: 'wrap',
+                          }}
+                        >
                           {item.metadata.map((meta, metaIndex) => (
-                            <Box key={metaIndex} sx={{ display: 'flex', alignItems: 'center' }}>
+                            <Box
+                              key={metaIndex}
+                              sx={{ display: 'flex', alignItems: 'center' }}
+                            >
                               {meta.icon}
-                              <Typography variant="caption" color="text.secondary" sx={{ ml: 0.5 }}>
+                              <Typography
+                                variant='caption'
+                                color='text.secondary'
+                                sx={{ ml: 0.5 }}
+                              >
                                 {meta.text}
                               </Typography>
                             </Box>
@@ -138,15 +173,15 @@ const ModernList: React.FC<ModernListProps> = ({
                       <Chip
                         label={item.status.label}
                         color={item.status.color}
-                        size="small"
+                        size='small'
                         sx={{
                           fontWeight: 'bold',
-                          borderRadius: 2
+                          borderRadius: 2,
                         }}
                       />
                     )}
                     {item.onAction && (
-                      <IconButton size="small" onClick={item.onAction}>
+                      <IconButton size='small' onClick={item.onAction}>
                         <MoreVert />
                       </IconButton>
                     )}
@@ -167,13 +202,13 @@ const ModernList: React.FC<ModernListProps> = ({
                       width: 64,
                       height: 64,
                       mx: 'auto',
-                      mb: 2
+                      mb: 2,
                     }}
                   >
                     {emptyIcon}
                   </Avatar>
                 )}
-                <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
+                <Typography variant='h6' color='text.secondary' sx={{ mb: 1 }}>
                   {emptyMessage}
                 </Typography>
               </Box>

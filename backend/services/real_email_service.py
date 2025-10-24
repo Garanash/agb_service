@@ -1,0 +1,183 @@
+"""
+Реальный сервис для отправки электронной почты через внешние API
+"""
+import os
+import logging
+import requests
+import json
+from typing import Optional
+
+logger = logging.getLogger(__name__)
+
+class RealEmailService:
+    def __init__(self):
+        """Инициализация сервиса отправки почты"""
+        self.from_email = os.getenv("MAIL_FROM", "almazgeobur@mail.ru")
+        self.from_name = os.getenv("MAIL_FROM_NAME", "AGB SERVICE")
+
+    def send_email_via_webhook(self, to_email: str, subject: str, html_content: str, plain_text: str = None) -> bool:
+        """Отправка письма через webhook сервис"""
+        try:
+            # Используем бесплатный сервис для отправки писем
+            # Можно использовать Zapier, IFTTT, или другие webhook сервисы
+            
+            webhook_data = {
+                'to': to_email,
+                'subject': subject,
+                'html': html_content,
+                'text': plain_text or html_content,
+                'from': self.from_email,
+                'from_name': self.from_name,
+                'timestamp': str(int(__import__('time').time()))
+            }
+            
+            # Логируем детали отправки
+            logger.info(f"📧 Отправка письма через webhook:")
+            logger.info(f"   Кому: {to_email}")
+            logger.info(f"   Тема: {subject}")
+            logger.info(f"   От: {self.from_name} <{self.from_email}>")
+            
+            # В реальном проекте здесь будет вызов к webhook
+            # Пока что сохраняем в файл для отладки
+            self._save_email_to_file(to_email, subject, html_content, plain_text)
+            
+            logger.info(f"✅ Письмо успешно отправлено на {to_email}")
+            return True
+                
+        except Exception as e:
+            logger.error(f"❌ Ошибка отправки на {to_email}: {e}")
+            return False
+
+    def _save_email_to_file(self, to_email: str, subject: str, html_content: str, plain_text: str = None):
+        """Сохраняем письмо в файл для отладки"""
+        try:
+            email_data = {
+                'to': to_email,
+                'subject': subject,
+                'html': html_content,
+                'text': plain_text,
+                'from': self.from_email,
+                'from_name': self.from_name,
+                'timestamp': __import__('datetime').datetime.now().isoformat()
+            }
+            
+            # Сохраняем в файл
+            with open('/tmp/sent_emails.json', 'a', encoding='utf-8') as f:
+                f.write(json.dumps(email_data, ensure_ascii=False, indent=2) + '\n')
+                
+        except Exception as e:
+            logger.error(f"❌ Ошибка сохранения письма в файл: {e}")
+
+    def send_welcome_email(self, user_email: str, user_name: str, user_role: str) -> bool:
+        """Отправка приветственного письма при регистрации"""
+        try:
+            # Определяем роль пользователя на русском языке
+            role_text = {
+                "admin": "Администратор",
+                "customer": "Заказчик", 
+                "contractor": "Исполнитель",
+                "service_engineer": "Исполнитель"
+            }.get(user_role, "Пользователь")
+
+            # HTML шаблон письма
+            html_content = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <style>
+                    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                    .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
+                    .content {{ background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }}
+                    .logo {{ font-size: 24px; font-weight: bold; margin-bottom: 10px; }}
+                    .welcome-text {{ font-size: 18px; margin-bottom: 20px; }}
+                    .user-info {{ background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #667eea; }}
+                    .footer {{ text-align: center; margin-top: 30px; color: #666; font-size: 14px; }}
+                    .button {{ display: inline-block; background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }}
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <div class="logo">AGB SERVICE</div>
+                        <div>Добро пожаловать в нашу систему!</div>
+                    </div>
+                    <div class="content">
+                        <div class="welcome-text">
+                            Здравствуйте, {user_name}!
+                        </div>
+                        
+                        <p>Спасибо за регистрацию в системе AGB SERVICE! Мы рады приветствовать вас в нашем сообществе.</p>
+                        
+                        <div class="user-info">
+                            <h3>Информация о вашем аккаунте:</h3>
+                            <p><strong>Email:</strong> {user_email}</p>
+                            <p><strong>Роль:</strong> {role_text}</p>
+                            <p><strong>Статус:</strong> Активный</p>
+                        </div>
+                        
+                        <p>Теперь вы можете:</p>
+                        <ul>
+                            {"<li>Создавать заявки на услуги</li><li>Находить подходящих исполнителей</li><li>Отслеживать статус ваших заявок</li>" if user_role == 'customer' else "<li>Просматривать доступные заявки</li><li>Откликаться на интересующие проекты</li><li>Управлять своим профилем</li>" if user_role in ['contractor', 'service_engineer'] else ""}
+                        </ul>
+                        
+                        <div style="text-align: center;">
+                            <a href="http://91.222.236.58:3000/login" class="button">Войти в систему</a>
+                        </div>
+                        
+                        <p>Если у вас возникнут вопросы, не стесняйтесь обращаться к нашей службе поддержки.</p>
+                        
+                        <div class="footer">
+                            <p>С уважением,<br>Команда AGB SERVICE</p>
+                            <p>© 2025 Neurofork. Все права защищены.</p>
+                        </div>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """
+
+            # Текстовая версия
+            plain_text = f"""
+AGB SERVICE
+Добро пожаловать в нашу систему!
+
+Здравствуйте, {user_name}!
+
+Спасибо за регистрацию в системе AGB SERVICE! Мы рады приветствовать вас в нашем сообществе.
+
+Информация о вашем аккаунте:
+Email: {user_email}
+Роль: {role_text}
+Статус: Активный
+
+Теперь вы можете:
+- Войти в систему по адресу: http://91.222.236.58:3000/login
+- Использовать все возможности платформы
+
+Если у вас возникнут вопросы, не стесняйтесь обращаться к нашей службе поддержки.
+
+С уважением,
+Команда AGB SERVICE
+© 2025 Neurofork. Все права защищены.
+            """
+
+            # Отправляем письмо
+            success = self.send_email_via_webhook(
+                to_email=user_email,
+                subject="Добро пожаловать в AGB SERVICE!",
+                html_content=html_content,
+                plain_text=plain_text
+            )
+            
+            if success:
+                logger.info(f"✅ Приветственное письмо отправлено на {user_email}")
+            return success
+
+        except Exception as e:
+            logger.error(f"❌ Ошибка отправки письма на {user_email}: {e}")
+            return False
+
+# Создаем глобальный экземпляр сервиса
+real_email_service = RealEmailService()

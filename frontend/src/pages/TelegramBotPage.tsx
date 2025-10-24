@@ -82,16 +82,20 @@ interface BulkNotificationResult {
 const TelegramBotPage: React.FC = () => {
   const { user } = useAuth();
   const [botInfo, setBotInfo] = useState<BotInfo | null>(null);
-  const [verifiedContractors, setVerifiedContractors] = useState<VerifiedContractor[]>([]);
+  const [verifiedContractors, setVerifiedContractors] = useState<
+    VerifiedContractor[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  
+
   // Диалоги
   const [notificationDialogOpen, setNotificationDialogOpen] = useState(false);
-  const [bulkNotificationDialogOpen, setBulkNotificationDialogOpen] = useState(false);
+  const [bulkNotificationDialogOpen, setBulkNotificationDialogOpen] =
+    useState(false);
   const [testDialogOpen, setTestDialogOpen] = useState(false);
-  const [selectedContractor, setSelectedContractor] = useState<VerifiedContractor | null>(null);
+  const [selectedContractor, setSelectedContractor] =
+    useState<VerifiedContractor | null>(null);
   const [notificationMessage, setNotificationMessage] = useState('');
   const [bulkMessage, setBulkMessage] = useState('');
   const [selectedContractors, setSelectedContractors] = useState<number[]>([]);
@@ -104,17 +108,18 @@ const TelegramBotPage: React.FC = () => {
   const loadTelegramData = async () => {
     try {
       setLoading(true);
-      
+
       const [botInfoData, contractorsData] = await Promise.all([
         apiService.getBotInfo(),
-        apiService.getVerifiedContractorsForNotifications()
+        apiService.getVerifiedContractorsForNotifications(),
       ]);
-      
+
       setBotInfo(botInfoData);
       setVerifiedContractors(contractorsData);
-      
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Ошибка загрузки данных Telegram бота');
+      setError(
+        err.response?.data?.detail || 'Ошибка загрузки данных Telegram бота',
+      );
     } finally {
       setLoading(false);
     }
@@ -122,16 +127,21 @@ const TelegramBotPage: React.FC = () => {
 
   const handleSendNotification = async () => {
     if (!selectedContractor || !notificationMessage.trim()) return;
-    
+
     try {
-      await apiService.sendNotificationToContractor(selectedContractor.contractor_id, {
-        message: notificationMessage
-      });
-      
+      await apiService.sendNotificationToContractor(
+        selectedContractor.contractor_id,
+        {
+          message: notificationMessage,
+        },
+      );
+
       setNotificationDialogOpen(false);
       setNotificationMessage('');
       setSelectedContractor(null);
-      setSuccess(`Уведомление отправлено исполнителю ${selectedContractor.name}`);
+      setSuccess(
+        `Уведомление отправлено исполнителю ${selectedContractor.name}`,
+      );
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Ошибка отправки уведомления');
     }
@@ -139,17 +149,21 @@ const TelegramBotPage: React.FC = () => {
 
   const handleSendBulkNotification = async () => {
     if (!bulkMessage.trim()) return;
-    
+
     try {
-      const result: BulkNotificationResult = await apiService.sendBulkNotification({
-        message: bulkMessage,
-        contractor_ids: selectedContractors.length > 0 ? selectedContractors : undefined
-      });
-      
+      const result: BulkNotificationResult =
+        await apiService.sendBulkNotification({
+          message: bulkMessage,
+          contractor_ids:
+            selectedContractors.length > 0 ? selectedContractors : undefined,
+        });
+
       setBulkNotificationDialogOpen(false);
       setBulkMessage('');
       setSelectedContractors([]);
-      setSuccess(`Массовая отправка завершена: ${result.successful}/${result.total} успешно`);
+      setSuccess(
+        `Массовая отправка завершена: ${result.successful}/${result.total} успешно`,
+      );
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Ошибка массовой отправки');
     }
@@ -167,25 +181,30 @@ const TelegramBotPage: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     const colors: { [key: string]: string } = {
-      'available': 'success',
-      'busy': 'warning',
-      'blocked': 'error'
+      available: 'success',
+      busy: 'warning',
+      blocked: 'error',
     };
     return colors[status] || 'default';
   };
 
   const getStatusText = (status: string) => {
     const texts: { [key: string]: string } = {
-      'available': 'Доступен',
-      'busy': 'Занят',
-      'blocked': 'Заблокирован'
+      available: 'Доступен',
+      busy: 'Занят',
+      blocked: 'Заблокирован',
     };
     return texts[status] || status;
   };
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <Box
+        display='flex'
+        justifyContent='center'
+        alignItems='center'
+        minHeight='400px'
+      >
         <CircularProgress />
       </Box>
     );
@@ -193,18 +212,22 @@ const TelegramBotPage: React.FC = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom>
+      <Typography variant='h4' gutterBottom>
         Telegram бот
       </Typography>
-      
+
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+        <Alert severity='error' sx={{ mb: 2 }} onClose={() => setError(null)}>
           {error}
         </Alert>
       )}
 
       {success && (
-        <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess(null)}>
+        <Alert
+          severity='success'
+          sx={{ mb: 2 }}
+          onClose={() => setSuccess(null)}
+        >
           {success}
         </Alert>
       )}
@@ -212,28 +235,35 @@ const TelegramBotPage: React.FC = () => {
       {/* Статус бота */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
-          <Box display="flex" alignItems="center" justifyContent="space-between">
-            <Box display="flex" alignItems="center">
-              <Telegram color={botInfo?.bot_configured ? "success" : "error"} sx={{ mr: 2 }} />
+          <Box
+            display='flex'
+            alignItems='center'
+            justifyContent='space-between'
+          >
+            <Box display='flex' alignItems='center'>
+              <Telegram
+                color={botInfo?.bot_configured ? 'success' : 'error'}
+                sx={{ mr: 2 }}
+              />
               <Box>
-                <Typography variant="h6">
-                  Статус Telegram бота
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {botInfo?.bot_configured ? 'Настроен и готов к работе' : 'Не настроен'}
+                <Typography variant='h6'>Статус Telegram бота</Typography>
+                <Typography variant='body2' color='text.secondary'>
+                  {botInfo?.bot_configured
+                    ? 'Настроен и готов к работе'
+                    : 'Не настроен'}
                 </Typography>
               </Box>
             </Box>
-            <Box display="flex" gap={1}>
+            <Box display='flex' gap={1}>
               <Button
-                variant="outlined"
+                variant='outlined'
                 startIcon={<Settings />}
                 onClick={handleTestConnection}
               >
                 Тестировать подключение
               </Button>
               <Button
-                variant="contained"
+                variant='contained'
                 startIcon={<Notifications />}
                 onClick={() => setBulkNotificationDialogOpen(true)}
                 disabled={!botInfo?.bot_configured}
@@ -242,32 +272,33 @@ const TelegramBotPage: React.FC = () => {
               </Button>
             </Box>
           </Box>
-          
+
           {botInfo?.bot_info && (
             <Box sx={{ mt: 2 }}>
               <Grid container spacing={2}>
                 <Grid item xs={12} md={6}>
-                  <Typography variant="body2">
+                  <Typography variant='body2'>
                     <strong>Имя бота:</strong> {botInfo.bot_info.first_name}
                   </Typography>
-                  <Typography variant="body2">
+                  <Typography variant='body2'>
                     <strong>Username:</strong> @{botInfo.bot_info.username}
                   </Typography>
                 </Grid>
                 <Grid item xs={12} md={6}>
-                  <Typography variant="body2">
+                  <Typography variant='body2'>
                     <strong>ID:</strong> {botInfo.bot_info.id}
                   </Typography>
-                  <Typography variant="body2">
-                    <strong>Чат настроен:</strong> {botInfo.chat_configured ? 'Да' : 'Нет'}
+                  <Typography variant='body2'>
+                    <strong>Чат настроен:</strong>{' '}
+                    {botInfo.chat_configured ? 'Да' : 'Нет'}
                   </Typography>
                 </Grid>
               </Grid>
             </Box>
           )}
-          
+
           {botInfo?.error && (
-            <Alert severity="error" sx={{ mt: 2 }}>
+            <Alert severity='error' sx={{ mt: 2 }}>
               {botInfo.error}
             </Alert>
           )}
@@ -277,12 +308,17 @@ const TelegramBotPage: React.FC = () => {
       {/* Проверенные исполнители */}
       <Card>
         <CardContent>
-          <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
-            <Typography variant="h6">
+          <Box
+            display='flex'
+            alignItems='center'
+            justifyContent='space-between'
+            mb={2}
+          >
+            <Typography variant='h6'>
               Исполнители с Telegram ({verifiedContractors.length})
             </Typography>
             <Button
-              variant="outlined"
+              variant='outlined'
               startIcon={<Message />}
               onClick={() => setBulkNotificationDialogOpen(true)}
               disabled={verifiedContractors.length === 0}
@@ -290,7 +326,7 @@ const TelegramBotPage: React.FC = () => {
               Отправить всем
             </Button>
           </Box>
-          
+
           <TableContainer component={Paper}>
             <Table>
               <TableHead>
@@ -304,45 +340,55 @@ const TelegramBotPage: React.FC = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {verifiedContractors.map((contractor) => (
+                {verifiedContractors.map(contractor => (
                   <TableRow key={contractor.contractor_id}>
                     <TableCell>
-                      <Typography variant="subtitle2">
+                      <Typography variant='subtitle2'>
                         {contractor.name}
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body2">
+                      <Typography variant='body2'>
                         @{contractor.telegram_username}
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body2">
+                      <Typography variant='body2'>
                         {contractor.phone}
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography variant='body2' color='text.secondary'>
                         {contractor.email}
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      {contractor.specializations.slice(0, 2).map((spec) => (
-                        <Chip key={spec} label={spec} size="small" sx={{ mr: 1, mb: 1 }} />
+                      {contractor.specializations.slice(0, 2).map(spec => (
+                        <Chip
+                          key={spec}
+                          label={spec}
+                          size='small'
+                          sx={{ mr: 1, mb: 1 }}
+                        />
                       ))}
                       {contractor.specializations.length > 2 && (
-                        <Chip label={`+${contractor.specializations.length - 2}`} size="small" />
+                        <Chip
+                          label={`+${contractor.specializations.length - 2}`}
+                          size='small'
+                        />
                       )}
                     </TableCell>
                     <TableCell>
                       <Chip
                         label={getStatusText(contractor.availability_status)}
-                        color={getStatusColor(contractor.availability_status) as any}
-                        size="small"
+                        color={
+                          getStatusColor(contractor.availability_status) as any
+                        }
+                        size='small'
                       />
                     </TableCell>
                     <TableCell>
-                      <Tooltip title="Отправить уведомление">
+                      <Tooltip title='Отправить уведомление'>
                         <IconButton
-                          size="small"
+                          size='small'
                           onClick={() => {
                             setSelectedContractor(contractor);
                             setNotificationDialogOpen(true);
@@ -361,36 +407,43 @@ const TelegramBotPage: React.FC = () => {
       </Card>
 
       {/* Диалог отправки уведомления */}
-      <Dialog open={notificationDialogOpen} onClose={() => setNotificationDialogOpen(false)} maxWidth="md" fullWidth>
+      <Dialog
+        open={notificationDialogOpen}
+        onClose={() => setNotificationDialogOpen(false)}
+        maxWidth='md'
+        fullWidth
+      >
         <DialogTitle>Отправить уведомление</DialogTitle>
         <DialogContent>
           {selectedContractor && (
             <Box sx={{ mb: 2 }}>
-              <Typography variant="subtitle1" gutterBottom>
+              <Typography variant='subtitle1' gutterBottom>
                 Исполнитель: {selectedContractor.name}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant='body2' color='text.secondary'>
                 Telegram: @{selectedContractor.telegram_username}
               </Typography>
             </Box>
           )}
-          
+
           <TextField
             fullWidth
             multiline
             rows={4}
-            label="Сообщение"
+            label='Сообщение'
             value={notificationMessage}
-            onChange={(e) => setNotificationMessage(e.target.value)}
-            placeholder="Введите текст уведомления..."
+            onChange={e => setNotificationMessage(e.target.value)}
+            placeholder='Введите текст уведомления...'
             sx={{ mt: 2 }}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setNotificationDialogOpen(false)}>Отмена</Button>
+          <Button onClick={() => setNotificationDialogOpen(false)}>
+            Отмена
+          </Button>
           <Button
             onClick={handleSendNotification}
-            variant="contained"
+            variant='contained'
             disabled={!notificationMessage.trim()}
           >
             Отправить
@@ -399,48 +452,61 @@ const TelegramBotPage: React.FC = () => {
       </Dialog>
 
       {/* Диалог массовой отправки */}
-      <Dialog open={bulkNotificationDialogOpen} onClose={() => setBulkNotificationDialogOpen(false)} maxWidth="md" fullWidth>
+      <Dialog
+        open={bulkNotificationDialogOpen}
+        onClose={() => setBulkNotificationDialogOpen(false)}
+        maxWidth='md'
+        fullWidth
+      >
         <DialogTitle>Массовая отправка уведомлений</DialogTitle>
         <DialogContent>
-          <FormControl fullWidth margin="dense">
+          <FormControl fullWidth margin='dense'>
             <InputLabel>Получатели</InputLabel>
             <Select
               multiple
               value={selectedContractors}
-              onChange={(e) => setSelectedContractors(e.target.value as number[])}
-              label="Получатели"
+              onChange={e => setSelectedContractors(e.target.value as number[])}
+              label='Получатели'
             >
-              {verifiedContractors.map((contractor) => (
-                <MenuItem key={contractor.contractor_id} value={contractor.contractor_id}>
+              {verifiedContractors.map(contractor => (
+                <MenuItem
+                  key={contractor.contractor_id}
+                  value={contractor.contractor_id}
+                >
                   {contractor.name} (@{contractor.telegram_username})
                 </MenuItem>
               ))}
             </Select>
           </FormControl>
-          
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 2 }}>
-            {selectedContractors.length === 0 
+
+          <Typography
+            variant='body2'
+            color='text.secondary'
+            sx={{ mt: 1, mb: 2 }}
+          >
+            {selectedContractors.length === 0
               ? 'Если не выбраны получатели, сообщение будет отправлено всем исполнителям'
-              : `Выбрано получателей: ${selectedContractors.length}`
-            }
+              : `Выбрано получателей: ${selectedContractors.length}`}
           </Typography>
-          
+
           <TextField
             fullWidth
             multiline
             rows={4}
-            label="Сообщение"
+            label='Сообщение'
             value={bulkMessage}
-            onChange={(e) => setBulkMessage(e.target.value)}
-            placeholder="Введите текст для массовой отправки..."
+            onChange={e => setBulkMessage(e.target.value)}
+            placeholder='Введите текст для массовой отправки...'
             sx={{ mt: 2 }}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setBulkNotificationDialogOpen(false)}>Отмена</Button>
+          <Button onClick={() => setBulkNotificationDialogOpen(false)}>
+            Отмена
+          </Button>
           <Button
             onClick={handleSendBulkNotification}
-            variant="contained"
+            variant='contained'
             disabled={!bulkMessage.trim()}
           >
             Отправить всем
@@ -449,38 +515,44 @@ const TelegramBotPage: React.FC = () => {
       </Dialog>
 
       {/* Диалог тестирования подключения */}
-      <Dialog open={testDialogOpen} onClose={() => setTestDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog
+        open={testDialogOpen}
+        onClose={() => setTestDialogOpen(false)}
+        maxWidth='sm'
+        fullWidth
+      >
         <DialogTitle>Тестирование подключения к Telegram боту</DialogTitle>
         <DialogContent>
           {testResult && (
             <Box>
               {testResult.success ? (
-                <Alert severity="success" sx={{ mb: 2 }}>
-                  <Typography variant="h6">✅ Подключение успешно!</Typography>
+                <Alert severity='success' sx={{ mb: 2 }}>
+                  <Typography variant='h6'>✅ Подключение успешно!</Typography>
                 </Alert>
               ) : (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                  <Typography variant="h6">❌ Ошибка подключения</Typography>
-                  <Typography variant="body2">{testResult.error}</Typography>
+                <Alert severity='error' sx={{ mb: 2 }}>
+                  <Typography variant='h6'>❌ Ошибка подключения</Typography>
+                  <Typography variant='body2'>{testResult.error}</Typography>
                 </Alert>
               )}
-              
+
               {testResult.bot_info && (
                 <Box>
-                  <Typography variant="subtitle1" gutterBottom>
+                  <Typography variant='subtitle1' gutterBottom>
                     Информация о боте:
                   </Typography>
-                  <Typography variant="body2">
+                  <Typography variant='body2'>
                     <strong>ID:</strong> {testResult.bot_info.id}
                   </Typography>
-                  <Typography variant="body2">
+                  <Typography variant='body2'>
                     <strong>Имя:</strong> {testResult.bot_info.first_name}
                   </Typography>
-                  <Typography variant="body2">
+                  <Typography variant='body2'>
                     <strong>Username:</strong> @{testResult.bot_info.username}
                   </Typography>
-                  <Typography variant="body2">
-                    <strong>Может присоединяться к группам:</strong> {testResult.bot_info.can_join_groups ? 'Да' : 'Нет'}
+                  <Typography variant='body2'>
+                    <strong>Может присоединяться к группам:</strong>{' '}
+                    {testResult.bot_info.can_join_groups ? 'Да' : 'Нет'}
                   </Typography>
                 </Box>
               )}

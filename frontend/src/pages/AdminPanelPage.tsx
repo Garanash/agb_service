@@ -724,9 +724,7 @@ const AdminPanelPage: React.FC = () => {
                       alignItems='center'
                       mb={1}
                     >
-                        <Typography variant='body2'>
-                          {status}
-                        </Typography>
+                      <Typography variant='body2'>{status}</Typography>
                       <Box display='flex' alignItems='center' width='60%'>
                         <LinearProgress
                           variant='determinate'

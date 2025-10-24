@@ -14,7 +14,7 @@ const LoadingSpinner: React.FC = () => {
       }}
     >
       <CircularProgress size={60} />
-      <Typography variant="h6" color="text.secondary">
+      <Typography variant='h6' color='text.secondary'>
         Загрузка...
       </Typography>
     </Box>

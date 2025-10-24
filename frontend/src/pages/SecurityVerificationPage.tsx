@@ -132,7 +132,7 @@ function TabPanel(props: TabPanelProps) {
   const { children, value, index, ...other } = props;
   return (
     <div
-      role="tabpanel"
+      role='tabpanel'
       hidden={value !== index}
       id={`security-tabpanel-${index}`}
       aria-labelledby={`security-tab-${index}`}
@@ -145,19 +145,22 @@ function TabPanel(props: TabPanelProps) {
 
 const SecurityVerificationPage: React.FC = () => {
   const { user } = useAuth();
-  const [pendingVerifications, setPendingVerifications] = useState<PendingVerification[]>([]);
+  const [pendingVerifications, setPendingVerifications] = useState<
+    PendingVerification[]
+  >([]);
   const [verifiedContractors, setVerifiedContractors] = useState<any[]>([]);
   const [rejectedContractors, setRejectedContractors] = useState<any[]>([]);
   const [stats, setStats] = useState<SecurityStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tabValue, setTabValue] = useState(0);
-  
+
   // Диалоги
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [approvalDialogOpen, setApprovalDialogOpen] = useState(false);
   const [rejectionDialogOpen, setRejectionDialogOpen] = useState(false);
-  const [selectedContractor, setSelectedContractor] = useState<ContractorDetails | null>(null);
+  const [selectedContractor, setSelectedContractor] =
+    useState<ContractorDetails | null>(null);
   const [verificationNotes, setVerificationNotes] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
 
@@ -168,21 +171,24 @@ const SecurityVerificationPage: React.FC = () => {
   const loadSecurityData = async () => {
     try {
       setLoading(true);
-      
-      const [pendingData, verifiedData, rejectedData, statsData] = await Promise.all([
-        apiService.getPendingVerifications(),
-        apiService.getVerifiedContractors(),
-        apiService.getRejectedContractors(),
-        apiService.getSecurityStatistics()
-      ]);
-      
+
+      const [pendingData, verifiedData, rejectedData, statsData] =
+        await Promise.all([
+          apiService.getPendingVerifications(),
+          apiService.getVerifiedContractors(),
+          apiService.getRejectedContractors(),
+          apiService.getSecurityStatistics(),
+        ]);
+
       setPendingVerifications(pendingData);
       setVerifiedContractors(verifiedData);
       setRejectedContractors(rejectedData);
       setStats(statsData);
-      
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Ошибка загрузки данных службы безопасности');
+      setError(
+        err.response?.data?.detail ||
+          'Ошибка загрузки данных службы безопасности',
+      );
     } finally {
       setLoading(false);
     }
@@ -194,18 +200,20 @@ const SecurityVerificationPage: React.FC = () => {
       setSelectedContractor(details);
       setDetailsDialogOpen(true);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Ошибка загрузки деталей исполнителя');
+      setError(
+        err.response?.data?.detail || 'Ошибка загрузки деталей исполнителя',
+      );
     }
   };
 
   const handleApproveContractor = async () => {
     if (!selectedContractor) return;
-    
+
     try {
       await apiService.approveContractor(selectedContractor.contractor_id, {
-        verification_notes: verificationNotes
+        verification_notes: verificationNotes,
       });
-      
+
       setApprovalDialogOpen(false);
       setVerificationNotes('');
       setSelectedContractor(null);
@@ -217,12 +225,12 @@ const SecurityVerificationPage: React.FC = () => {
 
   const handleRejectContractor = async () => {
     if (!selectedContractor || !rejectionReason.trim()) return;
-    
+
     try {
       await apiService.rejectContractor(selectedContractor.contractor_id, {
-        verification_notes: rejectionReason
+        verification_notes: rejectionReason,
       });
-      
+
       setRejectionDialogOpen(false);
       setRejectionReason('');
       setSelectedContractor(null);
@@ -234,27 +242,32 @@ const SecurityVerificationPage: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     const colors: { [key: string]: string } = {
-      'pending': 'warning',
-      'approved': 'success',
-      'rejected': 'error',
-      'not_verified': 'default'
+      pending: 'warning',
+      approved: 'success',
+      rejected: 'error',
+      not_verified: 'default',
     };
     return colors[status] || 'default';
   };
 
   const getStatusText = (status: string) => {
     const texts: { [key: string]: string } = {
-      'pending': 'Ожидает проверки',
-      'approved': 'Одобрен',
-      'rejected': 'Отклонен',
-      'not_verified': 'Не проверен'
+      pending: 'Ожидает проверки',
+      approved: 'Одобрен',
+      rejected: 'Отклонен',
+      not_verified: 'Не проверен',
     };
     return texts[status] || status;
   };
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <Box
+        display='flex'
+        justifyContent='center'
+        alignItems='center'
+        minHeight='400px'
+      >
         <CircularProgress />
       </Box>
     );
@@ -262,12 +275,12 @@ const SecurityVerificationPage: React.FC = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom>
+      <Typography variant='h4' gutterBottom>
         Служба безопасности
       </Typography>
-      
+
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+        <Alert severity='error' sx={{ mb: 2 }} onClose={() => setError(null)}>
           {error}
         </Alert>
       )}
@@ -278,15 +291,21 @@ const SecurityVerificationPage: React.FC = () => {
           <Grid item xs={12} sm={6} md={3}>
             <Card>
               <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
                   <Box>
-                    <Typography variant="h4" component="div">
+                    <Typography variant='h4' component='div'>
                       {stats.total_verifications}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant='body2' color='text.secondary'>
                       Всего проверок
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant='caption' color='text.secondary'>
                       За все время
                     </Typography>
                   </Box>
@@ -299,15 +318,21 @@ const SecurityVerificationPage: React.FC = () => {
           <Grid item xs={12} sm={6} md={3}>
             <Card>
               <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
                   <Box>
-                    <Typography variant="h4" component="div">
+                    <Typography variant='h4' component='div'>
                       {stats.pending_count}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant='body2' color='text.secondary'>
                       Ожидают проверки
                     </Typography>
-                    <Typography variant="caption" color="warning.main">
+                    <Typography variant='caption' color='warning.main'>
                       Требуют внимания
                     </Typography>
                   </Box>
@@ -320,15 +345,21 @@ const SecurityVerificationPage: React.FC = () => {
           <Grid item xs={12} sm={6} md={3}>
             <Card>
               <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
                   <Box>
-                    <Typography variant="h4" component="div">
+                    <Typography variant='h4' component='div'>
                       {stats.approved_count}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant='body2' color='text.secondary'>
                       Одобрено
                     </Typography>
-                    <Typography variant="caption" color="success.main">
+                    <Typography variant='caption' color='success.main'>
                       Проверены
                     </Typography>
                   </Box>
@@ -341,15 +372,21 @@ const SecurityVerificationPage: React.FC = () => {
           <Grid item xs={12} sm={6} md={3}>
             <Card>
               <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
                   <Box>
-                    <Typography variant="h4" component="div">
+                    <Typography variant='h4' component='div'>
                       {stats.approval_rate}%
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant='body2' color='text.secondary'>
                       Процент одобрения
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant='caption' color='text.secondary'>
                       Эффективность
                     </Typography>
                   </Box>
@@ -363,7 +400,10 @@ const SecurityVerificationPage: React.FC = () => {
 
       {/* Табы */}
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-        <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)}>
+        <Tabs
+          value={tabValue}
+          onChange={(e, newValue) => setTabValue(newValue)}
+        >
           <Tab label={`Ожидают проверки (${pendingVerifications.length})`} />
           <Tab label={`Одобренные (${verifiedContractors.length})`} />
           <Tab label={`Отклоненные (${rejectedContractors.length})`} />
@@ -387,60 +427,103 @@ const SecurityVerificationPage: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {pendingVerifications.map((verification) => (
+              {pendingVerifications.map(verification => (
                 <TableRow key={verification.id}>
                   <TableCell>
-                    <Typography variant="subtitle2">
-                      {verification.contractor?.first_name} {verification.contractor?.last_name}
+                    <Typography variant='subtitle2'>
+                      {verification.contractor?.first_name}{' '}
+                      {verification.contractor?.last_name}
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2">
+                    <Typography variant='body2'>
                       {verification.contractor?.phone}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant='body2' color='text.secondary'>
                       {verification.contractor?.email}
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    {verification.contractor?.specializations?.slice(0, 2).map((spec) => (
-                      <Chip key={spec} label={spec} size="small" sx={{ mr: 1, mb: 1 }} />
-                    ))}
-                    {verification.contractor?.specializations && verification.contractor.specializations.length > 2 && (
-                      <Chip label={`+${verification.contractor.specializations.length - 2}`} size="small" />
-                    )}
+                    {verification.contractor?.specializations
+                      ?.slice(0, 2)
+                      .map(spec => (
+                        <Chip
+                          key={spec}
+                          label={spec}
+                          size='small'
+                          sx={{ mr: 1, mb: 1 }}
+                        />
+                      ))}
+                    {verification.contractor?.specializations &&
+                      verification.contractor.specializations.length > 2 && (
+                        <Chip
+                          label={`+${verification.contractor.specializations.length - 2}`}
+                          size='small'
+                        />
+                      )}
                   </TableCell>
                   <TableCell>
-                    {verification.contractor?.equipment_brands_experience?.slice(0, 2).map((brand) => (
-                      <Chip key={brand} label={brand} size="small" color="secondary" sx={{ mr: 1, mb: 1 }} />
-                    ))}
-                    {verification.contractor?.equipment_brands_experience && verification.contractor.equipment_brands_experience.length > 2 && (
-                      <Chip label={`+${verification.contractor.equipment_brands_experience.length - 2}`} size="small" color="secondary" />
-                    )}
+                    {verification.contractor?.equipment_brands_experience
+                      ?.slice(0, 2)
+                      .map(brand => (
+                        <Chip
+                          key={brand}
+                          label={brand}
+                          size='small'
+                          color='secondary'
+                          sx={{ mr: 1, mb: 1 }}
+                        />
+                      ))}
+                    {verification.contractor?.equipment_brands_experience &&
+                      verification.contractor.equipment_brands_experience
+                        .length > 2 && (
+                        <Chip
+                          label={`+${verification.contractor.equipment_brands_experience.length - 2}`}
+                          size='small'
+                          color='secondary'
+                        />
+                      )}
                   </TableCell>
                   <TableCell>
-                    {verification.contractor?.work_regions?.slice(0, 2).map((region) => (
-                      <Chip key={region} label={region} size="small" color="info" sx={{ mr: 1, mb: 1 }} />
-                    ))}
-                    {verification.contractor?.work_regions && verification.contractor.work_regions.length > 2 && (
-                      <Chip label={`+${verification.contractor.work_regions.length - 2}`} size="small" color="info" />
-                    )}
+                    {verification.contractor?.work_regions
+                      ?.slice(0, 2)
+                      .map(region => (
+                        <Chip
+                          key={region}
+                          label={region}
+                          size='small'
+                          color='info'
+                          sx={{ mr: 1, mb: 1 }}
+                        />
+                      ))}
+                    {verification.contractor?.work_regions &&
+                      verification.contractor.work_regions.length > 2 && (
+                        <Chip
+                          label={`+${verification.contractor.work_regions.length - 2}`}
+                          size='small'
+                          color='info'
+                        />
+                      )}
                   </TableCell>
                   <TableCell>
                     <Chip
                       label={getStatusText(verification.verification_status)}
-                      color={getStatusColor(verification.verification_status) as any}
-                      size="small"
+                      color={
+                        getStatusColor(verification.verification_status) as any
+                      }
+                      size='small'
                     />
                   </TableCell>
                   <TableCell>
                     {new Date(verification.created_at).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
-                    <Tooltip title="Просмотреть детали">
+                    <Tooltip title='Просмотреть детали'>
                       <IconButton
-                        size="small"
-                        onClick={() => handleViewDetails(verification.contractor_id)}
+                        size='small'
+                        onClick={() =>
+                          handleViewDetails(verification.contractor_id)
+                        }
                       >
                         <Visibility />
                       </IconButton>
@@ -469,53 +552,88 @@ const SecurityVerificationPage: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {verifiedContractors.map((contractor) => (
+              {verifiedContractors.map(contractor => (
                 <TableRow key={contractor.contractor_id}>
                   <TableCell>
-                    <Typography variant="subtitle2">
+                    <Typography variant='subtitle2'>
                       {contractor.name}
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2">
-                      {contractor.phone}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant='body2'>{contractor.phone}</Typography>
+                    <Typography variant='body2' color='text.secondary'>
                       {contractor.email}
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    {contractor.specializations?.slice(0, 2).map((spec) => (
-                      <Chip key={spec} label={spec} size="small" sx={{ mr: 1, mb: 1 }} />
+                    {contractor.specializations?.slice(0, 2).map(spec => (
+                      <Chip
+                        key={spec}
+                        label={spec}
+                        size='small'
+                        sx={{ mr: 1, mb: 1 }}
+                      />
                     ))}
-                    {contractor.specializations && contractor.specializations.length > 2 && (
-                      <Chip label={`+${contractor.specializations.length - 2}`} size="small" />
-                    )}
+                    {contractor.specializations &&
+                      contractor.specializations.length > 2 && (
+                        <Chip
+                          label={`+${contractor.specializations.length - 2}`}
+                          size='small'
+                        />
+                      )}
                   </TableCell>
                   <TableCell>
-                    {contractor.equipment_brands_experience?.slice(0, 2).map((brand) => (
-                      <Chip key={brand} label={brand} size="small" color="secondary" sx={{ mr: 1, mb: 1 }} />
+                    {contractor.equipment_brands_experience
+                      ?.slice(0, 2)
+                      .map(brand => (
+                        <Chip
+                          key={brand}
+                          label={brand}
+                          size='small'
+                          color='secondary'
+                          sx={{ mr: 1, mb: 1 }}
+                        />
+                      ))}
+                    {contractor.equipment_brands_experience &&
+                      contractor.equipment_brands_experience.length > 2 && (
+                        <Chip
+                          label={`+${contractor.equipment_brands_experience.length - 2}`}
+                          size='small'
+                          color='secondary'
+                        />
+                      )}
+                  </TableCell>
+                  <TableCell>
+                    {contractor.work_regions?.slice(0, 2).map(region => (
+                      <Chip
+                        key={region}
+                        label={region}
+                        size='small'
+                        color='info'
+                        sx={{ mr: 1, mb: 1 }}
+                      />
                     ))}
-                    {contractor.equipment_brands_experience && contractor.equipment_brands_experience.length > 2 && (
-                      <Chip label={`+${contractor.equipment_brands_experience.length - 2}`} size="small" color="secondary" />
-                    )}
+                    {contractor.work_regions &&
+                      contractor.work_regions.length > 2 && (
+                        <Chip
+                          label={`+${contractor.work_regions.length - 2}`}
+                          size='small'
+                          color='info'
+                        />
+                      )}
                   </TableCell>
                   <TableCell>
-                    {contractor.work_regions?.slice(0, 2).map((region) => (
-                      <Chip key={region} label={region} size="small" color="info" sx={{ mr: 1, mb: 1 }} />
-                    ))}
-                    {contractor.work_regions && contractor.work_regions.length > 2 && (
-                      <Chip label={`+${contractor.work_regions.length - 2}`} size="small" color="info" />
-                    )}
+                    {contractor.verified_at
+                      ? new Date(contractor.verified_at).toLocaleDateString()
+                      : 'Неизвестно'}
                   </TableCell>
                   <TableCell>
-                    {contractor.verified_at ? new Date(contractor.verified_at).toLocaleDateString() : 'Неизвестно'}
-                  </TableCell>
-                  <TableCell>
-                    <Tooltip title="Просмотреть детали">
+                    <Tooltip title='Просмотреть детали'>
                       <IconButton
-                        size="small"
-                        onClick={() => handleViewDetails(contractor.contractor_id)}
+                        size='small'
+                        onClick={() =>
+                          handleViewDetails(contractor.contractor_id)
+                        }
                       >
                         <Visibility />
                       </IconButton>
@@ -542,34 +660,36 @@ const SecurityVerificationPage: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {rejectedContractors.map((contractor) => (
+              {rejectedContractors.map(contractor => (
                 <TableRow key={contractor.contractor_id}>
                   <TableCell>
-                    <Typography variant="subtitle2">
+                    <Typography variant='subtitle2'>
                       {contractor.name}
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2">
-                      {contractor.phone}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant='body2'>{contractor.phone}</Typography>
+                    <Typography variant='body2' color='text.secondary'>
                       {contractor.email}
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2" color="error">
+                    <Typography variant='body2' color='error'>
                       {contractor.rejection_reason || 'Не указана'}
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    {contractor.rejected_at ? new Date(contractor.rejected_at).toLocaleDateString() : 'Неизвестно'}
+                    {contractor.rejected_at
+                      ? new Date(contractor.rejected_at).toLocaleDateString()
+                      : 'Неизвестно'}
                   </TableCell>
                   <TableCell>
-                    <Tooltip title="Просмотреть детали">
+                    <Tooltip title='Просмотреть детали'>
                       <IconButton
-                        size="small"
-                        onClick={() => handleViewDetails(contractor.contractor_id)}
+                        size='small'
+                        onClick={() =>
+                          handleViewDetails(contractor.contractor_id)
+                        }
                       >
                         <Visibility />
                       </IconButton>
@@ -583,28 +703,48 @@ const SecurityVerificationPage: React.FC = () => {
       </TabPanel>
 
       {/* Диалог деталей исполнителя */}
-      <Dialog open={detailsDialogOpen} onClose={() => setDetailsDialogOpen(false)} maxWidth="md" fullWidth>
+      <Dialog
+        open={detailsDialogOpen}
+        onClose={() => setDetailsDialogOpen(false)}
+        maxWidth='md'
+        fullWidth
+      >
         <DialogTitle>Детальная информация об исполнителе</DialogTitle>
         <DialogContent>
           {selectedContractor && (
             <Box>
               <Accordion defaultExpanded>
                 <AccordionSummary expandIcon={<ExpandMore />}>
-                  <Typography variant="h6">Личная информация</Typography>
+                  <Typography variant='h6'>Личная информация</Typography>
                 </AccordionSummary>
                 <AccordionDetails>
                   <Grid container spacing={2}>
                     <Grid item xs={12} md={6}>
-                      <Typography variant="body2"><strong>ФИО:</strong> {selectedContractor.personal_info.first_name} {selectedContractor.personal_info.last_name} {selectedContractor.personal_info.patronymic}</Typography>
+                      <Typography variant='body2'>
+                        <strong>ФИО:</strong>{' '}
+                        {selectedContractor.personal_info.first_name}{' '}
+                        {selectedContractor.personal_info.last_name}{' '}
+                        {selectedContractor.personal_info.patronymic}
+                      </Typography>
                     </Grid>
                     <Grid item xs={12} md={6}>
-                      <Typography variant="body2"><strong>Телефон:</strong> {selectedContractor.personal_info.phone}</Typography>
+                      <Typography variant='body2'>
+                        <strong>Телефон:</strong>{' '}
+                        {selectedContractor.personal_info.phone}
+                      </Typography>
                     </Grid>
                     <Grid item xs={12} md={6}>
-                      <Typography variant="body2"><strong>Email:</strong> {selectedContractor.personal_info.email}</Typography>
+                      <Typography variant='body2'>
+                        <strong>Email:</strong>{' '}
+                        {selectedContractor.personal_info.email}
+                      </Typography>
                     </Grid>
                     <Grid item xs={12} md={6}>
-                      <Typography variant="body2"><strong>Telegram:</strong> {selectedContractor.personal_info.telegram_username || 'Не указан'}</Typography>
+                      <Typography variant='body2'>
+                        <strong>Telegram:</strong>{' '}
+                        {selectedContractor.personal_info.telegram_username ||
+                          'Не указан'}
+                      </Typography>
                     </Grid>
                   </Grid>
                 </AccordionDetails>
@@ -612,39 +752,79 @@ const SecurityVerificationPage: React.FC = () => {
 
               <Accordion>
                 <AccordionSummary expandIcon={<ExpandMore />}>
-                  <Typography variant="h6">Профессиональная информация</Typography>
+                  <Typography variant='h6'>
+                    Профессиональная информация
+                  </Typography>
                 </AccordionSummary>
                 <AccordionDetails>
                   <Grid container spacing={2}>
                     <Grid item xs={12}>
-                      <Typography variant="body2"><strong>Специализации:</strong></Typography>
+                      <Typography variant='body2'>
+                        <strong>Специализации:</strong>
+                      </Typography>
                       <Box sx={{ mt: 1 }}>
-                        {selectedContractor.professional_info.specializations.map((spec) => (
-                          <Chip key={spec} label={spec} size="small" sx={{ mr: 1, mb: 1 }} />
-                        ))}
+                        {selectedContractor.professional_info.specializations.map(
+                          spec => (
+                            <Chip
+                              key={spec}
+                              label={spec}
+                              size='small'
+                              sx={{ mr: 1, mb: 1 }}
+                            />
+                          ),
+                        )}
                       </Box>
                     </Grid>
                     <Grid item xs={12}>
-                      <Typography variant="body2"><strong>Опыт с брендами:</strong></Typography>
+                      <Typography variant='body2'>
+                        <strong>Опыт с брендами:</strong>
+                      </Typography>
                       <Box sx={{ mt: 1 }}>
-                        {selectedContractor.professional_info.equipment_brands_experience.map((brand) => (
-                          <Chip key={brand} label={brand} size="small" sx={{ mr: 1, mb: 1 }} />
-                        ))}
+                        {selectedContractor.professional_info.equipment_brands_experience.map(
+                          brand => (
+                            <Chip
+                              key={brand}
+                              label={brand}
+                              size='small'
+                              sx={{ mr: 1, mb: 1 }}
+                            />
+                          ),
+                        )}
                       </Box>
                     </Grid>
                     <Grid item xs={12}>
-                      <Typography variant="body2"><strong>Регионы работы:</strong></Typography>
+                      <Typography variant='body2'>
+                        <strong>Регионы работы:</strong>
+                      </Typography>
                       <Box sx={{ mt: 1 }}>
-                        {selectedContractor.professional_info.work_regions.map((region) => (
-                          <Chip key={region} label={region} size="small" sx={{ mr: 1, mb: 1 }} />
-                        ))}
+                        {selectedContractor.professional_info.work_regions.map(
+                          region => (
+                            <Chip
+                              key={region}
+                              label={region}
+                              size='small'
+                              sx={{ mr: 1, mb: 1 }}
+                            />
+                          ),
+                        )}
                       </Box>
                     </Grid>
                     <Grid item xs={12} md={6}>
-                      <Typography variant="body2"><strong>Почасовая ставка:</strong> {selectedContractor.professional_info.hourly_rate || 'Не указана'} руб/час</Typography>
+                      <Typography variant='body2'>
+                        <strong>Почасовая ставка:</strong>{' '}
+                        {selectedContractor.professional_info.hourly_rate ||
+                          'Не указана'}{' '}
+                        руб/час
+                      </Typography>
                     </Grid>
                     <Grid item xs={12} md={6}>
-                      <Typography variant="body2"><strong>Статус доступности:</strong> {selectedContractor.professional_info.availability_status}</Typography>
+                      <Typography variant='body2'>
+                        <strong>Статус доступности:</strong>{' '}
+                        {
+                          selectedContractor.professional_info
+                            .availability_status
+                        }
+                      </Typography>
                     </Grid>
                   </Grid>
                 </AccordionDetails>
@@ -652,25 +832,55 @@ const SecurityVerificationPage: React.FC = () => {
 
               <Accordion>
                 <AccordionSummary expandIcon={<ExpandMore />}>
-                  <Typography variant="h6">Информация о проверке</Typography>
+                  <Typography variant='h6'>Информация о проверке</Typography>
                 </AccordionSummary>
                 <AccordionDetails>
                   <Grid container spacing={2}>
                     <Grid item xs={12} md={6}>
-                      <Typography variant="body2"><strong>Статус:</strong> {getStatusText(selectedContractor.verification_info.status)}</Typography>
+                      <Typography variant='body2'>
+                        <strong>Статус:</strong>{' '}
+                        {getStatusText(
+                          selectedContractor.verification_info.status,
+                        )}
+                      </Typography>
                     </Grid>
                     <Grid item xs={12} md={6}>
-                      <Typography variant="body2"><strong>Дата подачи:</strong> {selectedContractor.verification_info.created_at ? new Date(selectedContractor.verification_info.created_at).toLocaleDateString() : 'Неизвестно'}</Typography>
+                      <Typography variant='body2'>
+                        <strong>Дата подачи:</strong>{' '}
+                        {selectedContractor.verification_info.created_at
+                          ? new Date(
+                              selectedContractor.verification_info.created_at,
+                            ).toLocaleDateString()
+                          : 'Неизвестно'}
+                      </Typography>
                     </Grid>
                     <Grid item xs={12} md={6}>
-                      <Typography variant="body2"><strong>Дата проверки:</strong> {selectedContractor.verification_info.checked_at ? new Date(selectedContractor.verification_info.checked_at).toLocaleDateString() : 'Не проверен'}</Typography>
+                      <Typography variant='body2'>
+                        <strong>Дата проверки:</strong>{' '}
+                        {selectedContractor.verification_info.checked_at
+                          ? new Date(
+                              selectedContractor.verification_info.checked_at,
+                            ).toLocaleDateString()
+                          : 'Не проверен'}
+                      </Typography>
                     </Grid>
                     <Grid item xs={12} md={6}>
-                      <Typography variant="body2"><strong>Проверил:</strong> {selectedContractor.verification_info.checked_by || 'Неизвестно'}</Typography>
+                      <Typography variant='body2'>
+                        <strong>Проверил:</strong>{' '}
+                        {selectedContractor.verification_info.checked_by ||
+                          'Неизвестно'}
+                      </Typography>
                     </Grid>
-                    {selectedContractor.verification_info.verification_notes && (
+                    {selectedContractor.verification_info
+                      .verification_notes && (
                       <Grid item xs={12}>
-                        <Typography variant="body2"><strong>Примечания:</strong> {selectedContractor.verification_info.verification_notes}</Typography>
+                        <Typography variant='body2'>
+                          <strong>Примечания:</strong>{' '}
+                          {
+                            selectedContractor.verification_info
+                              .verification_notes
+                          }
+                        </Typography>
                       </Grid>
                     )}
                   </Grid>
@@ -679,18 +889,31 @@ const SecurityVerificationPage: React.FC = () => {
 
               <Accordion>
                 <AccordionSummary expandIcon={<ExpandMore />}>
-                  <Typography variant="h6">Активность</Typography>
+                  <Typography variant='h6'>Активность</Typography>
                 </AccordionSummary>
                 <AccordionDetails>
                   <Grid container spacing={2}>
                     <Grid item xs={12} md={6}>
-                      <Typography variant="body2"><strong>Количество заявок:</strong> {selectedContractor.activity_info.requests_count}</Typography>
+                      <Typography variant='body2'>
+                        <strong>Количество заявок:</strong>{' '}
+                        {selectedContractor.activity_info.requests_count}
+                      </Typography>
                     </Grid>
                     <Grid item xs={12} md={6}>
-                      <Typography variant="body2"><strong>Дата регистрации:</strong> {new Date(selectedContractor.activity_info.registration_date).toLocaleDateString()}</Typography>
+                      <Typography variant='body2'>
+                        <strong>Дата регистрации:</strong>{' '}
+                        {new Date(
+                          selectedContractor.activity_info.registration_date,
+                        ).toLocaleDateString()}
+                      </Typography>
                     </Grid>
                     <Grid item xs={12} md={6}>
-                      <Typography variant="body2"><strong>Активен:</strong> {selectedContractor.activity_info.is_active ? 'Да' : 'Нет'}</Typography>
+                      <Typography variant='body2'>
+                        <strong>Активен:</strong>{' '}
+                        {selectedContractor.activity_info.is_active
+                          ? 'Да'
+                          : 'Нет'}
+                      </Typography>
                     </Grid>
                   </Grid>
                 </AccordionDetails>
@@ -703,7 +926,7 @@ const SecurityVerificationPage: React.FC = () => {
           {selectedContractor?.verification_info.status === 'pending' && (
             <>
               <Button
-                color="error"
+                color='error'
                 onClick={() => {
                   setDetailsDialogOpen(false);
                   setRejectionDialogOpen(true);
@@ -713,7 +936,7 @@ const SecurityVerificationPage: React.FC = () => {
                 Отклонить
               </Button>
               <Button
-                color="success"
+                color='success'
                 onClick={() => {
                   setDetailsDialogOpen(false);
                   setApprovalDialogOpen(true);
@@ -728,53 +951,68 @@ const SecurityVerificationPage: React.FC = () => {
       </Dialog>
 
       {/* Диалог одобрения */}
-      <Dialog open={approvalDialogOpen} onClose={() => setApprovalDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog
+        open={approvalDialogOpen}
+        onClose={() => setApprovalDialogOpen(false)}
+        maxWidth='sm'
+        fullWidth
+      >
         <DialogTitle>Одобрить исполнителя</DialogTitle>
         <DialogContent>
           <TextField
             fullWidth
             multiline
             rows={3}
-            label="Примечания к одобрению"
+            label='Примечания к одобрению'
             value={verificationNotes}
-            onChange={(e) => setVerificationNotes(e.target.value)}
-            placeholder="Дополнительные комментарии к одобрению..."
+            onChange={e => setVerificationNotes(e.target.value)}
+            placeholder='Дополнительные комментарии к одобрению...'
             sx={{ mt: 2 }}
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setApprovalDialogOpen(false)}>Отмена</Button>
-          <Button onClick={handleApproveContractor} variant="contained" color="success">
+          <Button
+            onClick={handleApproveContractor}
+            variant='contained'
+            color='success'
+          >
             Одобрить
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Диалог отклонения */}
-      <Dialog open={rejectionDialogOpen} onClose={() => setRejectionDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog
+        open={rejectionDialogOpen}
+        onClose={() => setRejectionDialogOpen(false)}
+        maxWidth='sm'
+        fullWidth
+      >
         <DialogTitle>Отклонить исполнителя</DialogTitle>
         <DialogContent>
-          <Alert severity="warning" sx={{ mb: 2 }}>
-            При отклонении исполнитель будет заблокирован и не сможет отвечать на заявки.
+          <Alert severity='warning' sx={{ mb: 2 }}>
+            При отклонении исполнитель будет заблокирован и не сможет отвечать
+            на заявки.
           </Alert>
           <TextField
             fullWidth
             multiline
             rows={3}
-            label="Причина отклонения *"
+            label='Причина отклонения *'
             value={rejectionReason}
-            onChange={(e) => setRejectionReason(e.target.value)}
-            placeholder="Укажите причину отклонения..."
+            onChange={e => setRejectionReason(e.target.value)}
+            placeholder='Укажите причину отклонения...'
             required
             sx={{ mt: 2 }}
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setRejectionDialogOpen(false)}>Отмена</Button>
-          <Button 
-            onClick={handleRejectContractor} 
-            variant="contained" 
-            color="error"
+          <Button
+            onClick={handleRejectContractor}
+            variant='contained'
+            color='error'
             disabled={!rejectionReason.trim()}
           >
             Отклонить

@@ -125,7 +125,7 @@ const ProfilePage: React.FC = () => {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
+      <Typography variant='h4' gutterBottom>
         Мой профиль
       </Typography>
 
@@ -134,8 +134,15 @@ const ProfilePage: React.FC = () => {
         <Box sx={{ flex: '2 1 400px', minWidth: '400px' }}>
           <Card>
             <CardContent>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h6">Основная информация</Typography>
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  mb: 3,
+                }}
+              >
+                <Typography variant='h6'>Основная информация</Typography>
                 <Button
                   variant={isEditing ? 'outlined' : 'contained'}
                   startIcon={isEditing ? <Cancel /> : <Edit />}
@@ -150,19 +157,19 @@ const ProfilePage: React.FC = () => {
                   <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                     <TextField
                       fullWidth
-                      label="Имя"
+                      label='Имя'
                       {...register('first_name')}
                       disabled={!isEditing}
                     />
                     <TextField
                       fullWidth
-                      label="Фамилия"
+                      label='Фамилия'
                       {...register('last_name')}
                       disabled={!isEditing}
                     />
                     <TextField
                       fullWidth
-                      label="Отчество"
+                      label='Отчество'
                       {...register('middle_name')}
                       disabled={!isEditing}
                     />
@@ -170,13 +177,13 @@ const ProfilePage: React.FC = () => {
                   <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                     <TextField
                       fullWidth
-                      label="Телефон"
+                      label='Телефон'
                       {...register('phone')}
                       disabled={!isEditing}
                     />
                     <TextField
                       fullWidth
-                      label="Должность"
+                      label='Должность'
                       {...register('position')}
                       disabled={!isEditing}
                     />
@@ -186,8 +193,8 @@ const ProfilePage: React.FC = () => {
                 {isEditing && (
                   <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
                     <Button
-                      type="submit"
-                      variant="contained"
+                      type='submit'
+                      variant='contained'
                       startIcon={<Save />}
                       disabled={loading}
                     >
@@ -204,17 +211,24 @@ const ProfilePage: React.FC = () => {
         <Box sx={{ flex: '1 1 300px', minWidth: '300px' }}>
           <Card>
             <CardContent>
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 2 }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  mb: 2,
+                }}
+              >
                 <Avatar sx={{ width: 80, height: 80, mb: 2 }}>
                   <AccountCircle sx={{ fontSize: 60 }} />
                 </Avatar>
-                <Typography variant="h6">
+                <Typography variant='h6'>
                   {user.first_name} {user.last_name}
                 </Typography>
                 <Chip
                   label={getRoleText(user.role)}
                   color={getRoleColor(user.role)}
-                  size="small"
+                  size='small'
                   sx={{ mt: 1 }}
                 />
               </Box>
@@ -226,17 +240,14 @@ const ProfilePage: React.FC = () => {
                   <ListItemIcon>
                     <Email />
                   </ListItemIcon>
-                  <ListItemText
-                    primary="Email"
-                    secondary={user.email}
-                  />
+                  <ListItemText primary='Email' secondary={user.email} />
                 </ListItem>
                 <ListItem>
                   <ListItemIcon>
                     <Person />
                   </ListItemIcon>
                   <ListItemText
-                    primary="Имя пользователя"
+                    primary='Имя пользователя'
                     secondary={user.username}
                   />
                 </ListItem>
@@ -245,7 +256,7 @@ const ProfilePage: React.FC = () => {
                     <Business />
                   </ListItemIcon>
                   <ListItemText
-                    primary="Статус"
+                    primary='Статус'
                     secondary={user.is_active ? 'Активен' : 'Неактивен'}
                   />
                 </ListItem>
@@ -254,24 +265,26 @@ const ProfilePage: React.FC = () => {
                     <Email />
                   </ListItemIcon>
                   <ListItemText
-                    primary="Email подтвержден"
+                    primary='Email подтвержден'
                     secondary={
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box
+                        sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                      >
                         {user.email_verified ? (
                           <>
                             <Chip
-                              label="Подтвержден"
-                              color="success"
-                              size="small"
+                              label='Подтвержден'
+                              color='success'
+                              size='small'
                               icon={<CheckCircle />}
                             />
                           </>
                         ) : (
                           <>
                             <Chip
-                              label="Не подтвержден"
-                              color="error"
-                              size="small"
+                              label='Не подтвержден'
+                              color='error'
+                              size='small'
                               icon={<Cancel />}
                             />
                           </>
@@ -285,8 +298,10 @@ const ProfilePage: React.FC = () => {
                     <Person />
                   </ListItemIcon>
                   <ListItemText
-                    primary="Дата регистрации"
-                    secondary={new Date(user.created_at).toLocaleDateString('ru-RU')}
+                    primary='Дата регистрации'
+                    secondary={new Date(user.created_at).toLocaleDateString(
+                      'ru-RU',
+                    )}
                   />
                 </ListItem>
               </List>
@@ -297,17 +312,19 @@ const ProfilePage: React.FC = () => {
           {user.role === UserRole.CUSTOMER && (
             <Card sx={{ mt: 2 }}>
               <CardContent>
-                <Typography variant="h6" gutterBottom>
+                <Typography variant='h6' gutterBottom>
                   Информация о компании
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant='body2' color='text.secondary'>
                   Здесь будет отображаться информация о профиле заказчика
                 </Typography>
                 <Button
-                  variant="outlined"
+                  variant='outlined'
                   fullWidth
                   sx={{ mt: 2 }}
-                  onClick={() => {/* Переход к редактированию профиля заказчика */}}
+                  onClick={() => {
+                    /* Переход к редактированию профиля заказчика */
+                  }}
                 >
                   Редактировать профиль компании
                 </Button>
@@ -318,17 +335,19 @@ const ProfilePage: React.FC = () => {
           {user.role === UserRole.CONTRACTOR && (
             <Card sx={{ mt: 2 }}>
               <CardContent>
-                <Typography variant="h6" gutterBottom>
+                <Typography variant='h6' gutterBottom>
                   Профиль исполнителя
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant='body2' color='text.secondary'>
                   Здесь будет отображаться информация о профиле исполнителя
                 </Typography>
                 <Button
-                  variant="outlined"
+                  variant='outlined'
                   fullWidth
                   sx={{ mt: 2 }}
-                  onClick={() => {/* Переход к редактированию профиля исполнителя */}}
+                  onClick={() => {
+                    /* Переход к редактированию профиля исполнителя */
+                  }}
                 >
                   Редактировать профиль исполнителя
                 </Button>

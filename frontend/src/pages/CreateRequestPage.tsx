@@ -52,7 +52,7 @@ const equipmentTypes = [
   'Краны',
   'Компрессоры',
   'Генераторы',
-  'Другое оборудование'
+  'Другое оборудование',
 ];
 
 const equipmentBrands = [
@@ -63,7 +63,7 @@ const equipmentBrands = [
   'Компани',
   'Либхерр',
   'Вольво',
-  'Другие'
+  'Другие',
 ];
 
 const CreateRequestPage: React.FC = () => {
@@ -72,7 +72,11 @@ const CreateRequestPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [mapOpen, setMapOpen] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number; address: string } | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<{
+    lat: number;
+    lng: number;
+    address: string;
+  } | null>(null);
 
   const {
     register,
@@ -93,9 +97,9 @@ const CreateRequestPage: React.FC = () => {
         ...data,
         latitude: selectedLocation?.lat,
         longitude: selectedLocation?.lng,
-        address: selectedLocation?.address || data.address
+        address: selectedLocation?.address || data.address,
       };
-      
+
       await apiService.createRepairRequest(requestData);
       setSuccess(true);
       reset();
@@ -107,7 +111,11 @@ const CreateRequestPage: React.FC = () => {
     }
   };
 
-  const handleLocationSelect = (location: { lat: number; lng: number; address: string }) => {
+  const handleLocationSelect = (location: {
+    lat: number;
+    lng: number;
+    address: string;
+  }) => {
     setSelectedLocation(location);
   };
 
@@ -116,11 +124,12 @@ const CreateRequestPage: React.FC = () => {
       <Box sx={{ p: 3 }}>
         <Card>
           <CardContent>
-            <Alert severity="success" sx={{ mb: 2 }}>
-              Заявка успешно создана! Она будет рассмотрена менеджером в ближайшее время.
+            <Alert severity='success' sx={{ mb: 2 }}>
+              Заявка успешно создана! Она будет рассмотрена менеджером в
+              ближайшее время.
             </Alert>
             <Button
-              variant="contained"
+              variant='contained'
               onClick={() => setSuccess(false)}
               startIcon={<Send />}
             >
@@ -134,12 +143,12 @@ const CreateRequestPage: React.FC = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom>
+      <Typography variant='h4' gutterBottom>
         Создать заявку на сервис
       </Typography>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+        <Alert severity='error' sx={{ mb: 2 }} onClose={() => setError(null)}>
           {error}
         </Alert>
       )}
@@ -150,7 +159,7 @@ const CreateRequestPage: React.FC = () => {
             <Grid container spacing={3}>
               {/* Основная информация */}
               <Grid item xs={12}>
-                <Typography variant="h6" gutterBottom>
+                <Typography variant='h6' gutterBottom>
                   Основная информация
                 </Typography>
               </Grid>
@@ -158,7 +167,7 @@ const CreateRequestPage: React.FC = () => {
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
-                  label="Название заявки"
+                  label='Название заявки'
                   {...register('title', { required: 'Название обязательно' })}
                   error={!!errors.title}
                   helperText={errors.title?.message}
@@ -169,10 +178,12 @@ const CreateRequestPage: React.FC = () => {
                 <FormControl fullWidth error={!!errors.urgency}>
                   <InputLabel>Срочность</InputLabel>
                   <Select
-                    {...register('urgency', { required: 'Срочность обязательна' })}
-                    label="Срочность"
+                    {...register('urgency', {
+                      required: 'Срочность обязательна',
+                    })}
+                    label='Срочность'
                   >
-                    {urgencyOptions.map((option) => (
+                    {urgencyOptions.map(option => (
                       <MenuItem key={option.value} value={option.value}>
                         {option.label}
                       </MenuItem>
@@ -186,17 +197,19 @@ const CreateRequestPage: React.FC = () => {
                   fullWidth
                   multiline
                   rows={3}
-                  label="Описание проблемы"
-                  {...register('description', { required: 'Описание обязательно' })}
+                  label='Описание проблемы'
+                  {...register('description', {
+                    required: 'Описание обязательно',
+                  })}
                   error={!!errors.description}
                   helperText={errors.description?.message}
-                  placeholder="Подробно опишите проблему с оборудованием..."
+                  placeholder='Подробно опишите проблему с оборудованием...'
                 />
               </Grid>
 
               {/* Информация об оборудовании */}
               <Grid item xs={12}>
-                <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+                <Typography variant='h6' gutterBottom sx={{ mt: 2 }}>
                   Информация об оборудовании
                 </Typography>
               </Grid>
@@ -206,9 +219,9 @@ const CreateRequestPage: React.FC = () => {
                   <InputLabel>Тип оборудования</InputLabel>
                   <Select
                     {...register('equipment_type')}
-                    label="Тип оборудования"
+                    label='Тип оборудования'
                   >
-                    {equipmentTypes.map((type) => (
+                    {equipmentTypes.map(type => (
                       <MenuItem key={type} value={type}>
                         {type}
                       </MenuItem>
@@ -222,9 +235,9 @@ const CreateRequestPage: React.FC = () => {
                   <InputLabel>Бренд оборудования</InputLabel>
                   <Select
                     {...register('equipment_brand')}
-                    label="Бренд оборудования"
+                    label='Бренд оборудования'
                   >
-                    {equipmentBrands.map((brand) => (
+                    {equipmentBrands.map(brand => (
                       <MenuItem key={brand} value={brand}>
                         {brand}
                       </MenuItem>
@@ -236,7 +249,7 @@ const CreateRequestPage: React.FC = () => {
               <Grid item xs={12} md={4}>
                 <TextField
                   fullWidth
-                  label="Модель оборудования"
+                  label='Модель оборудования'
                   {...register('equipment_model')}
                   error={!!errors.equipment_model}
                   helperText={errors.equipment_model?.message}
@@ -248,17 +261,17 @@ const CreateRequestPage: React.FC = () => {
                   fullWidth
                   multiline
                   rows={3}
-                  label="Детальное описание неисправности"
+                  label='Детальное описание неисправности'
                   {...register('problem_description')}
                   error={!!errors.problem_description}
                   helperText={errors.problem_description?.message}
-                  placeholder="Опишите симптомы, когда возникла проблема, что происходило перед поломкой..."
+                  placeholder='Опишите симптомы, когда возникла проблема, что происходило перед поломкой...'
                 />
               </Grid>
 
               {/* Местоположение */}
               <Grid item xs={12}>
-                <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+                <Typography variant='h6' gutterBottom sx={{ mt: 2 }}>
                   Местоположение
                 </Typography>
               </Grid>
@@ -266,7 +279,7 @@ const CreateRequestPage: React.FC = () => {
               <Grid item xs={12} md={4}>
                 <TextField
                   fullWidth
-                  label="Регион"
+                  label='Регион'
                   {...register('region', { required: 'Регион обязателен' })}
                   error={!!errors.region}
                   helperText={errors.region?.message}
@@ -276,7 +289,7 @@ const CreateRequestPage: React.FC = () => {
               <Grid item xs={12} md={4}>
                 <TextField
                   fullWidth
-                  label="Город"
+                  label='Город'
                   {...register('city')}
                   error={!!errors.city}
                   helperText={errors.city?.message}
@@ -286,7 +299,7 @@ const CreateRequestPage: React.FC = () => {
               <Grid item xs={12} md={4}>
                 <TextField
                   fullWidth
-                  label="Адрес"
+                  label='Адрес'
                   {...register('address')}
                   error={!!errors.address}
                   helperText={errors.address?.message}
@@ -295,9 +308,16 @@ const CreateRequestPage: React.FC = () => {
               </Grid>
 
               <Grid item xs={12} md={4}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, height: '100%' }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    height: '100%',
+                  }}
+                >
                   <Button
-                    variant="outlined"
+                    variant='outlined'
                     startIcon={<LocationOn />}
                     onClick={() => setMapOpen(true)}
                     sx={{ height: '56px' }}
@@ -305,7 +325,7 @@ const CreateRequestPage: React.FC = () => {
                     Выбрать на карте
                   </Button>
                   {selectedLocation && (
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant='caption' color='text.secondary'>
                       Место выбрано
                     </Typography>
                   )}
@@ -314,17 +334,16 @@ const CreateRequestPage: React.FC = () => {
 
               {/* Дополнительные параметры */}
               <Grid item xs={12}>
-                <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+                <Typography variant='h6' gutterBottom sx={{ mt: 2 }}>
                   Дополнительные параметры
                 </Typography>
               </Grid>
 
-
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
-                  type="datetime-local"
-                  label="Предпочтительная дата выполнения"
+                  type='datetime-local'
+                  label='Предпочтительная дата выполнения'
                   InputLabelProps={{ shrink: true }}
                   {...register('preferred_date')}
                   error={!!errors.preferred_date}
@@ -336,17 +355,19 @@ const CreateRequestPage: React.FC = () => {
               <Grid item xs={12}>
                 <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
                   <Button
-                    type="submit"
-                    variant="contained"
-                    startIcon={loading ? <CircularProgress size={20} /> : <Save />}
+                    type='submit'
+                    variant='contained'
+                    startIcon={
+                      loading ? <CircularProgress size={20} /> : <Save />
+                    }
                     disabled={loading}
                     sx={{ minWidth: 200 }}
                   >
                     {loading ? 'Создание...' : 'Создать заявку'}
                   </Button>
-                  
+
                   <Button
-                    variant="outlined"
+                    variant='outlined'
                     onClick={() => reset()}
                     disabled={loading}
                   >

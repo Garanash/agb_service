@@ -1,5 +1,10 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline, Box } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -41,14 +46,16 @@ const theme = createTheme({
 });
 
 // Компонент для защищенных маршрутов
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return <LoadingSpinner />;
   }
 
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+  return isAuthenticated ? <>{children}</> : <Navigate to='/login' replace />;
 };
 
 // Компонент для публичных маршрутов (только для неавторизованных)
@@ -59,32 +66,32 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     return <LoadingSpinner />;
   }
 
-  return !isAuthenticated ? <>{children}</> : <Navigate to="/" replace />;
+  return !isAuthenticated ? <>{children}</> : <Navigate to='/' replace />;
 };
 
 const AppRoutes: React.FC = () => {
   return (
     <Routes>
       <Route
-        path="/login"
+        path='/login'
         element={
           <PublicRoute>
             <LoginPage />
           </PublicRoute>
         }
       />
-      
+
       <Route
-        path="/register"
+        path='/register'
         element={
           <PublicRoute>
             <RegistrationPage />
           </PublicRoute>
         }
       />
-      
+
       <Route
-        path="/"
+        path='/'
         element={
           <ProtectedRoute>
             <Layout>
@@ -93,9 +100,9 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
-      
+
       <Route
-        path="/repair-requests"
+        path='/repair-requests'
         element={
           <ProtectedRoute>
             <Layout>
@@ -104,9 +111,9 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
-      
+
       <Route
-        path="/contractors"
+        path='/contractors'
         element={
           <ProtectedRoute>
             <Layout>
@@ -115,9 +122,9 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
-      
+
       <Route
-        path="/customers"
+        path='/customers'
         element={
           <ProtectedRoute>
             <Layout>
@@ -126,9 +133,9 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
-      
+
       <Route
-        path="/profile"
+        path='/profile'
         element={
           <ProtectedRoute>
             <Layout>
@@ -137,9 +144,9 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
-      
+
       <Route
-        path="/manager/requests"
+        path='/manager/requests'
         element={
           <ProtectedRoute>
             <Layout>
@@ -148,9 +155,9 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
-      
+
       <Route
-        path="/manager/calendar"
+        path='/manager/calendar'
         element={
           <ProtectedRoute>
             <Layout>
@@ -159,9 +166,9 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
-      
+
       <Route
-        path="/security/verification"
+        path='/security/verification'
         element={
           <ProtectedRoute>
             <Layout>
@@ -170,9 +177,9 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
-      
+
       <Route
-        path="/hr/documents"
+        path='/hr/documents'
         element={
           <ProtectedRoute>
             <Layout>
@@ -181,9 +188,9 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
-      
+
       <Route
-        path="/telegram/bot"
+        path='/telegram/bot'
         element={
           <ProtectedRoute>
             <Layout>
@@ -192,9 +199,9 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
-      
+
       <Route
-        path="/customer/cabinet"
+        path='/customer/cabinet'
         element={
           <ProtectedRoute>
             <Layout>
@@ -203,9 +210,9 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
-      
+
       <Route
-        path="/repair-requests/new"
+        path='/repair-requests/new'
         element={
           <ProtectedRoute>
             <Layout>
@@ -214,9 +221,9 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
-      
+
       <Route
-        path="/admin/panel"
+        path='/admin/panel'
         element={
           <ProtectedRoute>
             <Layout>
@@ -233,10 +240,16 @@ const App: React.FC = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="ru">
+      <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale='ru'>
         <AuthProvider>
           <Router>
-            <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                minHeight: '100vh',
+              }}
+            >
               <AppRoutes />
             </Box>
           </Router>

@@ -127,7 +127,7 @@ function TabPanel(props: TabPanelProps) {
   const { children, value, index, ...other } = props;
   return (
     <div
-      role="tabpanel"
+      role='tabpanel'
       hidden={value !== index}
       id={`customer-tabpanel-${index}`}
       aria-labelledby={`customer-tab-${index}`}
@@ -147,15 +147,22 @@ const CustomerCabinetPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [tabValue, setTabValue] = useState(0);
-  
+
   // Диалоги
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [requestDialogOpen, setRequestDialogOpen] = useState(false);
   const [viewRequestDialogOpen, setViewRequestDialogOpen] = useState(false);
   const [mapOpen, setMapOpen] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number; address: string } | null>(null);
-  const [selectedRequest, setSelectedRequest] = useState<CustomerRequest | null>(null);
-  const [editingProfile, setEditingProfile] = useState<Partial<CustomerProfile>>({});
+  const [selectedLocation, setSelectedLocation] = useState<{
+    lat: number;
+    lng: number;
+    address: string;
+  } | null>(null);
+  const [selectedRequest, setSelectedRequest] =
+    useState<CustomerRequest | null>(null);
+  const [editingProfile, setEditingProfile] = useState<
+    Partial<CustomerProfile>
+  >({});
   const [newRequest, setNewRequest] = useState({
     title: '',
     description: '',
@@ -167,7 +174,7 @@ const CustomerCabinetPage: React.FC = () => {
     equipment_type: '',
     equipment_brand: '',
     equipment_model: '',
-    problem_description: ''
+    problem_description: '',
   });
 
   useEffect(() => {
@@ -177,17 +184,16 @@ const CustomerCabinetPage: React.FC = () => {
   const loadCustomerData = async () => {
     try {
       setLoading(true);
-      
+
       const [profileData, requestsData, statsData] = await Promise.all([
         apiService.getCustomerProfile(),
         apiService.getCustomerRequests(),
-        apiService.getCustomerStatistics()
+        apiService.getCustomerStatistics(),
       ]);
-      
+
       setProfile(profileData);
       setRequests(requestsData);
       setStats(statsData);
-      
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Ошибка загрузки данных кабинета');
     } finally {
@@ -214,9 +220,9 @@ const CustomerCabinetPage: React.FC = () => {
         ...newRequest,
         latitude: selectedLocation?.lat,
         longitude: selectedLocation?.lng,
-        address: selectedLocation?.address || newRequest.address
+        address: selectedLocation?.address || newRequest.address,
       };
-      
+
       await apiService.createCustomerRequest(requestData);
       setRequestDialogOpen(false);
       setNewRequest({
@@ -230,7 +236,7 @@ const CustomerCabinetPage: React.FC = () => {
         equipment_type: '',
         equipment_brand: '',
         equipment_model: '',
-        problem_description: ''
+        problem_description: '',
       });
       setSelectedLocation(null);
       await loadCustomerData();
@@ -240,7 +246,11 @@ const CustomerCabinetPage: React.FC = () => {
     }
   };
 
-  const handleLocationSelect = (location: { lat: number; lng: number; address: string }) => {
+  const handleLocationSelect = (location: {
+    lat: number;
+    lng: number;
+    address: string;
+  }) => {
     setSelectedLocation(location);
   };
 
@@ -256,40 +266,40 @@ const CustomerCabinetPage: React.FC = () => {
 
   const getStatusColor = (status: RequestStatus) => {
     const colors: { [key: string]: string } = {
-      'new': 'info',
-      'manager_review': 'warning',
-      'clarification': 'warning',
-      'sent_to_contractors': 'info',
-      'contractor_responses': 'info',
-      'assigned': 'success',
-      'in_progress': 'primary',
-      'completed': 'success',
-      'cancelled': 'error'
+      new: 'info',
+      manager_review: 'warning',
+      clarification: 'warning',
+      sent_to_contractors: 'info',
+      contractor_responses: 'info',
+      assigned: 'success',
+      in_progress: 'primary',
+      completed: 'success',
+      cancelled: 'error',
     };
     return colors[status] || 'default';
   };
 
   const getStatusText = (status: RequestStatus) => {
     const texts: { [key: string]: string } = {
-      'new': 'Новая',
-      'manager_review': 'На рассмотрении',
-      'clarification': 'Уточнение',
-      'sent_to_contractors': 'Отправлена исполнителям',
-      'contractor_responses': 'Отклики исполнителей',
-      'assigned': 'Назначена',
-      'in_progress': 'В работе',
-      'completed': 'Завершена',
-      'cancelled': 'Отменена'
+      new: 'Новая',
+      manager_review: 'На рассмотрении',
+      clarification: 'Уточнение',
+      sent_to_contractors: 'Отправлена исполнителям',
+      contractor_responses: 'Отклики исполнителей',
+      assigned: 'Назначена',
+      in_progress: 'В работе',
+      completed: 'Завершена',
+      cancelled: 'Отменена',
     };
     return texts[status] || status;
   };
 
   const getUrgencyText = (urgency?: string) => {
     const texts: { [key: string]: string } = {
-      'low': 'Низкая',
-      'medium': 'Средняя',
-      'high': 'Высокая',
-      'critical': 'Критическая'
+      low: 'Низкая',
+      medium: 'Средняя',
+      high: 'Высокая',
+      critical: 'Критическая',
     };
     return texts[urgency || ''] || 'Не указана';
   };
@@ -299,12 +309,19 @@ const CustomerCabinetPage: React.FC = () => {
   };
 
   const canCancelRequest = (status: RequestStatus) => {
-    return status === RequestStatus.NEW || status === RequestStatus.MANAGER_REVIEW;
+    return (
+      status === RequestStatus.NEW || status === RequestStatus.MANAGER_REVIEW
+    );
   };
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <Box
+        display='flex'
+        justifyContent='center'
+        alignItems='center'
+        minHeight='400px'
+      >
         <CircularProgress />
       </Box>
     );
@@ -312,18 +329,22 @@ const CustomerCabinetPage: React.FC = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom>
+      <Typography variant='h4' gutterBottom>
         Личный кабинет заказчика
       </Typography>
-      
+
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+        <Alert severity='error' sx={{ mb: 2 }} onClose={() => setError(null)}>
           {error}
         </Alert>
       )}
 
       {success && (
-        <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess(null)}>
+        <Alert
+          severity='success'
+          sx={{ mb: 2 }}
+          onClose={() => setSuccess(null)}
+        >
           {success}
         </Alert>
       )}
@@ -334,53 +355,61 @@ const CustomerCabinetPage: React.FC = () => {
           <Grid item xs={12} sm={6} md={3}>
             <Card>
               <CardContent>
-                <Box display="flex" alignItems="center">
-                  <Build color="primary" sx={{ mr: 2 }} />
+                <Box display='flex' alignItems='center'>
+                  <Build color='primary' sx={{ mr: 2 }} />
                   <Box>
-                    <Typography variant="h4">{stats.total_requests}</Typography>
-                    <Typography color="text.secondary">Всего заявок</Typography>
+                    <Typography variant='h4'>{stats.total_requests}</Typography>
+                    <Typography color='text.secondary'>Всего заявок</Typography>
                   </Box>
                 </Box>
               </CardContent>
             </Card>
           </Grid>
-          
+
           <Grid item xs={12} sm={6} md={3}>
             <Card>
               <CardContent>
-                <Box display="flex" alignItems="center">
-                  <CheckCircle color="success" sx={{ mr: 2 }} />
+                <Box display='flex' alignItems='center'>
+                  <CheckCircle color='success' sx={{ mr: 2 }} />
                   <Box>
-                    <Typography variant="h4">{stats.status_counts.completed || 0}</Typography>
-                    <Typography color="text.secondary">Завершено</Typography>
+                    <Typography variant='h4'>
+                      {stats.status_counts.completed || 0}
+                    </Typography>
+                    <Typography color='text.secondary'>Завершено</Typography>
                   </Box>
                 </Box>
               </CardContent>
             </Card>
           </Grid>
-          
+
           <Grid item xs={12} sm={6} md={3}>
             <Card>
               <CardContent>
-                <Box display="flex" alignItems="center">
-                  <Pending color="warning" sx={{ mr: 2 }} />
+                <Box display='flex' alignItems='center'>
+                  <Pending color='warning' sx={{ mr: 2 }} />
                   <Box>
-                    <Typography variant="h4">{stats.status_counts.new || 0}</Typography>
-                    <Typography color="text.secondary">Новых</Typography>
+                    <Typography variant='h4'>
+                      {stats.status_counts.new || 0}
+                    </Typography>
+                    <Typography color='text.secondary'>Новых</Typography>
                   </Box>
                 </Box>
               </CardContent>
             </Card>
           </Grid>
-          
+
           <Grid item xs={12} sm={6} md={3}>
             <Card>
               <CardContent>
-                <Box display="flex" alignItems="center">
-                  <TrendingUp color="info" sx={{ mr: 2 }} />
+                <Box display='flex' alignItems='center'>
+                  <TrendingUp color='info' sx={{ mr: 2 }} />
                   <Box>
-                    <Typography variant="h4">{stats.completion_rate}%</Typography>
-                    <Typography color="text.secondary">Процент завершения</Typography>
+                    <Typography variant='h4'>
+                      {stats.completion_rate}%
+                    </Typography>
+                    <Typography color='text.secondary'>
+                      Процент завершения
+                    </Typography>
                   </Box>
                 </Box>
               </CardContent>
@@ -391,25 +420,33 @@ const CustomerCabinetPage: React.FC = () => {
 
       {/* Табы */}
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-        <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)}>
+        <Tabs
+          value={tabValue}
+          onChange={(e, newValue) => setTabValue(newValue)}
+        >
           <Tab label={`Мои заявки (${requests.length})`} />
-          <Tab label="Профиль" />
+          <Tab label='Профиль' />
         </Tabs>
       </Box>
 
       {/* Заявки */}
       <TabPanel value={tabValue} index={0}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-          <Typography variant="h6">Мои заявки</Typography>
+        <Box
+          display='flex'
+          justifyContent='space-between'
+          alignItems='center'
+          mb={2}
+        >
+          <Typography variant='h6'>Мои заявки</Typography>
           <Button
-            variant="contained"
+            variant='contained'
             startIcon={<Add />}
             onClick={() => setRequestDialogOpen(true)}
           >
             Создать заявку
           </Button>
         </Box>
-        
+
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
@@ -423,21 +460,21 @@ const CustomerCabinetPage: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {requests.map((request) => (
+              {requests.map(request => (
                 <TableRow key={request.id}>
                   <TableCell>
-                    <Typography variant="subtitle2">
+                    <Typography variant='subtitle2'>
                       #{request.id} {request.title}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant='body2' color='text.secondary'>
                       {request.description.substring(0, 100)}...
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2">
+                    <Typography variant='body2'>
                       {request.equipment_type || 'Не указано'}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant='body2' color='text.secondary'>
                       {request.equipment_brand || 'Бренд не указан'}
                     </Typography>
                   </TableCell>
@@ -445,11 +482,11 @@ const CustomerCabinetPage: React.FC = () => {
                     <Chip
                       label={getStatusText(request.status)}
                       color={getStatusColor(request.status) as any}
-                      size="small"
+                      size='small'
                     />
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2">
+                    <Typography variant='body2'>
                       {getUrgencyText(request.urgency)}
                     </Typography>
                   </TableCell>
@@ -457,9 +494,9 @@ const CustomerCabinetPage: React.FC = () => {
                     {new Date(request.created_at).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
-                    <Tooltip title="Просмотреть">
+                    <Tooltip title='Просмотреть'>
                       <IconButton
-                        size="small"
+                        size='small'
                         onClick={() => {
                           setSelectedRequest(request);
                           setViewRequestDialogOpen(true);
@@ -469,16 +506,16 @@ const CustomerCabinetPage: React.FC = () => {
                       </IconButton>
                     </Tooltip>
                     {canEditRequest(request.status) && (
-                      <Tooltip title="Редактировать">
-                        <IconButton size="small">
+                      <Tooltip title='Редактировать'>
+                        <IconButton size='small'>
                           <Edit />
                         </IconButton>
                       </Tooltip>
                     )}
                     {canCancelRequest(request.status) && (
-                      <Tooltip title="Отменить">
+                      <Tooltip title='Отменить'>
                         <IconButton
-                          size="small"
+                          size='small'
                           onClick={() => handleCancelRequest(request.id)}
                         >
                           <Cancel />
@@ -495,10 +532,15 @@ const CustomerCabinetPage: React.FC = () => {
 
       {/* Профиль */}
       <TabPanel value={tabValue} index={1}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-          <Typography variant="h6">Профиль компании</Typography>
+        <Box
+          display='flex'
+          justifyContent='space-between'
+          alignItems='center'
+          mb={2}
+        >
+          <Typography variant='h6'>Профиль компании</Typography>
           <Button
-            variant="outlined"
+            variant='outlined'
             startIcon={<Edit />}
             onClick={() => {
               setEditingProfile(profile || {});
@@ -508,92 +550,126 @@ const CustomerCabinetPage: React.FC = () => {
             Редактировать
           </Button>
         </Box>
-        
+
         {profile && (
           <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
               <Card>
                 <CardContent>
-                  <Typography variant="h6" gutterBottom>
+                  <Typography variant='h6' gutterBottom>
                     Информация о пользователе
                   </Typography>
-                  <Typography variant="body2">
-                    <strong>Имя:</strong> {profile.user_info.first_name} {profile.user_info.last_name}
+                  <Typography variant='body2'>
+                    <strong>Имя:</strong> {profile.user_info.first_name}{' '}
+                    {profile.user_info.last_name}
                   </Typography>
-                  <Typography variant="body2">
+                  <Typography variant='body2'>
                     <strong>Email:</strong> {profile.user_info.email}
                   </Typography>
-                  <Typography variant="body2">
+                  <Typography variant='body2'>
                     <strong>Телефон:</strong> {profile.user_info.phone}
                   </Typography>
-                  <Typography variant="body2">
-                    <strong>Дата регистрации:</strong> {new Date(profile.user_info.created_at).toLocaleDateString()}
+                  <Typography variant='body2'>
+                    <strong>Дата регистрации:</strong>{' '}
+                    {new Date(
+                      profile.user_info.created_at,
+                    ).toLocaleDateString()}
                   </Typography>
                 </CardContent>
               </Card>
             </Grid>
-            
+
             <Grid item xs={12} md={6}>
               <Card>
                 <CardContent>
-                  <Typography variant="h6" gutterBottom>
+                  <Typography variant='h6' gutterBottom>
                     Информация о компании
                   </Typography>
-                  <Typography variant="body2">
-                    <strong>Название:</strong> {profile.company_info.company_name}
+                  <Typography variant='body2'>
+                    <strong>Название:</strong>{' '}
+                    {profile.company_info.company_name}
                   </Typography>
-                  <Typography variant="body2">
-                    <strong>Контактное лицо:</strong> {profile.company_info.contact_person}
+                  <Typography variant='body2'>
+                    <strong>Контактное лицо:</strong>{' '}
+                    {profile.company_info.contact_person}
                   </Typography>
-                  <Typography variant="body2">
-                    <strong>Адрес:</strong> {profile.company_info.address || 'Не указан'}
+                  <Typography variant='body2'>
+                    <strong>Адрес:</strong>{' '}
+                    {profile.company_info.address || 'Не указан'}
                   </Typography>
-                  <Typography variant="body2">
-                    <strong>ИНН:</strong> {profile.company_info.inn || 'Не указан'}
+                  <Typography variant='body2'>
+                    <strong>ИНН:</strong>{' '}
+                    {profile.company_info.inn || 'Не указан'}
                   </Typography>
-                  <Typography variant="body2">
-                    <strong>ОГРН:</strong> {profile.company_info.ogrn || 'Не указан'}
+                  <Typography variant='body2'>
+                    <strong>ОГРН:</strong>{' '}
+                    {profile.company_info.ogrn || 'Не указан'}
                   </Typography>
                 </CardContent>
               </Card>
             </Grid>
-            
+
             <Grid item xs={12}>
               <Card>
                 <CardContent>
-                  <Typography variant="h6" gutterBottom>
+                  <Typography variant='h6' gutterBottom>
                     Информация об оборудовании
                   </Typography>
                   <Grid container spacing={2}>
                     <Grid item xs={12} md={4}>
-                      <Typography variant="subtitle2">Бренды техники:</Typography>
+                      <Typography variant='subtitle2'>
+                        Бренды техники:
+                      </Typography>
                       <Box sx={{ mt: 1 }}>
-                        {profile.equipment_info.equipment_brands.map((brand) => (
-                          <Chip key={brand} label={brand} size="small" sx={{ mr: 1, mb: 1 }} />
+                        {profile.equipment_info.equipment_brands.map(brand => (
+                          <Chip
+                            key={brand}
+                            label={brand}
+                            size='small'
+                            sx={{ mr: 1, mb: 1 }}
+                          />
                         ))}
                       </Box>
                     </Grid>
                     <Grid item xs={12} md={4}>
-                      <Typography variant="subtitle2">Типы оборудования:</Typography>
+                      <Typography variant='subtitle2'>
+                        Типы оборудования:
+                      </Typography>
                       <Box sx={{ mt: 1 }}>
-                        {profile.equipment_info.equipment_types.map((type) => (
-                          <Chip key={type} label={type} size="small" sx={{ mr: 1, mb: 1 }} />
+                        {profile.equipment_info.equipment_types.map(type => (
+                          <Chip
+                            key={type}
+                            label={type}
+                            size='small'
+                            sx={{ mr: 1, mb: 1 }}
+                          />
                         ))}
                       </Box>
                     </Grid>
                     <Grid item xs={12} md={4}>
-                      <Typography variant="subtitle2">Виды горных работ:</Typography>
+                      <Typography variant='subtitle2'>
+                        Виды горных работ:
+                      </Typography>
                       <Box sx={{ mt: 1 }}>
-                        {profile.equipment_info.mining_operations.map((operation) => (
-                          <Chip key={operation} label={operation} size="small" sx={{ mr: 1, mb: 1 }} />
-                        ))}
+                        {profile.equipment_info.mining_operations.map(
+                          operation => (
+                            <Chip
+                              key={operation}
+                              label={operation}
+                              size='small'
+                              sx={{ mr: 1, mb: 1 }}
+                            />
+                          ),
+                        )}
                       </Box>
                     </Grid>
                   </Grid>
                   {profile.equipment_info.service_history && (
                     <Box sx={{ mt: 2 }}>
-                      <Typography variant="subtitle2">История обслуживания:</Typography>
-                      <Typography variant="body2" sx={{ mt: 1 }}>
+                      <Typography variant='subtitle2'>
+                        История обслуживания:
+                      </Typography>
+                      <Typography variant='body2' sx={{ mt: 1 }}>
                         {profile.equipment_info.service_history}
                       </Typography>
                     </Box>
@@ -606,96 +682,141 @@ const CustomerCabinetPage: React.FC = () => {
       </TabPanel>
 
       {/* Диалог редактирования профиля */}
-      <Dialog open={profileDialogOpen} onClose={() => setProfileDialogOpen(false)} maxWidth="md" fullWidth>
+      <Dialog
+        open={profileDialogOpen}
+        onClose={() => setProfileDialogOpen(false)}
+        maxWidth='md'
+        fullWidth
+      >
         <DialogTitle>Редактирование профиля</DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Имя"
+                label='Имя'
                 value={editingProfile.user_info?.first_name || ''}
-                onChange={(e) => setEditingProfile({
-                  ...editingProfile,
-                  user_info: { ...editingProfile.user_info, first_name: e.target.value }
-                })}
+                onChange={e =>
+                  setEditingProfile({
+                    ...editingProfile,
+                    user_info: {
+                      ...editingProfile.user_info,
+                      first_name: e.target.value,
+                    },
+                  })
+                }
               />
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Фамилия"
+                label='Фамилия'
                 value={editingProfile.user_info?.last_name || ''}
-                onChange={(e) => setEditingProfile({
-                  ...editingProfile,
-                  user_info: { ...editingProfile.user_info, last_name: e.target.value }
-                })}
+                onChange={e =>
+                  setEditingProfile({
+                    ...editingProfile,
+                    user_info: {
+                      ...editingProfile.user_info,
+                      last_name: e.target.value,
+                    },
+                  })
+                }
               />
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Телефон"
+                label='Телефон'
                 value={editingProfile.user_info?.phone || ''}
-                onChange={(e) => setEditingProfile({
-                  ...editingProfile,
-                  user_info: { ...editingProfile.user_info, phone: e.target.value }
-                })}
+                onChange={e =>
+                  setEditingProfile({
+                    ...editingProfile,
+                    user_info: {
+                      ...editingProfile.user_info,
+                      phone: e.target.value,
+                    },
+                  })
+                }
               />
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Название компании"
+                label='Название компании'
                 value={editingProfile.company_info?.company_name || ''}
-                onChange={(e) => setEditingProfile({
-                  ...editingProfile,
-                  company_info: { ...editingProfile.company_info, company_name: e.target.value }
-                })}
+                onChange={e =>
+                  setEditingProfile({
+                    ...editingProfile,
+                    company_info: {
+                      ...editingProfile.company_info,
+                      company_name: e.target.value,
+                    },
+                  })
+                }
               />
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Контактное лицо"
+                label='Контактное лицо'
                 value={editingProfile.company_info?.contact_person || ''}
-                onChange={(e) => setEditingProfile({
-                  ...editingProfile,
-                  company_info: { ...editingProfile.company_info, contact_person: e.target.value }
-                })}
+                onChange={e =>
+                  setEditingProfile({
+                    ...editingProfile,
+                    company_info: {
+                      ...editingProfile.company_info,
+                      contact_person: e.target.value,
+                    },
+                  })
+                }
               />
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Адрес"
+                label='Адрес'
                 value={editingProfile.company_info?.address || ''}
-                onChange={(e) => setEditingProfile({
-                  ...editingProfile,
-                  company_info: { ...editingProfile.company_info, address: e.target.value }
-                })}
+                onChange={e =>
+                  setEditingProfile({
+                    ...editingProfile,
+                    company_info: {
+                      ...editingProfile.company_info,
+                      address: e.target.value,
+                    },
+                  })
+                }
               />
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="ИНН"
+                label='ИНН'
                 value={editingProfile.company_info?.inn || ''}
-                onChange={(e) => setEditingProfile({
-                  ...editingProfile,
-                  company_info: { ...editingProfile.company_info, inn: e.target.value }
-                })}
+                onChange={e =>
+                  setEditingProfile({
+                    ...editingProfile,
+                    company_info: {
+                      ...editingProfile.company_info,
+                      inn: e.target.value,
+                    },
+                  })
+                }
               />
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="ОГРН"
+                label='ОГРН'
                 value={editingProfile.company_info?.ogrn || ''}
-                onChange={(e) => setEditingProfile({
-                  ...editingProfile,
-                  company_info: { ...editingProfile.company_info, ogrn: e.target.value }
-                })}
+                onChange={e =>
+                  setEditingProfile({
+                    ...editingProfile,
+                    company_info: {
+                      ...editingProfile.company_info,
+                      ogrn: e.target.value,
+                    },
+                  })
+                }
               />
             </Grid>
             <Grid item xs={12}>
@@ -703,35 +824,47 @@ const CustomerCabinetPage: React.FC = () => {
                 fullWidth
                 multiline
                 rows={3}
-                label="История обслуживания"
+                label='История обслуживания'
                 value={editingProfile.equipment_info?.service_history || ''}
-                onChange={(e) => setEditingProfile({
-                  ...editingProfile,
-                  equipment_info: { ...editingProfile.equipment_info, service_history: e.target.value }
-                })}
+                onChange={e =>
+                  setEditingProfile({
+                    ...editingProfile,
+                    equipment_info: {
+                      ...editingProfile.equipment_info,
+                      service_history: e.target.value,
+                    },
+                  })
+                }
               />
             </Grid>
           </Grid>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setProfileDialogOpen(false)}>Отмена</Button>
-          <Button onClick={handleUpdateProfile} variant="contained">
+          <Button onClick={handleUpdateProfile} variant='contained'>
             Сохранить
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Диалог создания заявки */}
-      <Dialog open={requestDialogOpen} onClose={() => setRequestDialogOpen(false)} maxWidth="md" fullWidth>
+      <Dialog
+        open={requestDialogOpen}
+        onClose={() => setRequestDialogOpen(false)}
+        maxWidth='md'
+        fullWidth
+      >
         <DialogTitle>Создание новой заявки</DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Название заявки"
+                label='Название заявки'
                 value={newRequest.title}
-                onChange={(e) => setNewRequest({ ...newRequest, title: e.target.value })}
+                onChange={e =>
+                  setNewRequest({ ...newRequest, title: e.target.value })
+                }
                 required
               />
             </Grid>
@@ -740,9 +873,11 @@ const CustomerCabinetPage: React.FC = () => {
                 fullWidth
                 multiline
                 rows={3}
-                label="Описание проблемы"
+                label='Описание проблемы'
                 value={newRequest.description}
-                onChange={(e) => setNewRequest({ ...newRequest, description: e.target.value })}
+                onChange={e =>
+                  setNewRequest({ ...newRequest, description: e.target.value })
+                }
                 required
               />
             </Grid>
@@ -751,77 +886,103 @@ const CustomerCabinetPage: React.FC = () => {
                 <InputLabel>Срочность</InputLabel>
                 <Select
                   value={newRequest.urgency}
-                  onChange={(e) => setNewRequest({ ...newRequest, urgency: e.target.value })}
-                  label="Срочность"
+                  onChange={e =>
+                    setNewRequest({ ...newRequest, urgency: e.target.value })
+                  }
+                  label='Срочность'
                 >
-                  <MenuItem value="low">Низкая</MenuItem>
-                  <MenuItem value="medium">Средняя</MenuItem>
-                  <MenuItem value="high">Высокая</MenuItem>
-                  <MenuItem value="critical">Критическая</MenuItem>
+                  <MenuItem value='low'>Низкая</MenuItem>
+                  <MenuItem value='medium'>Средняя</MenuItem>
+                  <MenuItem value='high'>Высокая</MenuItem>
+                  <MenuItem value='critical'>Критическая</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Предпочтительная дата"
-                type="datetime-local"
+                label='Предпочтительная дата'
+                type='datetime-local'
                 value={newRequest.preferred_date}
-                onChange={(e) => setNewRequest({ ...newRequest, preferred_date: e.target.value })}
+                onChange={e =>
+                  setNewRequest({
+                    ...newRequest,
+                    preferred_date: e.target.value,
+                  })
+                }
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Тип оборудования"
+                label='Тип оборудования'
                 value={newRequest.equipment_type}
-                onChange={(e) => setNewRequest({ ...newRequest, equipment_type: e.target.value })}
+                onChange={e =>
+                  setNewRequest({
+                    ...newRequest,
+                    equipment_type: e.target.value,
+                  })
+                }
               />
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Бренд оборудования"
+                label='Бренд оборудования'
                 value={newRequest.equipment_brand}
-                onChange={(e) => setNewRequest({ ...newRequest, equipment_brand: e.target.value })}
+                onChange={e =>
+                  setNewRequest({
+                    ...newRequest,
+                    equipment_brand: e.target.value,
+                  })
+                }
               />
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Модель оборудования"
+                label='Модель оборудования'
                 value={newRequest.equipment_model}
-                onChange={(e) => setNewRequest({ ...newRequest, equipment_model: e.target.value })}
+                onChange={e =>
+                  setNewRequest({
+                    ...newRequest,
+                    equipment_model: e.target.value,
+                  })
+                }
               />
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Город"
+                label='Город'
                 value={newRequest.city}
-                onChange={(e) => setNewRequest({ ...newRequest, city: e.target.value })}
+                onChange={e =>
+                  setNewRequest({ ...newRequest, city: e.target.value })
+                }
               />
             </Grid>
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Адрес"
+                label='Адрес'
                 value={selectedLocation?.address || newRequest.address}
-                onChange={(e) => setNewRequest({ ...newRequest, address: e.target.value })}
+                onChange={e =>
+                  setNewRequest({ ...newRequest, address: e.target.value })
+                }
               />
             </Grid>
             <Grid item xs={12}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Button
-                  variant="outlined"
+                  variant='outlined'
                   startIcon={<LocationOn />}
                   onClick={() => setMapOpen(true)}
                 >
                   Выбрать на карте
                 </Button>
                 {selectedLocation && (
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant='caption' color='text.secondary'>
                     Место выбрано: {selectedLocation.address}
                   </Typography>
                 )}
@@ -832,9 +993,14 @@ const CustomerCabinetPage: React.FC = () => {
                 fullWidth
                 multiline
                 rows={2}
-                label="Детальное описание проблемы"
+                label='Детальное описание проблемы'
                 value={newRequest.problem_description}
-                onChange={(e) => setNewRequest({ ...newRequest, problem_description: e.target.value })}
+                onChange={e =>
+                  setNewRequest({
+                    ...newRequest,
+                    problem_description: e.target.value,
+                  })
+                }
               />
             </Grid>
           </Grid>
@@ -843,7 +1009,7 @@ const CustomerCabinetPage: React.FC = () => {
           <Button onClick={() => setRequestDialogOpen(false)}>Отмена</Button>
           <Button
             onClick={handleCreateRequest}
-            variant="contained"
+            variant='contained'
             disabled={!newRequest.title || !newRequest.description}
           >
             Создать заявку
@@ -852,61 +1018,77 @@ const CustomerCabinetPage: React.FC = () => {
       </Dialog>
 
       {/* Диалог просмотра заявки */}
-      <Dialog open={viewRequestDialogOpen} onClose={() => setViewRequestDialogOpen(false)} maxWidth="md" fullWidth>
+      <Dialog
+        open={viewRequestDialogOpen}
+        onClose={() => setViewRequestDialogOpen(false)}
+        maxWidth='md'
+        fullWidth
+      >
         <DialogTitle>Заявка #{selectedRequest?.id}</DialogTitle>
         <DialogContent>
           {selectedRequest && (
             <Box>
-              <Typography variant="h6" gutterBottom>
+              <Typography variant='h6' gutterBottom>
                 {selectedRequest.title}
               </Typography>
-              <Typography variant="body1" paragraph>
+              <Typography variant='body1' paragraph>
                 {selectedRequest.description}
               </Typography>
-              
+
               <Grid container spacing={2}>
                 <Grid item xs={12} md={6}>
-                  <Typography variant="subtitle2">Статус:</Typography>
+                  <Typography variant='subtitle2'>Статус:</Typography>
                   <Chip
                     label={getStatusText(selectedRequest.status)}
                     color={getStatusColor(selectedRequest.status) as any}
-                    size="small"
+                    size='small'
                   />
                 </Grid>
                 <Grid item xs={12} md={6}>
-                  <Typography variant="subtitle2">Срочность:</Typography>
-                  <Typography variant="body2">{getUrgencyText(selectedRequest.urgency)}</Typography>
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <Typography variant="subtitle2">Оборудование:</Typography>
-                  <Typography variant="body2">
-                    {selectedRequest.equipment_type || 'Не указано'} - {selectedRequest.equipment_brand || 'Бренд не указан'}
+                  <Typography variant='subtitle2'>Срочность:</Typography>
+                  <Typography variant='body2'>
+                    {getUrgencyText(selectedRequest.urgency)}
                   </Typography>
                 </Grid>
                 <Grid item xs={12} md={6}>
-                  <Typography variant="subtitle2">Местоположение:</Typography>
-                  <Typography variant="body2">
+                  <Typography variant='subtitle2'>Оборудование:</Typography>
+                  <Typography variant='body2'>
+                    {selectedRequest.equipment_type || 'Не указано'} -{' '}
+                    {selectedRequest.equipment_brand || 'Бренд не указан'}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Typography variant='subtitle2'>Местоположение:</Typography>
+                  <Typography variant='body2'>
                     {selectedRequest.address || 'Не указано'}
                   </Typography>
                 </Grid>
                 <Grid item xs={12} md={6}>
-                  <Typography variant="subtitle2">Дата создания:</Typography>
-                  <Typography variant="body2">
+                  <Typography variant='subtitle2'>Дата создания:</Typography>
+                  <Typography variant='body2'>
                     {new Date(selectedRequest.created_at).toLocaleString()}
                   </Typography>
                 </Grid>
                 <Grid item xs={12} md={6}>
-                  <Typography variant="subtitle2">Предпочтительная дата:</Typography>
-                  <Typography variant="body2">
-                    {selectedRequest.preferred_date ? new Date(selectedRequest.preferred_date).toLocaleString() : 'Не указана'}
+                  <Typography variant='subtitle2'>
+                    Предпочтительная дата:
+                  </Typography>
+                  <Typography variant='body2'>
+                    {selectedRequest.preferred_date
+                      ? new Date(
+                          selectedRequest.preferred_date,
+                        ).toLocaleString()
+                      : 'Не указана'}
                   </Typography>
                 </Grid>
               </Grid>
-              
+
               {selectedRequest.problem_description && (
                 <Box sx={{ mt: 2 }}>
-                  <Typography variant="subtitle2">Детальное описание проблемы:</Typography>
-                  <Typography variant="body2" sx={{ mt: 1 }}>
+                  <Typography variant='subtitle2'>
+                    Детальное описание проблемы:
+                  </Typography>
+                  <Typography variant='body2' sx={{ mt: 1 }}>
                     {selectedRequest.problem_description}
                   </Typography>
                 </Box>
@@ -915,7 +1097,9 @@ const CustomerCabinetPage: React.FC = () => {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setViewRequestDialogOpen(false)}>Закрыть</Button>
+          <Button onClick={() => setViewRequestDialogOpen(false)}>
+            Закрыть
+          </Button>
         </DialogActions>
       </Dialog>
 

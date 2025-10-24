@@ -26,9 +26,9 @@ const ModernActions: React.FC<ModernActionsProps> = ({ title, actions }) => {
           '&:hover': {
             background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
             transform: 'translateY(-2px)',
-            boxShadow: '0 8px 25px rgba(102, 126, 234, 0.3)'
+            boxShadow: '0 8px 25px rgba(102, 126, 234, 0.3)',
           },
-          transition: 'all 0.3s ease-in-out'
+          transition: 'all 0.3s ease-in-out',
         };
       case 'secondary':
         return {
@@ -38,9 +38,9 @@ const ModernActions: React.FC<ModernActionsProps> = ({ title, actions }) => {
           '&:hover': {
             background: 'linear-gradient(135deg, #e881f0 0%, #f3455a 100%)',
             transform: 'translateY(-2px)',
-            boxShadow: '0 8px 25px rgba(240, 147, 251, 0.3)'
+            boxShadow: '0 8px 25px rgba(240, 147, 251, 0.3)',
           },
-          transition: 'all 0.3s ease-in-out'
+          transition: 'all 0.3s ease-in-out',
         };
       case 'outline':
         return {
@@ -52,9 +52,9 @@ const ModernActions: React.FC<ModernActionsProps> = ({ title, actions }) => {
             borderColor: 'primary.dark',
             backgroundColor: 'primary.light',
             transform: 'translateY(-2px)',
-            boxShadow: '0 8px 25px rgba(25, 118, 210, 0.2)'
+            boxShadow: '0 8px 25px rgba(25, 118, 210, 0.2)',
           },
-          transition: 'all 0.3s ease-in-out'
+          transition: 'all 0.3s ease-in-out',
         };
       default:
         return {};
@@ -69,12 +69,15 @@ const ModernActions: React.FC<ModernActionsProps> = ({ title, actions }) => {
         backdropFilter: 'blur(10px)',
         border: '1px solid rgba(255,255,255,0.2)',
         background: 'rgba(255,255,255,0.9)',
-        p: 3
+        p: 3,
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
         <Star sx={{ color: 'primary.main', mr: 1 }} />
-        <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'text.primary' }}>
+        <Typography
+          variant='h6'
+          sx={{ fontWeight: 'bold', color: 'text.primary' }}
+        >
           {title}
         </Typography>
       </Box>

@@ -38,9 +38,9 @@ const DashboardPage: React.FC = () => {
       try {
         const [requestsResponse, analyticsData] = await Promise.all([
           apiService.getRepairRequests(1, 5),
-          apiService.getDashboardAnalytics()
+          apiService.getDashboardAnalytics(),
         ]);
-        
+
         setRecentRequests(requestsResponse.items || []);
         setAnalytics(analyticsData);
       } catch (error) {
@@ -110,7 +110,7 @@ const DashboardPage: React.FC = () => {
       case UserRole.CUSTOMER:
         return (
           <Button
-            variant="contained"
+            variant='contained'
             startIcon={<Add />}
             onClick={() => navigate('/repair-requests/new')}
             sx={{ mb: 2 }}
@@ -121,7 +121,7 @@ const DashboardPage: React.FC = () => {
       case UserRole.CONTRACTOR:
         return (
           <Button
-            variant="contained"
+            variant='contained'
             startIcon={<Assignment />}
             onClick={() => navigate('/repair-requests')}
             sx={{ mb: 2 }}
@@ -133,14 +133,14 @@ const DashboardPage: React.FC = () => {
         return (
           <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
             <Button
-              variant="contained"
+              variant='contained'
               startIcon={<Add />}
               onClick={() => navigate('/repair-requests/new')}
             >
               Создать заявку
             </Button>
             <Button
-              variant="outlined"
+              variant='outlined'
               startIcon={<People />}
               onClick={() => navigate('/contractors')}
             >
@@ -155,15 +155,21 @@ const DashboardPage: React.FC = () => {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
+      <Typography variant='h4' gutterBottom>
         Добро пожаловать, {user?.first_name}!
       </Typography>
-      
-      <Typography variant="subtitle1" color="text.secondary" sx={{ mb: 3 }}>
-        Роль: {user?.role === UserRole.ADMIN ? 'Администратор' : 
-               user?.role === UserRole.CUSTOMER ? 'Заказчик' :
-               user?.role === UserRole.CONTRACTOR ? 'Исполнитель' :
-               user?.role === UserRole.SERVICE_ENGINEER ? 'Сервисный инженер' : 'Пользователь'}
+
+      <Typography variant='subtitle1' color='text.secondary' sx={{ mb: 3 }}>
+        Роль:{' '}
+        {user?.role === UserRole.ADMIN
+          ? 'Администратор'
+          : user?.role === UserRole.CUSTOMER
+            ? 'Заказчик'
+            : user?.role === UserRole.CONTRACTOR
+              ? 'Исполнитель'
+              : user?.role === UserRole.SERVICE_ENGINEER
+                ? 'Сервисный инженер'
+                : 'Пользователь'}
       </Typography>
 
       {getRoleSpecificActions()}
@@ -173,15 +179,21 @@ const DashboardPage: React.FC = () => {
         <Grid item xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
                 <Box>
-                  <Typography variant="h4" component="div">
+                  <Typography variant='h4' component='div'>
                     {analytics?.overview?.total_requests || 0}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant='body2' color='text.secondary'>
                     Всего заявок
                   </Typography>
-                  <Typography variant="caption" color="success.main">
+                  <Typography variant='caption' color='success.main'>
                     +{analytics?.overview?.recent_requests_7d || 0} за неделю
                   </Typography>
                 </Box>
@@ -194,15 +206,21 @@ const DashboardPage: React.FC = () => {
         <Grid item xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
                 <Box>
-                  <Typography variant="h4" component="div">
+                  <Typography variant='h4' component='div'>
                     {analytics?.overview?.active_requests || 0}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant='body2' color='text.secondary'>
                     Активные заявки
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant='caption' color='text.secondary'>
                     В работе
                   </Typography>
                 </Box>
@@ -215,15 +233,21 @@ const DashboardPage: React.FC = () => {
         <Grid item xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
                 <Box>
-                  <Typography variant="h4" component="div">
+                  <Typography variant='h4' component='div'>
                     {analytics?.overview?.total_contractors || 0}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant='body2' color='text.secondary'>
                     Исполнители
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant='caption' color='text.secondary'>
                     Зарегистрированы
                   </Typography>
                 </Box>
@@ -236,15 +260,21 @@ const DashboardPage: React.FC = () => {
         <Grid item xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
                 <Box>
-                  <Typography variant="h4" component="div">
+                  <Typography variant='h4' component='div'>
                     {analytics?.overview?.total_customers || 0}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant='body2' color='text.secondary'>
                     Заказчики
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant='caption' color='text.secondary'>
                     Компании
                   </Typography>
                 </Box>
@@ -261,12 +291,12 @@ const DashboardPage: React.FC = () => {
         <Grid item xs={12} md={8}>
           <Card>
             <CardContent>
-              <Typography variant="h6" gutterBottom>
+              <Typography variant='h6' gutterBottom>
                 Последние заявки
               </Typography>
               {recentRequests.length > 0 ? (
                 <List>
-                  {recentRequests.map((request) => (
+                  {recentRequests.map(request => (
                     <ListItem key={request.id} divider>
                       <ListItemIcon>
                         <Build />
@@ -275,17 +305,29 @@ const DashboardPage: React.FC = () => {
                         primary={request.title}
                         secondary={
                           <Box>
-                            <Typography variant="body2" color="text.secondary">
+                            <Typography variant='body2' color='text.secondary'>
                               {request.description}
                             </Typography>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+                            <Box
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1,
+                                mt: 1,
+                              }}
+                            >
                               <Chip
                                 label={getStatusText(request.status)}
                                 color={getStatusColor(request.status) as any}
-                                size="small"
+                                size='small'
                               />
-                              <Typography variant="caption" color="text.secondary">
-                                {new Date(request.created_at).toLocaleDateString('ru-RU')}
+                              <Typography
+                                variant='caption'
+                                color='text.secondary'
+                              >
+                                {new Date(
+                                  request.created_at,
+                                ).toLocaleDateString('ru-RU')}
                               </Typography>
                             </Box>
                           </Box>
@@ -297,7 +339,7 @@ const DashboardPage: React.FC = () => {
               ) : (
                 <Box sx={{ textAlign: 'center', py: 4 }}>
                   <Build sx={{ fontSize: 48, color: 'grey.400', mb: 2 }} />
-                  <Typography variant="h6" color="text.secondary">
+                  <Typography variant='h6' color='text.secondary'>
                     Нет заявок
                   </Typography>
                 </Box>
@@ -310,12 +352,12 @@ const DashboardPage: React.FC = () => {
         <Grid item xs={12} md={4}>
           <Card>
             <CardContent>
-              <Typography variant="h6" gutterBottom>
+              <Typography variant='h6' gutterBottom>
                 Быстрые действия
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <Button
-                  variant="contained"
+                  variant='contained'
                   startIcon={<Build />}
                   onClick={() => navigate('/repair-requests')}
                   fullWidth
@@ -324,7 +366,7 @@ const DashboardPage: React.FC = () => {
                 </Button>
                 {user?.role === UserRole.CUSTOMER && (
                   <Button
-                    variant="outlined"
+                    variant='outlined'
                     startIcon={<Add />}
                     onClick={() => navigate('/repair-requests/new')}
                     fullWidth
@@ -333,7 +375,7 @@ const DashboardPage: React.FC = () => {
                   </Button>
                 )}
                 <Button
-                  variant="outlined"
+                  variant='outlined'
                   startIcon={<AccountCircle />}
                   onClick={() => navigate('/profile')}
                   fullWidth

@@ -19,7 +19,7 @@ const ModernCard: React.FC<ModernCardProps> = ({
   subtitle,
   icon,
   gradient,
-  trend
+  trend,
 }) => {
   return (
     <Card
@@ -46,27 +46,33 @@ const ModernCard: React.FC<ModernCardProps> = ({
         '&:hover': {
           transform: 'translateY(-4px)',
           boxShadow: '0 12px 40px rgba(0,0,0,0.15)',
-          transition: 'all 0.3s ease-in-out'
-        }
+          transition: 'all 0.3s ease-in-out',
+        },
       }}
     >
       <CardContent sx={{ p: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
           <Box>
-            <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
+            <Typography variant='h4' sx={{ fontWeight: 'bold', mb: 1 }}>
               {value}
             </Typography>
-            <Typography variant="body2" sx={{ opacity: 0.9, mb: 1 }}>
+            <Typography variant='body2' sx={{ opacity: 0.9, mb: 1 }}>
               {title}
             </Typography>
             {subtitle && (
-              <Typography variant="caption" sx={{ opacity: 0.8 }}>
+              <Typography variant='caption' sx={{ opacity: 0.8 }}>
                 {subtitle}
               </Typography>
             )}
             {trend && (
               <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                <Typography variant="caption" sx={{ opacity: 0.9 }}>
+                <Typography variant='caption' sx={{ opacity: 0.9 }}>
                   {trend.value}
                 </Typography>
               </Box>
@@ -77,7 +83,7 @@ const ModernCard: React.FC<ModernCardProps> = ({
               bgcolor: 'rgba(255,255,255,0.2)',
               width: 56,
               height: 56,
-              backdropFilter: 'blur(10px)'
+              backdropFilter: 'blur(10px)',
             }}
           >
             {icon}

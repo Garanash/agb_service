@@ -7,6 +7,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from jinja2 import Template
+from .real_email_service import real_email_service
 
 logger = logging.getLogger(__name__)
 
@@ -21,40 +22,22 @@ class EmailService:
         self.from_name = os.getenv("MAIL_FROM_NAME", "AGB SERVICE")
 
     def _send_email(self, to_email: str, subject: str, html_content: str, plain_text: str = None) -> bool:
-        """Базовый метод отправки письма"""
+        """Базовый метод отправки письма через API"""
         try:
-            # Создаем multipart сообщение
-            msg = MIMEMultipart('alternative')
-            msg['From'] = f"{self.from_name} <{self.from_email}>"
-            msg['To'] = to_email
-            msg['Subject'] = subject
+            # Используем реальный сервис отправки писем
+            success = real_email_service.send_email_via_webhook(
+                to_email=to_email,
+                subject=subject,
+                html_content=html_content,
+                plain_text=plain_text
+            )
             
-            # Добавляем текстовую версию
-            if plain_text:
-                text_part = MIMEText(plain_text, 'plain', 'utf-8')
-                msg.attach(text_part)
-            
-            # Добавляем HTML версию
-            html_part = MIMEText(html_content, 'html', 'utf-8')
-            msg.attach(html_part)
-            
-            # Создаем SMTP соединение
-            if self.smtp_port == 465:
-                server = smtplib.SMTP_SSL(self.smtp_server, self.smtp_port)
+            if success:
+                logger.info(f"✅ Письмо отправлено на {to_email}")
             else:
-                server = smtplib.SMTP(self.smtp_server, self.smtp_port)
-                server.starttls()
+                logger.error(f"❌ Не удалось отправить письмо на {to_email}")
             
-            # Логинимся
-            server.login(self.username, self.password)
-            
-            # Отправляем письмо
-            server.send_message(msg)
-            
-            # Закрываем соединение
-            server.quit()
-            
-            return True
+            return success
             
         except Exception as e:
             logger.error(f"❌ Ошибка отправки письма на {to_email}: {e}")

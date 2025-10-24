@@ -1,5 +1,17 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, LoginRequest, UserCreate, CustomerRegistrationRequest, ContractorRegistrationRequest } from '../types/api';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react';
+import {
+  User,
+  LoginRequest,
+  UserCreate,
+  CustomerRegistrationRequest,
+  ContractorRegistrationRequest,
+} from '../types/api';
 import { apiService } from '../services/api';
 
 interface AuthContextType {
@@ -8,8 +20,12 @@ interface AuthContextType {
   isLoading: boolean;
   login: (credentials: LoginRequest) => Promise<void>;
   register: (userData: UserCreate) => Promise<void>;
-  registerCustomer: (customerData: CustomerRegistrationRequest) => Promise<void>;
-  registerContractor: (contractorData: ContractorRegistrationRequest) => Promise<void>;
+  registerCustomer: (
+    customerData: CustomerRegistrationRequest
+  ) => Promise<void>;
+  registerContractor: (
+    contractorData: ContractorRegistrationRequest
+  ) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
 }
@@ -74,7 +90,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const registerCustomer = async (customerData: CustomerRegistrationRequest) => {
+  const registerCustomer = async (
+    customerData: CustomerRegistrationRequest,
+  ) => {
     try {
       await apiService.registerCustomer(customerData);
     } catch (error) {
@@ -83,7 +101,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const registerContractor = async (contractorData: ContractorRegistrationRequest) => {
+  const registerContractor = async (
+    contractorData: ContractorRegistrationRequest,
+  ) => {
     try {
       await apiService.registerContractor(contractorData);
     } catch (error) {

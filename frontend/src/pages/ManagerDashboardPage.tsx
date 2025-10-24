@@ -50,12 +50,12 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs, { Dayjs } from 'dayjs';
 import 'dayjs/locale/ru';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import { useAuth } from 'hooks/useAuth';
+import { apiService } from 'services/api';
 
 // Настраиваем dayjs
 dayjs.extend(relativeTime);
 dayjs.locale('ru');
-import { useAuth } from 'hooks/useAuth';
-import { apiService } from 'services/api';
 
 interface DashboardStats {
   total_requests: number;
@@ -126,12 +126,16 @@ const ManagerDashboardPage: React.FC = () => {
   const [deadlines, setDeadlines] = useState<UpcomingDeadline[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Календарь
   const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
-  const [calendarView, setCalendarView] = useState<'month' | 'week' | 'day'>('month');
+  const [calendarView, setCalendarView] = useState<'month' | 'week' | 'day'>(
+    'month',
+  );
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
+    null,
+  );
   const [scheduleDate, setScheduleDate] = useState<Dayjs>(dayjs());
 
   useEffect(() => {
@@ -141,10 +145,12 @@ const ManagerDashboardPage: React.FC = () => {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      
+
       // Проверяем роль пользователя
       if (user?.role !== 'manager' && user?.role !== 'admin') {
-        console.warn('User does not have manager role, skipping manager-specific data');
+        console.warn(
+          'User does not have manager role, skipping manager-specific data',
+        );
         setStats({
           total_requests: 0,
           recent_requests: 0,
@@ -153,42 +159,42 @@ const ManagerDashboardPage: React.FC = () => {
           avg_processing_time_hours: 0,
           active_contractors: 0,
           active_customers: 0,
-          completion_rate: 0
+          completion_rate: 0,
         });
         setWorkload([]);
         setActivity([]);
         setDeadlines([]);
         return;
       }
-      
+
       // Загружаем данные параллельно с обработкой ошибок
-      const [statsData, workloadData, activityData, deadlinesData] = await Promise.all([
-        apiService.getManagerStats().catch(err => {
-          console.warn('Failed to load manager stats:', err);
-          return {};
-        }),
-        apiService.getContractorWorkload().catch(err => {
-          console.warn('Failed to load contractor workload:', err);
-          return [];
-        }),
-        apiService.getRecentActivity().catch(err => {
-          console.warn('Failed to load recent activity:', err);
-          return [];
-        }),
-        apiService.getUpcomingDeadlines().catch(err => {
-          console.warn('Failed to load upcoming deadlines:', err);
-          return [];
-        })
-      ]);
-      
+      const [statsData, workloadData, activityData, deadlinesData] =
+        await Promise.all([
+          apiService.getManagerStats().catch(err => {
+            console.warn('Failed to load manager stats:', err);
+            return {};
+          }),
+          apiService.getContractorWorkload().catch(err => {
+            console.warn('Failed to load contractor workload:', err);
+            return [];
+          }),
+          apiService.getRecentActivity().catch(err => {
+            console.warn('Failed to load recent activity:', err);
+            return [];
+          }),
+          apiService.getUpcomingDeadlines().catch(err => {
+            console.warn('Failed to load upcoming deadlines:', err);
+            return [];
+          }),
+        ]);
+
       setStats(statsData);
       setWorkload(workloadData);
       setActivity(activityData);
       setDeadlines(deadlinesData);
-      
+
       // Загружаем события календаря для текущего месяца
       await loadCalendarEvents();
-      
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Ошибка загрузки данных дашборда');
     } finally {
@@ -200,7 +206,7 @@ const ManagerDashboardPage: React.FC = () => {
     try {
       const startDate = selectedDate.startOf('month').toISOString();
       const endDate = selectedDate.endOf('month').toISOString();
-      
+
       const eventsData = await apiService.getCalendarEvents(startDate, endDate);
       setEvents(eventsData);
     } catch (err: any) {
@@ -217,11 +223,11 @@ const ManagerDashboardPage: React.FC = () => {
 
   const handleScheduleRequest = async () => {
     if (!selectedEvent) return;
-    
+
     try {
       const requestId = parseInt(selectedEvent.id.replace('request_', ''));
       await apiService.scheduleRequest(requestId, scheduleDate.toISOString());
-      
+
       setScheduleDialogOpen(false);
       setSelectedEvent(null);
       await loadCalendarEvents();
@@ -232,60 +238,65 @@ const ManagerDashboardPage: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     const colors: { [key: string]: string } = {
-      'new': '#2196f3',
-      'manager_review': '#ff9800',
-      'clarification': '#ff5722',
-      'sent_to_contractors': '#9c27b0',
-      'contractor_responses': '#673ab7',
-      'assigned': '#4caf50',
-      'in_progress': '#00bcd4',
-      'completed': '#8bc34a',
-      'cancelled': '#f44336'
+      new: '#2196f3',
+      manager_review: '#ff9800',
+      clarification: '#ff5722',
+      sent_to_contractors: '#9c27b0',
+      contractor_responses: '#673ab7',
+      assigned: '#4caf50',
+      in_progress: '#00bcd4',
+      completed: '#8bc34a',
+      cancelled: '#f44336',
     };
     return colors[status] || '#757575';
   };
 
   const getStatusText = (status: string) => {
     const texts: { [key: string]: string } = {
-      'new': 'Новая',
-      'manager_review': 'На рассмотрении',
-      'clarification': 'Уточнение',
-      'sent_to_contractors': 'Отправлена исполнителям',
-      'contractor_responses': 'Отклики получены',
-      'assigned': 'Назначена',
-      'in_progress': 'В работе',
-      'completed': 'Завершена',
-      'cancelled': 'Отменена'
+      new: 'Новая',
+      manager_review: 'На рассмотрении',
+      clarification: 'Уточнение',
+      sent_to_contractors: 'Отправлена исполнителям',
+      contractor_responses: 'Отклики получены',
+      assigned: 'Назначена',
+      in_progress: 'В работе',
+      completed: 'Завершена',
+      cancelled: 'Отменена',
     };
     return texts[status] || status;
   };
 
   const getUrgencyColor = (urgency: string) => {
     const colors: { [key: string]: string } = {
-      'high': 'error',
-      'medium': 'warning',
-      'low': 'success'
+      high: 'error',
+      medium: 'warning',
+      low: 'success',
     };
     return colors[urgency] || 'default';
   };
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <Box
+        display='flex'
+        justifyContent='center'
+        alignItems='center'
+        minHeight='400px'
+      >
         <CircularProgress />
       </Box>
     );
   }
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="ru">
+    <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale='ru'>
       <Box sx={{ p: 3 }}>
-        <Typography variant="h4" gutterBottom>
+        <Typography variant='h4' gutterBottom>
           Дашборд менеджера
         </Typography>
-        
+
         {error && (
-          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+          <Alert severity='error' sx={{ mb: 2 }} onClose={() => setError(null)}>
             {error}
           </Alert>
         )}
@@ -296,53 +307,69 @@ const ManagerDashboardPage: React.FC = () => {
             <Grid item xs={12} sm={6} md={3}>
               <Card>
                 <CardContent>
-                  <Box display="flex" alignItems="center">
-                    <Assignment color="primary" sx={{ mr: 2 }} />
+                  <Box display='flex' alignItems='center'>
+                    <Assignment color='primary' sx={{ mr: 2 }} />
                     <Box>
-                      <Typography variant="h4">{stats.total_requests}</Typography>
-                      <Typography color="text.secondary">Всего заявок</Typography>
+                      <Typography variant='h4'>
+                        {stats.total_requests}
+                      </Typography>
+                      <Typography color='text.secondary'>
+                        Всего заявок
+                      </Typography>
                     </Box>
                   </Box>
                 </CardContent>
               </Card>
             </Grid>
-            
+
             <Grid item xs={12} sm={6} md={3}>
               <Card>
                 <CardContent>
-                  <Box display="flex" alignItems="center">
-                    <TrendingUp color="success" sx={{ mr: 2 }} />
+                  <Box display='flex' alignItems='center'>
+                    <TrendingUp color='success' sx={{ mr: 2 }} />
                     <Box>
-                      <Typography variant="h4">{stats.completion_rate}%</Typography>
-                      <Typography color="text.secondary">Процент выполнения</Typography>
+                      <Typography variant='h4'>
+                        {stats.completion_rate}%
+                      </Typography>
+                      <Typography color='text.secondary'>
+                        Процент выполнения
+                      </Typography>
                     </Box>
                   </Box>
                 </CardContent>
               </Card>
             </Grid>
-            
+
             <Grid item xs={12} sm={6} md={3}>
               <Card>
                 <CardContent>
-                  <Box display="flex" alignItems="center">
-                    <People color="info" sx={{ mr: 2 }} />
+                  <Box display='flex' alignItems='center'>
+                    <People color='info' sx={{ mr: 2 }} />
                     <Box>
-                      <Typography variant="h4">{stats.active_contractors}</Typography>
-                      <Typography color="text.secondary">Активных исполнителей</Typography>
+                      <Typography variant='h4'>
+                        {stats.active_contractors}
+                      </Typography>
+                      <Typography color='text.secondary'>
+                        Активных исполнителей
+                      </Typography>
                     </Box>
                   </Box>
                 </CardContent>
               </Card>
             </Grid>
-            
+
             <Grid item xs={12} sm={6} md={3}>
               <Card>
                 <CardContent>
-                  <Box display="flex" alignItems="center">
-                    <Schedule color="warning" sx={{ mr: 2 }} />
+                  <Box display='flex' alignItems='center'>
+                    <Schedule color='warning' sx={{ mr: 2 }} />
                     <Box>
-                      <Typography variant="h4">{stats.avg_processing_time_hours}ч</Typography>
-                      <Typography color="text.secondary">Среднее время обработки</Typography>
+                      <Typography variant='h4'>
+                        {stats.avg_processing_time_hours}ч
+                      </Typography>
+                      <Typography color='text.secondary'>
+                        Среднее время обработки
+                      </Typography>
                     </Box>
                   </Box>
                 </CardContent>
@@ -356,10 +383,10 @@ const ManagerDashboardPage: React.FC = () => {
           <Grid item xs={12} md={8}>
             <Card>
               <CardContent>
-                <Typography variant="h6" gutterBottom>
+                <Typography variant='h6' gutterBottom>
                   Календарь заявок
                 </Typography>
-                
+
                 <Box sx={{ display: 'flex', gap: 2 }}>
                   <Box sx={{ flex: 1 }}>
                     <DateCalendar
@@ -368,16 +395,18 @@ const ManagerDashboardPage: React.FC = () => {
                       sx={{ width: '100%' }}
                     />
                   </Box>
-                  
+
                   <Box sx={{ flex: 1 }}>
-                    <Typography variant="subtitle1" gutterBottom>
+                    <Typography variant='subtitle1' gutterBottom>
                       События на {selectedDate.format('DD MMMM YYYY')}
                     </Typography>
-                    
+
                     <List dense>
                       {events
-                        .filter(event => dayjs(event.start).isSame(selectedDate, 'day'))
-                        .map((event) => (
+                        .filter(event =>
+                          dayjs(event.start).isSame(selectedDate, 'day'),
+                        )
+                        .map(event => (
                           <ListItem key={event.id} sx={{ px: 0 }}>
                             <ListItemIcon>
                               <Box
@@ -394,7 +423,7 @@ const ManagerDashboardPage: React.FC = () => {
                               secondary={`${event.customer_name} • ${event.equipment_type || 'Оборудование'}`}
                             />
                             <IconButton
-                              size="small"
+                              size='small'
                               onClick={() => {
                                 setSelectedEvent(event);
                                 setScheduleDialogOpen(true);
@@ -416,15 +445,17 @@ const ManagerDashboardPage: React.FC = () => {
             {/* Предстоящие дедлайны */}
             <Card sx={{ mb: 2 }}>
               <CardContent>
-                <Typography variant="h6" gutterBottom>
+                <Typography variant='h6' gutterBottom>
                   Предстоящие дедлайны
                 </Typography>
-                
+
                 <List dense>
-                  {deadlines.slice(0, 5).map((deadline) => (
+                  {deadlines.slice(0, 5).map(deadline => (
                     <ListItem key={deadline.id} sx={{ px: 0 }}>
                       <ListItemIcon>
-                        <Warning color={getUrgencyColor(deadline.urgency) as any} />
+                        <Warning
+                          color={getUrgencyColor(deadline.urgency) as any}
+                        />
                       </ListItemIcon>
                       <ListItemText
                         primary={deadline.title}
@@ -439,15 +470,15 @@ const ManagerDashboardPage: React.FC = () => {
             {/* Последняя активность */}
             <Card>
               <CardContent>
-                <Typography variant="h6" gutterBottom>
+                <Typography variant='h6' gutterBottom>
                   Последняя активность
                 </Typography>
-                
+
                 <List dense>
-                  {activity.slice(0, 5).map((item) => (
+                  {activity.slice(0, 5).map(item => (
                     <ListItem key={item.id} sx={{ px: 0 }}>
                       <ListItemIcon>
-                        <Typography variant="body2">{item.icon}</Typography>
+                        <Typography variant='body2'>{item.icon}</Typography>
                       </ListItemIcon>
                       <ListItemText
                         primary={item.title}
@@ -464,10 +495,10 @@ const ManagerDashboardPage: React.FC = () => {
         {/* Загрузка исполнителей */}
         <Card sx={{ mt: 3 }}>
           <CardContent>
-            <Typography variant="h6" gutterBottom>
+            <Typography variant='h6' gutterBottom>
               Загрузка исполнителей
             </Typography>
-            
+
             <TableContainer>
               <Table>
                 <TableHead>
@@ -481,10 +512,10 @@ const ManagerDashboardPage: React.FC = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {workload.map((contractor) => (
+                  {workload.map(contractor => (
                     <TableRow key={contractor.contractor_id}>
                       <TableCell>
-                        <Box display="flex" alignItems="center">
+                        <Box display='flex' alignItems='center'>
                           <Avatar sx={{ mr: 2, width: 32, height: 32 }}>
                             {contractor.name.charAt(0)}
                           </Avatar>
@@ -492,36 +523,52 @@ const ManagerDashboardPage: React.FC = () => {
                         </Box>
                       </TableCell>
                       <TableCell>
-                        {contractor.specializations.slice(0, 2).map((spec) => (
-                          <Chip key={spec} label={spec} size="small" sx={{ mr: 1, mb: 1 }} />
+                        {contractor.specializations.slice(0, 2).map(spec => (
+                          <Chip
+                            key={spec}
+                            label={spec}
+                            size='small'
+                            sx={{ mr: 1, mb: 1 }}
+                          />
                         ))}
                         {contractor.specializations.length > 2 && (
-                          <Chip label={`+${contractor.specializations.length - 2}`} size="small" />
+                          <Chip
+                            label={`+${contractor.specializations.length - 2}`}
+                            size='small'
+                          />
                         )}
                       </TableCell>
                       <TableCell>{contractor.active_requests}</TableCell>
                       <TableCell>
-                        <Box display="flex" alignItems="center">
+                        <Box display='flex' alignItems='center'>
                           <LinearProgress
-                            variant="determinate"
+                            variant='determinate'
                             value={contractor.workload_percentage}
                             sx={{ width: 100, mr: 1 }}
                           />
-                          <Typography variant="body2">
+                          <Typography variant='body2'>
                             {contractor.workload_percentage}%
                           </Typography>
                         </Box>
                       </TableCell>
                       <TableCell>
                         <Chip
-                          label={contractor.availability_status === 'available' ? 'Доступен' : 'Занят'}
-                          color={contractor.availability_status === 'available' ? 'success' : 'warning'}
-                          size="small"
+                          label={
+                            contractor.availability_status === 'available'
+                              ? 'Доступен'
+                              : 'Занят'
+                          }
+                          color={
+                            contractor.availability_status === 'available'
+                              ? 'success'
+                              : 'warning'
+                          }
+                          size='small'
                         />
                       </TableCell>
                       <TableCell>
-                        <Tooltip title="Просмотреть профиль">
-                          <IconButton size="small">
+                        <Tooltip title='Просмотреть профиль'>
+                          <IconButton size='small'>
                             <Visibility />
                           </IconButton>
                         </Tooltip>
@@ -535,36 +582,41 @@ const ManagerDashboardPage: React.FC = () => {
         </Card>
 
         {/* Диалог планирования */}
-        <Dialog open={scheduleDialogOpen} onClose={() => setScheduleDialogOpen(false)} maxWidth="sm" fullWidth>
+        <Dialog
+          open={scheduleDialogOpen}
+          onClose={() => setScheduleDialogOpen(false)}
+          maxWidth='sm'
+          fullWidth
+        >
           <DialogTitle>Планирование заявки</DialogTitle>
           <DialogContent>
             {selectedEvent && (
               <Box sx={{ mb: 2 }}>
-                <Typography variant="subtitle1" gutterBottom>
+                <Typography variant='subtitle1' gutterBottom>
                   {selectedEvent.title}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant='body2' color='text.secondary'>
                   Заказчик: {selectedEvent.customer_name}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant='body2' color='text.secondary'>
                   Оборудование: {selectedEvent.equipment_type}
                 </Typography>
               </Box>
             )}
-            
+
             <TextField
               fullWidth
-              type="datetime-local"
-              label="Дата и время выполнения"
+              type='datetime-local'
+              label='Дата и время выполнения'
               value={scheduleDate.format('YYYY-MM-DDTHH:mm')}
-              onChange={(e) => setScheduleDate(dayjs(e.target.value))}
+              onChange={e => setScheduleDate(dayjs(e.target.value))}
               InputLabelProps={{ shrink: true }}
               sx={{ mt: 2 }}
             />
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setScheduleDialogOpen(false)}>Отмена</Button>
-            <Button onClick={handleScheduleRequest} variant="contained">
+            <Button onClick={handleScheduleRequest} variant='contained'>
               Запланировать
             </Button>
           </DialogActions>
