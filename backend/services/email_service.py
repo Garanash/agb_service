@@ -15,7 +15,8 @@ class EmailService:
     def __init__(self):
         """Инициализация сервиса отправки почты"""
         self.smtp_server = os.getenv("MAIL_SERVER", "smtp.mail.ru")
-        self.smtp_port = int(os.getenv("MAIL_PORT", 465))
+        mail_port = os.getenv("MAIL_PORT", "465")
+        self.smtp_port = int(mail_port) if mail_port else 465
         self.username = os.getenv("MAIL_USERNAME", "test@example.com")
         self.password = os.getenv("MAIL_PASSWORD", "test_password")
         self.from_email = os.getenv("MAIL_FROM", "test@example.com")
