@@ -797,6 +797,11 @@ class ApiService {
     return response.data;
   }
 
+  // Методы для повторной отправки писем
+  async resendEmailVerification(userId: number): Promise<void> {
+    await this.api.post(`/api/v1/auth/resend-verification/${userId}`);
+  }
+
   // Методы для системы верификации исполнителей
   async getContractorProfileExtended(contractorId: number): Promise<any> {
     const response: AxiosResponse<any> = await this.api.get(

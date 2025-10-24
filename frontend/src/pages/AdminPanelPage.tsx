@@ -72,6 +72,7 @@ import {
   Schedule,
   LocationOn,
   PriorityHigh,
+  Email,
 } from '@mui/icons-material';
 import { useAuth } from 'hooks/useAuth';
 import { apiService } from 'services/api';
@@ -290,6 +291,15 @@ const AdminPanelPage: React.FC = () => {
       setSuccess('Пользователь успешно создан');
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Ошибка создания пользователя');
+    }
+  };
+
+  const handleResendEmailVerification = async (userId: number) => {
+    try {
+      await apiService.resendEmailVerification(userId);
+      setSuccess('Письмо подтверждения отправлено повторно');
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Ошибка отправки письма подтверждения');
     }
   };
 
@@ -759,6 +769,19 @@ const AdminPanelPage: React.FC = () => {
           <Edit sx={{ mr: 1 }} />
           Редактировать
         </MenuItemComponent>
+        {selectedUser && !selectedUser.email_verified && (
+          <MenuItemComponent
+            onClick={() => {
+              if (selectedUser) {
+                handleResendEmailVerification(selectedUser.id);
+              }
+              setUserMenuAnchor(null);
+            }}
+          >
+            <Email sx={{ mr: 1 }} />
+            Отправить письмо подтверждения
+          </MenuItemComponent>
+        )}
         <MenuItemComponent
           onClick={() => {
             if (selectedUser) {

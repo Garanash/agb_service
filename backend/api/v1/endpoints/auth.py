@@ -394,6 +394,55 @@ async def register_contractor(
     
     return UserResponse.from_orm(db_user)
 
+@router.post("/resend-verification/{user_id}")
+async def resend_email_verification(
+    user_id: int,
+    db: Session = Depends(get_db)
+):
+    """Повторная отправка письма подтверждения email"""
+    
+    # Получаем пользователя
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Пользователь не найден"
+        )
+    
+    # Если email уже подтвержден, не отправляем письмо
+    if user.email_verified:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email уже подтвержден"
+        )
+    
+    # Генерируем новый токен подтверждения
+    verification_token = generate_email_verification_token()
+    user.email_verification_token = verification_token
+    db.commit()
+    
+    # Отправляем письмо подтверждения
+    try:
+        email_sent = await email_service.send_email_verification(
+            user_email=user.email,
+            user_name=user.username,
+            verification_token=verification_token
+        )
+        
+        if email_sent:
+            logger.info(f"✅ Письмо подтверждения повторно отправлено пользователю {user.email}")
+            return {"message": "Письмо подтверждения отправлено"}
+        else:
+            logger.warning(f"⚠️ Не удалось повторно отправить письмо подтверждения пользователю {user.email}")
+            return {"message": "Письмо подтверждения отправлено (возможны проблемы с доставкой)"}
+            
+    except Exception as e:
+        logger.error(f"❌ Ошибка повторной отправки письма подтверждения: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Ошибка отправки письма подтверждения"
+        )
+
 @router.post("/register-simple", response_model=UserResponse)
 async def register_simple(
     registration_data: SimpleRegistrationRequest,
