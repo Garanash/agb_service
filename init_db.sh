@@ -19,8 +19,9 @@ echo "👤 Создаем администратора..."
 docker-compose exec agregator-backend python -c "
 from database import SessionLocal
 from models import User, UserRole
-import bcrypt
+from passlib.context import CryptContext
 
+pwd_context = CryptContext(schemes=['sha256_crypt'], deprecated='auto')
 db = SessionLocal()
 
 # Проверяем, есть ли уже админ
@@ -30,7 +31,7 @@ if admin:
 else:
     # Создаем хеш пароля
     password = 'admin123'
-    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    hashed_password = pwd_context.hash(password)
     
     # Создаем администратора
     admin_user = User(
@@ -39,7 +40,7 @@ else:
         hashed_password=hashed_password,
         first_name='Администратор',
         last_name='Системы',
-        role=UserRole.ADMIN,
+        role=UserRole.ADMIN.value,
         is_active=True,
         is_password_changed=True,
         email_verified=True
@@ -59,23 +60,24 @@ echo "👥 Создаем тестовых пользователей..."
 docker-compose exec agregator-backend python -c "
 from database import SessionLocal
 from models import User, UserRole
-import bcrypt
+from passlib.context import CryptContext
 
+pwd_context = CryptContext(schemes=['sha256_crypt'], deprecated='auto')
 db = SessionLocal()
 
 # Создаем тестовых пользователей
 users_data = [
-    {'username': 'customer1', 'email': 'customer1@test.com', 'first_name': 'Иван', 'last_name': 'Петров', 'role': UserRole.CUSTOMER},
-    {'username': 'customer2', 'email': 'customer2@test.com', 'first_name': 'Мария', 'last_name': 'Сидорова', 'role': UserRole.CUSTOMER},
-    {'username': 'contractor1', 'email': 'contractor1@test.com', 'first_name': 'Алексей', 'last_name': 'Козлов', 'role': UserRole.CONTRACTOR},
-    {'username': 'contractor2', 'email': 'contractor2@test.com', 'first_name': 'Елена', 'last_name': 'Морозова', 'role': UserRole.CONTRACTOR},
-    {'username': 'manager1', 'email': 'manager1@test.com', 'first_name': 'Дмитрий', 'last_name': 'Волков', 'role': UserRole.MANAGER},
-    {'username': 'security1', 'email': 'security1@test.com', 'first_name': 'Андрей', 'last_name': 'Лебедев', 'role': UserRole.SECURITY},
-    {'username': 'hr1', 'email': 'hr1@test.com', 'first_name': 'Ольга', 'last_name': 'Новикова', 'role': UserRole.HR},
+    {'username': 'customer1', 'email': 'customer1@test.com', 'first_name': 'Иван', 'last_name': 'Петров', 'role': UserRole.CUSTOMER.value},
+    {'username': 'customer2', 'email': 'customer2@test.com', 'first_name': 'Мария', 'last_name': 'Сидорова', 'role': UserRole.CUSTOMER.value},
+    {'username': 'contractor1', 'email': 'contractor1@test.com', 'first_name': 'Алексей', 'last_name': 'Козлов', 'role': UserRole.CONTRACTOR.value},
+    {'username': 'contractor2', 'email': 'contractor2@test.com', 'first_name': 'Елена', 'last_name': 'Морозова', 'role': UserRole.CONTRACTOR.value},
+    {'username': 'manager1', 'email': 'manager1@test.com', 'first_name': 'Дмитрий', 'last_name': 'Волков', 'role': UserRole.MANAGER.value},
+    {'username': 'security1', 'email': 'security1@test.com', 'first_name': 'Андрей', 'last_name': 'Лебедев', 'role': UserRole.SECURITY.value},
+    {'username': 'hr1', 'email': 'hr1@test.com', 'first_name': 'Ольга', 'last_name': 'Новикова', 'role': UserRole.HR.value},
 ]
 
 password = 'password123'
-hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+hashed_password = pwd_context.hash(password)
 
 for user_data in users_data:
     existing_user = db.query(User).filter(User.username == user_data['username']).first()
