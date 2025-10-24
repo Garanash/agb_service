@@ -19,7 +19,8 @@ class RealEmailService:
         self.from_email = os.getenv("MAIL_FROM", "almazgeobur@mail.ru")
         self.from_name = os.getenv("MAIL_FROM_NAME", "AGB SERVICE")
         self.smtp_server = os.getenv("MAIL_SERVER", "smtp.mail.ru")
-        self.smtp_port = int(os.getenv("MAIL_PORT", "587"))
+        mail_port = os.getenv("MAIL_PORT", "587")
+        self.smtp_port = int(mail_port) if mail_port else 587
         self.username = os.getenv("MAIL_USERNAME", "almazgeobur@mail.ru")
         self.password = os.getenv("MAIL_PASSWORD", "")
         self.use_tls = os.getenv("MAIL_TLS", "true").lower() == "true"
