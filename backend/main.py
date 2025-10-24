@@ -137,6 +137,9 @@ from api.v1.schemas import RepairRequestResponse, ContractorResponseResponse
 from api.v1.endpoints.auth import router as auth_router
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["🔐 Аутентификация"])
 
+from api.v1.endpoints.contractor_verification import router as contractor_verification_router
+app.include_router(contractor_verification_router, prefix="/api/v1", tags=["✅ Верификация исполнителей"])
+
 from api.v1.endpoints.repair_requests import router as repair_requests_router
 app.include_router(repair_requests_router, prefix="/api/v1/repair-requests", tags=["🔧 Заявки на ремонт"])
 

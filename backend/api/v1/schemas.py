@@ -375,6 +375,145 @@ class HRDocumentResponse(HRDocumentBase):
     created_at: datetime
     updated_at: Optional[datetime] = None
 
+# Схемы для системы верификации исполнителей
+
+class VerificationStatus(str, Enum):
+    INCOMPLETE = "incomplete"
+    PENDING_SECURITY = "pending_security"
+    PENDING_MANAGER = "pending_manager"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+
+class DocumentType(str, Enum):
+    PASSPORT = "passport"
+    INN = "inn"
+    SAFETY_CERTIFICATE = "safety_certificate"
+    EDUCATION_DIPLOMA = "education_diploma"
+    WORK_EXPERIENCE = "work_experience"
+    OTHER = "other"
+
+class ContractorEducationBase(BaseModel):
+    institution_name: str = Field(..., min_length=1, max_length=200)
+    degree: str = Field(..., min_length=1, max_length=100)
+    specialization: str = Field(..., min_length=1, max_length=200)
+    graduation_year: Optional[int] = Field(None, ge=1950, le=2030)
+    diploma_number: Optional[str] = Field(None, max_length=50)
+    document_path: Optional[str] = None
+
+class ContractorEducationCreate(ContractorEducationBase):
+    pass
+
+class ContractorEducationResponse(ContractorEducationBase):
+    class Config:
+        orm_mode = True
+    
+    id: int
+    contractor_id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+class ContractorDocumentBase(BaseModel):
+    document_type: DocumentType
+    document_name: str = Field(..., min_length=1, max_length=200)
+    document_path: str
+    file_size: Optional[int] = None
+    mime_type: Optional[str] = None
+
+class ContractorDocumentCreate(ContractorDocumentBase):
+    pass
+
+class ContractorDocumentResponse(ContractorDocumentBase):
+    class Config:
+        orm_mode = True
+    
+    id: int
+    contractor_id: int
+    verification_status: str = "pending"
+    verification_notes: Optional[str] = None
+    verified_by: Optional[int] = None
+    verified_at: Optional[datetime] = None
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+class ContractorVerificationBase(BaseModel):
+    profile_completed: bool = False
+    documents_uploaded: bool = False
+    security_check_passed: bool = False
+    manager_approval: bool = False
+    overall_status: VerificationStatus = VerificationStatus.INCOMPLETE
+    security_notes: Optional[str] = None
+    manager_notes: Optional[str] = None
+
+class ContractorVerificationResponse(ContractorVerificationBase):
+    class Config:
+        orm_mode = True
+    
+    id: int
+    contractor_id: int
+    security_checked_by: Optional[int] = None
+    manager_checked_by: Optional[int] = None
+    security_checked_at: Optional[datetime] = None
+    manager_checked_at: Optional[datetime] = None
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+# Расширенная схема профиля исполнителя
+class ContractorProfileExtended(ContractorProfileResponse):
+    education_records: List[ContractorEducationResponse] = []
+    documents: List[ContractorDocumentResponse] = []
+    verification: Optional[ContractorVerificationResponse] = None
+
+# Схемы для обновления профиля
+class ContractorProfileUpdate(BaseModel):
+    # Личные данные
+    first_name: Optional[str] = Field(None, max_length=100)
+    last_name: Optional[str] = Field(None, max_length=100)
+    patronymic: Optional[str] = Field(None, max_length=100)
+    phone: Optional[str] = Field(None, max_length=20)
+    email: Optional[str] = Field(None, pattern=r'^[^@]+@[^@]+\.[^@]+$')
+    
+    # Паспортные данные
+    passport_series: Optional[str] = Field(None, max_length=10)
+    passport_number: Optional[str] = Field(None, max_length=20)
+    passport_issued_by: Optional[str] = Field(None, max_length=200)
+    passport_issued_date: Optional[str] = Field(None, max_length=20)
+    passport_issued_code: Optional[str] = Field(None, max_length=10)
+    birth_date: Optional[str] = Field(None, max_length=20)
+    birth_place: Optional[str] = Field(None, max_length=200)
+    
+    # ИНН
+    inn: Optional[str] = Field(None, max_length=12)
+    
+    # Профессиональная информация
+    specializations: Optional[List[str]] = None
+    equipment_brands_experience: Optional[List[str]] = None
+    certifications: Optional[List[str]] = None
+    work_regions: Optional[List[str]] = None
+    hourly_rate: Optional[float] = Field(None, ge=0)
+    availability_status: Optional[str] = None
+    general_description: Optional[str] = Field(None, max_length=1000)
+    
+    # Контакты
+    telegram_username: Optional[str] = Field(None, max_length=100)
+    website: Optional[str] = Field(None, max_length=200)
+    
+    # Банковские данные
+    bank_name: Optional[str] = Field(None, max_length=200)
+    bank_account: Optional[str] = Field(None, max_length=30)
+    bank_bik: Optional[str] = Field(None, max_length=10)
+
+# Схемы для проверки документов
+class DocumentVerificationRequest(BaseModel):
+    document_id: int
+    verification_status: str = Field(..., regex="^(approved|rejected)$")
+    verification_notes: Optional[str] = Field(None, max_length=500)
+
+class ContractorVerificationRequest(BaseModel):
+    contractor_id: int
+    verification_type: str = Field(..., regex="^(security|manager)$")
+    approved: bool
+    notes: Optional[str] = Field(None, max_length=1000)
+
 # Обновляем forward references
 # Убираем model_rebuild() для Pydantic v1
 # RepairRequestResponse.model_rebuild()

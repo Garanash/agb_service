@@ -49,8 +49,8 @@ class User(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     # Связи с профилями
-    customer_profile = relationship("CustomerProfile", back_populates="user", lazy="selectin", uselist=False)
-    contractor_profile = relationship("ContractorProfile", back_populates="user", lazy="selectin", uselist=False)
+    customer_profile = relationship("CustomerProfile", back_populates="user", lazy="selectin", uselist=False, foreign_keys="CustomerProfile.user_id")
+    contractor_profile = relationship("ContractorProfile", back_populates="user", lazy="selectin", uselist=False, foreign_keys="ContractorProfile.user_id")
 
 class CustomerProfile(Base):
     """Профиль заказчика (компания)"""
@@ -80,7 +80,7 @@ class CustomerProfile(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     # Связи
-    user = relationship("User", back_populates="customer_profile", lazy="selectin")
+    user = relationship("User", back_populates="customer_profile", lazy="selectin", foreign_keys=[user_id])
     requests = relationship("RepairRequest", back_populates="customer", lazy="selectin")
 
 class ContractorProfile(Base):
@@ -97,11 +97,20 @@ class ContractorProfile(Base):
     phone = Column(String, nullable=True, default=None)
     email = Column(String, nullable=True, default=None)
 
+    # Паспортные данные (обязательно для СБ)
+    passport_series = Column(String, nullable=True)
+    passport_number = Column(String, nullable=True)
+    passport_issued_by = Column(String, nullable=True)
+    passport_issued_date = Column(String, nullable=True)
+    passport_issued_code = Column(String, nullable=True)
+    birth_date = Column(String, nullable=True)
+    birth_place = Column(String, nullable=True)
+    
+    # ИНН (обязательно для СБ)
+    inn = Column(String, nullable=True)
+    
     # Профессиональная информация (JSON массив)
     professional_info = Column(JSON, nullable=True, default=list)
-
-    # Образование (JSON массив)
-    education = Column(JSON, nullable=True, default=list)
 
     # Банковские данные
     bank_name = Column(String, nullable=True)
@@ -128,13 +137,24 @@ class ContractorProfile(Base):
     hourly_rate = Column(Float, nullable=True)  # Почасовая ставка
     availability_status = Column(String, nullable=True, default="available")  # Статус доступности
 
+    # Статус верификации
+    profile_completion_status = Column(String, nullable=True, default="incomplete")  # incomplete, pending_security, pending_manager, approved, rejected
+    security_verified = Column(Boolean, default=False)
+    manager_verified = Column(Boolean, default=False)
+    security_verified_at = Column(DateTime(timezone=True), nullable=True)
+    manager_verified_at = Column(DateTime(timezone=True), nullable=True)
+    security_verified_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    manager_verified_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+
     # Метаданные
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     # Связи
-    user = relationship("User", back_populates="contractor_profile", lazy="selectin")
+    user = relationship("User", back_populates="contractor_profile", lazy="selectin", foreign_keys=[user_id])
     responses = relationship("ContractorResponse", back_populates="contractor", lazy="selectin")
+    education_records = relationship("ContractorEducation", back_populates="contractor", lazy="selectin")
+    documents = relationship("ContractorDocument", back_populates="contractor", lazy="selectin")
 
 class RepairRequest(Base):
     """Заявка на ремонт"""
@@ -319,3 +339,88 @@ class HRDocument(Base):
     # Связи
     contractor = relationship("ContractorProfile", lazy="selectin")
     hr_officer = relationship("User", lazy="selectin")
+
+class ContractorEducation(Base):
+    """Образование исполнителя"""
+    __tablename__ = "contractor_education"
+
+    id = Column(Integer, primary_key=True, index=True)
+    contractor_id = Column(Integer, ForeignKey("contractor_profiles.id"), nullable=False)
+    
+    # Данные об образовании
+    institution_name = Column(String, nullable=False)  # Название учебного заведения
+    degree = Column(String, nullable=False)  # Степень/квалификация
+    specialization = Column(String, nullable=False)  # Специализация
+    graduation_year = Column(Integer, nullable=True)  # Год окончания
+    diploma_number = Column(String, nullable=True)  # Номер диплома
+    document_path = Column(String, nullable=True)  # Путь к файлу диплома
+    
+    # Метаданные
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Связи
+    contractor = relationship("ContractorProfile", back_populates="education_records", lazy="selectin")
+
+class ContractorDocument(Base):
+    """Документы исполнителя"""
+    __tablename__ = "contractor_documents"
+
+    id = Column(Integer, primary_key=True, index=True)
+    contractor_id = Column(Integer, ForeignKey("contractor_profiles.id"), nullable=False)
+    
+    # Данные о документе
+    document_type = Column(String, nullable=False)  # Тип документа (passport, inn, safety_certificate, etc.)
+    document_name = Column(String, nullable=False)  # Название документа
+    document_path = Column(String, nullable=False)  # Путь к файлу
+    file_size = Column(Integer, nullable=True)  # Размер файла в байтах
+    mime_type = Column(String, nullable=True)  # MIME тип файла
+    
+    # Статус проверки
+    verification_status = Column(String, nullable=False, default="pending")  # pending, approved, rejected
+    verification_notes = Column(Text, nullable=True)  # Комментарии при проверке
+    verified_by = Column(Integer, ForeignKey("users.id"), nullable=True)  # Кто проверил
+    verified_at = Column(DateTime(timezone=True), nullable=True)  # Когда проверили
+    
+    # Метаданные
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Связи
+    contractor = relationship("ContractorProfile", back_populates="documents", lazy="selectin")
+    verifier = relationship("User", lazy="selectin")
+
+class ContractorVerification(Base):
+    """Общая верификация исполнителя"""
+    __tablename__ = "contractor_verifications"
+
+    id = Column(Integer, primary_key=True, index=True)
+    contractor_id = Column(Integer, ForeignKey("contractor_profiles.id"), nullable=False, unique=True)
+    
+    # Статусы проверки
+    profile_completed = Column(Boolean, default=False)  # Профиль заполнен
+    documents_uploaded = Column(Boolean, default=False)  # Документы загружены
+    security_check_passed = Column(Boolean, default=False)  # Проверка СБ пройдена
+    manager_approval = Column(Boolean, default=False)  # Одобрение менеджера
+    
+    # Общий статус
+    overall_status = Column(String, nullable=False, default="incomplete")  # incomplete, pending_security, pending_manager, approved, rejected
+    
+    # Комментарии
+    security_notes = Column(Text, nullable=True)
+    manager_notes = Column(Text, nullable=True)
+    
+    # Кто проверял
+    security_checked_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    manager_checked_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    security_checked_at = Column(DateTime(timezone=True), nullable=True)
+    manager_checked_at = Column(DateTime(timezone=True), nullable=True)
+    
+    # Метаданные
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Связи
+    contractor = relationship("ContractorProfile", lazy="selectin")
+    security_officer = relationship("User", foreign_keys=[security_checked_by], lazy="selectin")
+    manager = relationship("User", foreign_keys=[manager_checked_by], lazy="selectin")

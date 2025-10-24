@@ -796,6 +796,75 @@ class ApiService {
     );
     return response.data;
   }
+
+  // Методы для системы верификации исполнителей
+  async getContractorProfileExtended(contractorId: number): Promise<any> {
+    const response: AxiosResponse<any> = await this.api.get(
+      `/api/v1/contractor-verification/profile/${contractorId}`,
+    );
+    return response.data;
+  }
+
+  async updateContractorProfile(contractorId: number, profileData: any): Promise<any> {
+    const response: AxiosResponse<any> = await this.api.put(
+      `/api/v1/contractor-verification/profile/${contractorId}`,
+      profileData,
+    );
+    return response.data;
+  }
+
+  async addEducationRecord(contractorId: number, educationData: any): Promise<any> {
+    const response: AxiosResponse<any> = await this.api.post(
+      `/api/v1/contractor-verification/education/${contractorId}`,
+      educationData,
+    );
+    return response.data;
+  }
+
+  async deleteEducationRecord(educationId: number): Promise<void> {
+    await this.api.delete(`/api/v1/contractor-verification/education/${educationId}`);
+  }
+
+  async uploadContractorDocument(contractorId: number, formData: FormData): Promise<any> {
+    const response: AxiosResponse<any> = await this.api.post(
+      `/api/v1/contractor-verification/documents/${contractorId}/upload`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      },
+    );
+    return response.data;
+  }
+
+  async deleteContractorDocument(documentId: number): Promise<void> {
+    await this.api.delete(`/api/v1/contractor-verification/documents/${documentId}`);
+  }
+
+  async verifyDocument(documentId: number, verificationData: any): Promise<any> {
+    const response: AxiosResponse<any> = await this.api.put(
+      `/api/v1/contractor-verification/documents/${documentId}/verify`,
+      verificationData,
+    );
+    return response.data;
+  }
+
+  async verifyContractor(contractorId: number, verificationData: any): Promise<any> {
+    const response: AxiosResponse<any> = await this.api.put(
+      `/api/v1/contractor-verification/contractor/${contractorId}/verify`,
+      verificationData,
+    );
+    return response.data;
+  }
+
+  async getPendingVerifications(verificationType?: string): Promise<any[]> {
+    const params = verificationType ? `?verification_type=${verificationType}` : '';
+    const response: AxiosResponse<any[]> = await this.api.get(
+      `/api/v1/contractor-verification/pending${params}`,
+    );
+    return response.data;
+  }
 }
 
 export const apiService = new ApiService();

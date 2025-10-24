@@ -104,3 +104,14 @@ def verify_email_verification_token(token: str, db: Session) -> Optional[User]:
             return None
     
     return user
+
+def require_role(allowed_roles: list):
+    """Декоратор для проверки ролей пользователя"""
+    def role_checker(current_user: User = Depends(get_current_user)):
+        if current_user.role not in allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Недостаточно прав. Требуются роли: {', '.join(allowed_roles)}"
+            )
+        return current_user
+    return role_checker
