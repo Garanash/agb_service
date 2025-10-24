@@ -1,10 +1,11 @@
 """
-Реальный сервис для отправки электронной почты через SMTP
+Реальный сервис для отправки электронной почты через внешние API
 """
 import os
 import logging
 import smtplib
 import json
+import requests
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from typing import Optional
@@ -22,6 +23,11 @@ class RealEmailService:
         self.username = os.getenv("MAIL_USERNAME", "almazgeobur@mail.ru")
         self.password = os.getenv("MAIL_PASSWORD", "")
         self.use_tls = os.getenv("MAIL_TLS", "true").lower() == "true"
+        
+        # Альтернативные настройки для внешних сервисов
+        self.sendgrid_api_key = os.getenv("SENDGRID_API_KEY", "")
+        self.mailgun_api_key = os.getenv("MAILGUN_API_KEY", "")
+        self.mailgun_domain = os.getenv("MAILGUN_DOMAIN", "")
 
     def send_email_via_smtp(self, to_email: str, subject: str, html_content: str, plain_text: str = None) -> bool:
         """Отправка письма через SMTP"""
@@ -66,16 +72,93 @@ class RealEmailService:
             logger.error(f"❌ Ошибка отправки письма через SMTP на {to_email}: {e}")
             return False
 
+    def send_email_via_sendgrid(self, to_email: str, subject: str, html_content: str, plain_text: str = None) -> bool:
+        """Отправка письма через SendGrid API"""
+        if not self.sendgrid_api_key:
+            logger.warning("⚠️ SendGrid API ключ не настроен")
+            return False
+            
+        try:
+            url = "https://api.sendgrid.com/v3/mail/send"
+            headers = {
+                "Authorization": f"Bearer {self.sendgrid_api_key}",
+                "Content-Type": "application/json"
+            }
+            
+            data = {
+                "personalizations": [{"to": [{"email": to_email}]}],
+                "from": {"email": self.from_email, "name": self.from_name},
+                "subject": subject,
+                "content": [
+                    {"type": "text/plain", "value": plain_text or html_content},
+                    {"type": "text/html", "value": html_content}
+                ]
+            }
+            
+            logger.info(f"📧 Отправка через SendGrid на {to_email}")
+            response = requests.post(url, headers=headers, json=data)
+            
+            if response.status_code == 202:
+                logger.info(f"✅ Письмо успешно отправлено через SendGrid на {to_email}")
+                return True
+            else:
+                logger.error(f"❌ Ошибка SendGrid: {response.status_code} - {response.text}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"❌ Ошибка отправки через SendGrid на {to_email}: {e}")
+            return False
+
+    def send_email_via_mailgun(self, to_email: str, subject: str, html_content: str, plain_text: str = None) -> bool:
+        """Отправка письма через Mailgun API"""
+        if not self.mailgun_api_key or not self.mailgun_domain:
+            logger.warning("⚠️ Mailgun API ключ или домен не настроены")
+            return False
+            
+        try:
+            url = f"https://api.mailgun.net/v3/{self.mailgun_domain}/messages"
+            auth = ("api", self.mailgun_api_key)
+            
+            data = {
+                "from": f"{self.from_name} <{self.from_email}>",
+                "to": to_email,
+                "subject": subject,
+                "html": html_content,
+                "text": plain_text or html_content
+            }
+            
+            logger.info(f"📧 Отправка через Mailgun на {to_email}")
+            response = requests.post(url, auth=auth, data=data)
+            
+            if response.status_code == 200:
+                logger.info(f"✅ Письмо успешно отправлено через Mailgun на {to_email}")
+                return True
+            else:
+                logger.error(f"❌ Ошибка Mailgun: {response.status_code} - {response.text}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"❌ Ошибка отправки через Mailgun на {to_email}: {e}")
+            return False
+
     def send_email_via_webhook(self, to_email: str, subject: str, html_content: str, plain_text: str = None) -> bool:
         """
-        Основной метод отправки письма - сначала пробуем SMTP, потом сохраняем в файл
+        Основной метод отправки письма - пробуем разные способы по порядку
         """
-        # Сначала пробуем отправить через SMTP
+        # 1. Пробуем SendGrid
+        if self.send_email_via_sendgrid(to_email, subject, html_content, plain_text):
+            return True
+        
+        # 2. Пробуем Mailgun
+        if self.send_email_via_mailgun(to_email, subject, html_content, plain_text):
+            return True
+        
+        # 3. Пробуем SMTP
         if self.send_email_via_smtp(to_email, subject, html_content, plain_text):
             return True
         
-        # Если SMTP не сработал, сохраняем в файл для отладки
-        logger.warning(f"⚠️ SMTP не сработал для {to_email}, сохраняем в файл")
+        # 4. Если ничего не сработало, сохраняем в файл
+        logger.warning(f"⚠️ Все методы отправки не сработали для {to_email}, сохраняем в файл")
         return self._save_email_to_file(to_email, subject, html_content, plain_text)
 
     def _save_email_to_file(self, to_email: str, subject: str, html_content: str, plain_text: str = None):
