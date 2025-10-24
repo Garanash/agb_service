@@ -28,6 +28,15 @@ class RealEmailService:
         self.sendgrid_api_key = os.getenv("SENDGRID_API_KEY", "")
         self.mailgun_api_key = os.getenv("MAILGUN_API_KEY", "")
         self.mailgun_domain = os.getenv("MAILGUN_DOMAIN", "")
+        
+        # Российские сервисы
+        self.mailru_api_key = os.getenv("MAILRU_API_KEY", "")
+        self.mailru_domain = os.getenv("MAILRU_DOMAIN", "")
+        self.yandex_api_key = os.getenv("YANDEX_API_KEY", "")
+        self.yandex_domain = os.getenv("YANDEX_DOMAIN", "")
+        self.unisender_api_key = os.getenv("UNISENDER_API_KEY", "")
+        self.sendpulse_api_key = os.getenv("SENDPULSE_API_KEY", "")
+        self.sendpulse_secret = os.getenv("SENDPULSE_SECRET", "")
 
     def send_email_via_smtp(self, to_email: str, subject: str, html_content: str, plain_text: str = None) -> bool:
         """Отправка письма через SMTP"""
@@ -141,15 +150,191 @@ class RealEmailService:
             logger.error(f"❌ Ошибка отправки через Mailgun на {to_email}: {e}")
             return False
 
+    def send_email_via_mailru(self, to_email: str, subject: str, html_content: str, plain_text: str = None) -> bool:
+        """Отправка письма через Mail.ru Cloud Solutions API"""
+        if not self.mailru_api_key or not self.mailru_domain:
+            logger.warning("⚠️ Mail.ru API ключ или домен не настроены")
+            return False
+            
+        try:
+            url = f"https://api.mail.ru/v1/{self.mailru_domain}/messages"
+            headers = {
+                "Authorization": f"Bearer {self.mailru_api_key}",
+                "Content-Type": "application/json"
+            }
+            
+            data = {
+                "from": {"email": self.from_email, "name": self.from_name},
+                "to": [{"email": to_email}],
+                "subject": subject,
+                "html": html_content,
+                "text": plain_text or html_content
+            }
+            
+            logger.info(f"📧 Отправка через Mail.ru на {to_email}")
+            response = requests.post(url, headers=headers, json=data)
+            
+            if response.status_code == 200:
+                logger.info(f"✅ Письмо успешно отправлено через Mail.ru на {to_email}")
+                return True
+            else:
+                logger.error(f"❌ Ошибка Mail.ru: {response.status_code} - {response.text}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"❌ Ошибка отправки через Mail.ru на {to_email}: {e}")
+            return False
+
+    def send_email_via_yandex(self, to_email: str, subject: str, html_content: str, plain_text: str = None) -> bool:
+        """Отправка письма через Yandex.Cloud Mail API"""
+        if not self.yandex_api_key or not self.yandex_domain:
+            logger.warning("⚠️ Yandex API ключ или домен не настроены")
+            return False
+            
+        try:
+            url = f"https://mail-api.yandexcloud.net/v1/{self.yandex_domain}/messages"
+            headers = {
+                "Authorization": f"Bearer {self.yandex_api_key}",
+                "Content-Type": "application/json"
+            }
+            
+            data = {
+                "from": {"email": self.from_email, "name": self.from_name},
+                "to": [{"email": to_email}],
+                "subject": subject,
+                "html": html_content,
+                "text": plain_text or html_content
+            }
+            
+            logger.info(f"📧 Отправка через Yandex на {to_email}")
+            response = requests.post(url, headers=headers, json=data)
+            
+            if response.status_code == 200:
+                logger.info(f"✅ Письмо успешно отправлено через Yandex на {to_email}")
+                return True
+            else:
+                logger.error(f"❌ Ошибка Yandex: {response.status_code} - {response.text}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"❌ Ошибка отправки через Yandex на {to_email}: {e}")
+            return False
+
+    def send_email_via_unisender(self, to_email: str, subject: str, html_content: str, plain_text: str = None) -> bool:
+        """Отправка письма через Unisender API"""
+        if not self.unisender_api_key:
+            logger.warning("⚠️ Unisender API ключ не настроен")
+            return False
+            
+        try:
+            url = "https://api.unisender.com/ru/api/sendEmail"
+            data = {
+                "api_key": self.unisender_api_key,
+                "email": to_email,
+                "sender_name": self.from_name,
+                "sender_email": self.from_email,
+                "subject": subject,
+                "body": html_content,
+                "text_body": plain_text or html_content
+            }
+            
+            logger.info(f"📧 Отправка через Unisender на {to_email}")
+            response = requests.post(url, data=data)
+            
+            if response.status_code == 200:
+                result = response.json()
+                if result.get("result", {}).get("email_id"):
+                    logger.info(f"✅ Письмо успешно отправлено через Unisender на {to_email}")
+                    return True
+                else:
+                    logger.error(f"❌ Ошибка Unisender: {result}")
+                    return False
+            else:
+                logger.error(f"❌ Ошибка Unisender: {response.status_code} - {response.text}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"❌ Ошибка отправки через Unisender на {to_email}: {e}")
+            return False
+
+    def send_email_via_sendpulse(self, to_email: str, subject: str, html_content: str, plain_text: str = None) -> bool:
+        """Отправка письма через SendPulse API"""
+        if not self.sendpulse_api_key or not self.sendpulse_secret:
+            logger.warning("⚠️ SendPulse API ключ или секрет не настроены")
+            return False
+            
+        try:
+            # Получаем токен доступа
+            auth_url = "https://api.sendpulse.com/oauth/access_token"
+            auth_data = {
+                "grant_type": "client_credentials",
+                "client_id": self.sendpulse_api_key,
+                "client_secret": self.sendpulse_secret
+            }
+            
+            auth_response = requests.post(auth_url, data=auth_data)
+            if auth_response.status_code != 200:
+                logger.error(f"❌ Ошибка авторизации SendPulse: {auth_response.text}")
+                return False
+                
+            access_token = auth_response.json().get("access_token")
+            if not access_token:
+                logger.error("❌ Не удалось получить токен доступа SendPulse")
+                return False
+            
+            # Отправляем письмо
+            url = "https://api.sendpulse.com/smtp/emails"
+            headers = {
+                "Authorization": f"Bearer {access_token}",
+                "Content-Type": "application/json"
+            }
+            
+            data = {
+                "email": {
+                    "subject": subject,
+                    "html": html_content,
+                    "text": plain_text or html_content,
+                    "from": {"name": self.from_name, "email": self.from_email},
+                    "to": [{"email": to_email}]
+                }
+            }
+            
+            logger.info(f"📧 Отправка через SendPulse на {to_email}")
+            response = requests.post(url, headers=headers, json=data)
+            
+            if response.status_code == 200:
+                logger.info(f"✅ Письмо успешно отправлено через SendPulse на {to_email}")
+                return True
+            else:
+                logger.error(f"❌ Ошибка SendPulse: {response.status_code} - {response.text}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"❌ Ошибка отправки через SendPulse на {to_email}: {e}")
+            return False
+
     def send_email_via_webhook(self, to_email: str, subject: str, html_content: str, plain_text: str = None) -> bool:
         """
         Основной метод отправки письма - пробуем разные способы по порядку
+        Приоритет: Российские сервисы → Зарубежные → SMTP → файл
         """
-        # 1. Пробуем SendGrid
+        # 1. Российские сервисы (приоритет для российских пользователей)
+        if self.send_email_via_mailru(to_email, subject, html_content, plain_text):
+            return True
+        
+        if self.send_email_via_yandex(to_email, subject, html_content, plain_text):
+            return True
+            
+        if self.send_email_via_unisender(to_email, subject, html_content, plain_text):
+            return True
+            
+        if self.send_email_via_sendpulse(to_email, subject, html_content, plain_text):
+            return True
+        
+        # 2. Зарубежные сервисы
         if self.send_email_via_sendgrid(to_email, subject, html_content, plain_text):
             return True
         
-        # 2. Пробуем Mailgun
         if self.send_email_via_mailgun(to_email, subject, html_content, plain_text):
             return True
         
