@@ -52,7 +52,7 @@ const LoginPage: React.FC = () => {
     <Box
       sx={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        backgroundColor: '#f5f5f5',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -62,8 +62,8 @@ const LoginPage: React.FC = () => {
       <Container maxWidth="sm">
         <Card
           sx={{
-            borderRadius: 3,
-            boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
+            borderRadius: 2,
+            boxShadow: 3,
             overflow: 'hidden',
           }}
         >
@@ -168,10 +168,6 @@ const LoginPage: React.FC = () => {
                   fontSize: '1.1rem',
                   fontWeight: 'bold',
                   borderRadius: 2,
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
-                  },
                 }}
               >
                 {isLoading ? (
