@@ -75,7 +75,7 @@ const LoginPage: React.FC = () => {
                 mb: 4,
               }}
             >
-              <Logo />
+              <Logo size={80} />
               <Typography
                 variant="h4"
                 component="h1"

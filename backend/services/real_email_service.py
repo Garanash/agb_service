@@ -1,11 +1,14 @@
 """
-Реальный сервис для отправки электронной почты через внешние API
+Реальный сервис для отправки электронной почты через SMTP
 """
 import os
 import logging
-import requests
+import smtplib
 import json
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from typing import Optional
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -14,39 +17,66 @@ class RealEmailService:
         """Инициализация сервиса отправки почты"""
         self.from_email = os.getenv("MAIL_FROM", "almazgeobur@mail.ru")
         self.from_name = os.getenv("MAIL_FROM_NAME", "AGB SERVICE")
+        self.smtp_server = os.getenv("MAIL_SERVER", "smtp.mail.ru")
+        self.smtp_port = int(os.getenv("MAIL_PORT", 587))
+        self.username = os.getenv("MAIL_USERNAME", "almazgeobur@mail.ru")
+        self.password = os.getenv("MAIL_PASSWORD", "")
+        self.use_tls = os.getenv("MAIL_TLS", "true").lower() == "true"
+
+    def send_email_via_smtp(self, to_email: str, subject: str, html_content: str, plain_text: str = None) -> bool:
+        """Отправка письма через SMTP"""
+        try:
+            # Создаем сообщение
+            msg = MIMEMultipart('alternative')
+            msg['Subject'] = subject
+            msg['From'] = f"{self.from_name} <{self.from_email}>"
+            msg['To'] = to_email
+
+            # Добавляем текстовую версию
+            if plain_text:
+                text_part = MIMEText(plain_text, 'plain', 'utf-8')
+                msg.attach(text_part)
+
+            # Добавляем HTML версию
+            html_part = MIMEText(html_content, 'html', 'utf-8')
+            msg.attach(html_part)
+
+            logger.info(f"📧 Подключение к SMTP серверу {self.smtp_server}:{self.smtp_port}")
+
+            # Подключаемся к SMTP серверу
+            if self.use_tls:
+                server = smtplib.SMTP(self.smtp_server, self.smtp_port)
+                server.starttls()
+            else:
+                server = smtplib.SMTP_SSL(self.smtp_server, self.smtp_port)
+
+            # Авторизуемся
+            logger.info(f"📧 Авторизация как {self.username}")
+            server.login(self.username, self.password)
+
+            # Отправляем письмо
+            logger.info(f"📧 Отправка письма на {to_email}")
+            server.send_message(msg)
+            server.quit()
+
+            logger.info(f"✅ Письмо успешно отправлено через SMTP на {to_email}")
+            return True
+
+        except Exception as e:
+            logger.error(f"❌ Ошибка отправки письма через SMTP на {to_email}: {e}")
+            return False
 
     def send_email_via_webhook(self, to_email: str, subject: str, html_content: str, plain_text: str = None) -> bool:
-        """Отправка письма через webhook сервис"""
-        try:
-            # Используем бесплатный сервис для отправки писем
-            # Можно использовать Zapier, IFTTT, или другие webhook сервисы
-            
-            webhook_data = {
-                'to': to_email,
-                'subject': subject,
-                'html': html_content,
-                'text': plain_text or html_content,
-                'from': self.from_email,
-                'from_name': self.from_name,
-                'timestamp': str(int(__import__('time').time()))
-            }
-            
-            # Логируем детали отправки
-            logger.info(f"📧 Отправка письма через webhook:")
-            logger.info(f"   Кому: {to_email}")
-            logger.info(f"   Тема: {subject}")
-            logger.info(f"   От: {self.from_name} <{self.from_email}>")
-            
-            # В реальном проекте здесь будет вызов к webhook
-            # Пока что сохраняем в файл для отладки
-            self._save_email_to_file(to_email, subject, html_content, plain_text)
-            
-            logger.info(f"✅ Письмо успешно отправлено на {to_email}")
+        """
+        Основной метод отправки письма - сначала пробуем SMTP, потом сохраняем в файл
+        """
+        # Сначала пробуем отправить через SMTP
+        if self.send_email_via_smtp(to_email, subject, html_content, plain_text):
             return True
-                
-        except Exception as e:
-            logger.error(f"❌ Ошибка отправки на {to_email}: {e}")
-            return False
+        
+        # Если SMTP не сработал, сохраняем в файл для отладки
+        logger.warning(f"⚠️ SMTP не сработал для {to_email}, сохраняем в файл")
+        return self._save_email_to_file(to_email, subject, html_content, plain_text)
 
     def _save_email_to_file(self, to_email: str, subject: str, html_content: str, plain_text: str = None):
         """Сохраняем письмо в файл для отладки"""
@@ -58,15 +88,19 @@ class RealEmailService:
                 'text': plain_text,
                 'from': self.from_email,
                 'from_name': self.from_name,
-                'timestamp': __import__('datetime').datetime.now().isoformat()
+                'timestamp': datetime.now().isoformat()
             }
             
             # Сохраняем в файл
             with open('/tmp/sent_emails.json', 'a', encoding='utf-8') as f:
                 f.write(json.dumps(email_data, ensure_ascii=False, indent=2) + '\n')
+            
+            logger.info(f"✅ Письмо сохранено в файл для {to_email}")
+            return True
                 
         except Exception as e:
             logger.error(f"❌ Ошибка сохранения письма в файл: {e}")
+            return False
 
     def send_welcome_email(self, user_email: str, user_name: str, user_role: str) -> bool:
         """Отправка приветственного письма при регистрации"""
@@ -88,13 +122,13 @@ class RealEmailService:
                 <style>
                     body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
                     .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-                    .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
-                    .content {{ background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }}
+                    .header {{ background: #f5f5f5; color: #333; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; border: 1px solid #ddd; }}
+                    .content {{ background: #fff; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #ddd; border-top: none; }}
                     .logo {{ font-size: 24px; font-weight: bold; margin-bottom: 10px; }}
                     .welcome-text {{ font-size: 18px; margin-bottom: 20px; }}
-                    .user-info {{ background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #667eea; }}
+                    .user-info {{ background: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #1976d2; }}
                     .footer {{ text-align: center; margin-top: 30px; color: #666; font-size: 14px; }}
-                    .button {{ display: inline-block; background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }}
+                    .button {{ display: inline-block; background: #1976d2; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }}
                 </style>
             </head>
             <body>
