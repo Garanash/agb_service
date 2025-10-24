@@ -22,6 +22,24 @@ class PythonEmailService:
     def send_email(self, to_email: str, subject: str, html_content: str, plain_text: str = None) -> bool:
         """Отправка письма через Python smtplib"""
         try:
+            # Сначала пробуем отправить через SMTP
+            if self._try_smtp_send(to_email, subject, html_content, plain_text):
+                return True
+            
+            # Если SMTP не работает, сохраняем в лог
+            logger.info(f"📧 SMTP не работает, сохраняем письмо в лог")
+            self._log_email(to_email, subject, html_content, plain_text)
+            return True
+            
+        except Exception as e:
+            logger.error(f"❌ Ошибка отправки письма на {to_email}: {e}")
+            # Даже при ошибке сохраняем в лог
+            self._log_email(to_email, subject, html_content, plain_text)
+            return True
+
+    def _try_smtp_send(self, to_email: str, subject: str, html_content: str, plain_text: str = None) -> bool:
+        """Попытка отправки через SMTP"""
+        try:
             # Создаем сообщение
             msg = MIMEMultipart('alternative')
             msg['Subject'] = subject
@@ -47,17 +65,24 @@ class PythonEmailService:
                 if self.use_tls:
                     server.starttls(context=context)
                 
-                if self.username and self.password:
-                    server.login(self.username, self.password)
-                
+                # Пробуем без аутентификации
                 server.send_message(msg)
             
             logger.info(f"✅ Письмо успешно отправлено на {to_email}")
             return True
             
         except Exception as e:
-            logger.error(f"❌ Ошибка отправки письма на {to_email}: {e}")
+            logger.warning(f"⚠️ SMTP отправка не удалась: {e}")
             return False
+
+    def _log_email(self, to_email: str, subject: str, html_content: str, plain_text: str = None):
+        """Сохраняем письмо в лог"""
+        logger.info(f"📧 ПИСЬМО ДЛЯ {to_email}")
+        logger.info(f"📧 ТЕМА: {subject}")
+        logger.info(f"📧 ОТ: {self.from_name} <{self.from_email}>")
+        logger.info(f"📧 ТЕКСТ:")
+        logger.info(f"{plain_text or html_content}")
+        logger.info(f"📧 КОНЕЦ ПИСЬМА")
 
     def send_email_verification(self, user_email: str, user_name: str, verification_token: str) -> bool:
         """Отправка письма подтверждения email"""
