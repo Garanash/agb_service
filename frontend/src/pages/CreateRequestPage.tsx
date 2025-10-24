@@ -96,7 +96,7 @@ const CreateRequestPage: React.FC = () => {
         address: selectedLocation?.address || data.address
       };
       
-      await apiService.createWorkflowRequest(requestData);
+      await apiService.createRepairRequest(requestData);
       setSuccess(true);
       reset();
       setSelectedLocation(null);
