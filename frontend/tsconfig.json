@@ -4,7 +4,7 @@
     "lib": [
       "dom",
       "dom.iterable",
-      "esnext"
+      "es6"
     ],
     "allowJs": true,
     "skipLibCheck": true,
@@ -21,16 +21,14 @@
     "jsx": "react-jsx",
     "baseUrl": "src",
     "paths": {
-      "@/*": ["*"],
-      "@/components/*": ["components/*"],
-      "@/pages/*": ["pages/*"],
-      "@/hooks/*": ["hooks/*"],
-      "@/services/*": ["services/*"],
-      "@/types/*": ["types/*"],
-      "@/utils/*": ["utils/*"]
+      "@/*": ["*"]
     }
   },
   "include": [
     "src"
+  ],
+  "exclude": [
+    "node_modules",
+    "build"
   ]
 }
