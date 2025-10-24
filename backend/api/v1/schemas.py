@@ -59,6 +59,14 @@ class ContractorRegistrationRequest(UserBase):
     hourly_rate: Optional[float] = Field(None, ge=0)
     telegram_username: Optional[str] = Field(None, max_length=100)
 
+# Упрощенные схемы для быстрой регистрации
+class SimpleRegistrationRequest(BaseModel):
+    username: str = Field(..., min_length=3, max_length=50)
+    email: str = Field(..., pattern=r'^[^@]+@[^@]+\.[^@]+$')
+    password: str = Field(..., min_length=6)
+    confirmPassword: str = Field(..., min_length=6)
+    role: str = Field(..., regex="^(contractor|customer)$")
+
 class UserResponse(UserBase):
     class Config:
         orm_mode = True

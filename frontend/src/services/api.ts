@@ -90,6 +90,21 @@ class ApiService {
     return response.data;
   }
 
+  // Упрощенная регистрация
+  async registerSimple(registrationData: {
+    username: string;
+    email: string;
+    password: string;
+    confirmPassword: string;
+    role: 'contractor' | 'customer';
+  }): Promise<User> {
+    const response: AxiosResponse<User> = await this.api.post(
+      '/api/v1/auth/register-simple',
+      registrationData,
+    );
+    return response.data;
+  }
+
   async getCurrentUser(): Promise<User> {
     const response: AxiosResponse<User> = await this.api.get('/api/v1/auth/me');
     return response.data;

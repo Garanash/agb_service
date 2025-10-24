@@ -11,7 +11,8 @@ from models import User
 from ..schemas import (
     LoginRequest, LoginResponse, UserCreate, UserResponse, 
     EmailVerificationRequest, EmailVerificationResponse,
-    CustomerRegistrationRequest, ContractorRegistrationRequest
+    CustomerRegistrationRequest, ContractorRegistrationRequest,
+    SimpleRegistrationRequest
 )
 from ..dependencies import (
     get_current_user, 
@@ -386,6 +387,129 @@ async def register_contractor(
             logger.info(f"✅ Письмо подтверждения отправлено исполнителю {contractor_data.email}")
         else:
             logger.warning(f"⚠️ Не удалось отправить письмо подтверждения исполнителю {contractor_data.email}")
+            
+    except Exception as e:
+        logger.error(f"❌ Ошибка отправки письма подтверждения: {e}")
+        # Не прерываем регистрацию из-за ошибки отправки почты
+    
+    return UserResponse.from_orm(db_user)
+
+@router.post("/register-simple", response_model=UserResponse)
+async def register_simple(
+    registration_data: SimpleRegistrationRequest,
+    db: Session = Depends(get_db)
+):
+    """Упрощенная регистрация пользователя (только основные поля)"""
+    
+    # Проверяем совпадение паролей
+    if registration_data.password != registration_data.confirmPassword:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Пароли не совпадают"
+        )
+    
+    # Проверяем, что пользователь с таким username не существует
+    existing_user = db.query(User).filter(User.username == registration_data.username).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Пользователь с таким именем уже существует"
+        )
+    
+    # Проверяем, что пользователь с таким email не существует
+    existing_email = db.query(User).filter(User.email == registration_data.email).first()
+    if existing_email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Пользователь с таким email уже существует"
+        )
+    
+    # Создаем нового пользователя
+    hashed_password = get_password_hash(registration_data.password)
+    verification_token = generate_email_verification_token()
+    
+    db_user = User(
+        username=registration_data.username,
+        email=registration_data.email,
+        hashed_password=hashed_password,
+        first_name="",  # Пустые поля, будут заполнены позже
+        last_name="",
+        middle_name="",
+        phone="",
+        position="",
+        role=registration_data.role,
+        is_active=True,
+        is_password_changed=False,
+        email_verified=False,
+        email_verification_token=verification_token
+    )
+    
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    
+    # Создаем профиль в зависимости от роли
+    if registration_data.role == "contractor":
+        from models import ContractorProfile
+        contractor_profile = ContractorProfile(
+            user_id=db_user.id,
+            first_name="",
+            last_name="",
+            patronymic="",
+            phone="",
+            email=registration_data.email,
+            telegram_username="",
+            specializations=[],
+            equipment_brands_experience=[],
+            certifications=[],
+            work_regions=[],
+            hourly_rate=0,
+            availability_status="available"
+        )
+        db.add(contractor_profile)
+        
+        # Создаем заявку на проверку службой безопасности
+        try:
+            from services.security_verification_service import get_security_verification_service
+            security_service = get_security_verification_service(db)
+            security_service.create_verification_request(contractor_profile.id)
+            logger.info(f"✅ Создана заявка на проверку для исполнителя {contractor_profile.id}")
+        except Exception as e:
+            logger.error(f"❌ Ошибка создания заявки на проверку: {e}")
+    
+    elif registration_data.role == "customer":
+        from models import CustomerProfile
+        customer_profile = CustomerProfile(
+            user_id=db_user.id,
+            company_name="",
+            contact_person=registration_data.username,
+            phone="",
+            email=registration_data.email,
+            address="",
+            inn=None,
+            kpp=None,
+            ogrn=None,
+            equipment_brands=[],
+            equipment_types=[],
+            mining_operations=[],
+            service_history=""
+        )
+        db.add(customer_profile)
+    
+    db.commit()
+    
+    # Отправляем письмо подтверждения email асинхронно
+    try:
+        email_sent = await email_service.send_email_verification(
+            user_email=registration_data.email,
+            user_name=registration_data.username,
+            verification_token=verification_token
+        )
+        
+        if email_sent:
+            logger.info(f"✅ Письмо подтверждения отправлено пользователю {registration_data.email}")
+        else:
+            logger.warning(f"⚠️ Не удалось отправить письмо подтверждения пользователю {registration_data.email}")
             
     except Exception as e:
         logger.error(f"❌ Ошибка отправки письма подтверждения: {e}")

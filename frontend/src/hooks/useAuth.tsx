@@ -26,6 +26,13 @@ interface AuthContextType {
   registerContractor: (
     contractorData: ContractorRegistrationRequest
   ) => Promise<void>;
+  registerSimple: (registrationData: {
+    username: string;
+    email: string;
+    password: string;
+    confirmPassword: string;
+    role: 'contractor' | 'customer';
+  }) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
 }
@@ -112,6 +119,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const registerSimple = async (registrationData: {
+    username: string;
+    email: string;
+    password: string;
+    confirmPassword: string;
+    role: 'contractor' | 'customer';
+  }) => {
+    try {
+      await apiService.registerSimple(registrationData);
+    } catch (error) {
+      console.error('Simple registration failed:', error);
+      throw error;
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('user');
@@ -137,6 +159,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     register,
     registerCustomer,
     registerContractor,
+    registerSimple,
     logout,
     refreshUser,
   };
