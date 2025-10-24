@@ -85,10 +85,11 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        REACT_APP_API_URL: /api
+        REACT_APP_API_URL: http://91.222.236.58:8000
     container_name: agregator_frontend
     environment:
       - NODE_ENV=production
+      - REACT_APP_API_URL=http://91.222.236.58:8000
     depends_on:
       - agregator-backend
     ports:

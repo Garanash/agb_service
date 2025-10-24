@@ -345,6 +345,7 @@ class SecurityVerificationResponse(SecurityVerificationBase):
     contractor_name: Optional[str] = None
     contractor_email: Optional[str] = None
     contractor_phone: Optional[str] = None
+    contractor: Optional[Dict[str, Any]] = None
 
 # Схемы для HR документов
 class HRDocumentBase(BaseModel):

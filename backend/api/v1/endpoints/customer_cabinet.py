@@ -199,7 +199,7 @@ async def create_customer_request(
         problem_description=request_data.problem_description,
         latitude=request_data.latitude,
         longitude=request_data.longitude,
-        priority=request_data.priority or "normal",
+        priority=getattr(request_data, 'priority', 'normal'),
         status=RequestStatus.NEW
     )
     

@@ -1,6 +1,6 @@
 // Конфигурация приложения
 export const config = {
-  apiUrl: '/api',
+  apiUrl: '',
   appName: 'Agregator Service',
   appVersion: '1.0.0',
 };

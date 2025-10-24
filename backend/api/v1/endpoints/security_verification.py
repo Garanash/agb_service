@@ -7,7 +7,7 @@ from typing import List, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from database import get_db
-from models import User
+from models import User, ContractorProfile
 from api.v1.schemas import (
     SecurityVerificationCreate, SecurityVerificationResponse,
     SecurityVerificationUpdate
@@ -36,12 +36,54 @@ async def get_pending_verifications(
     
     result = []
     for ver in pending_verifications:
-        verification_data = SecurityVerificationResponse.from_orm(ver)
-        # Добавляем информацию об исполнителе
-        if hasattr(ver, 'contractor') and ver.contractor:
-            verification_data.contractor_name = f"{ver.contractor.first_name} {ver.contractor.last_name}"
-            verification_data.contractor_email = ver.contractor.email
-            verification_data.contractor_phone = ver.contractor.phone
+        # Получаем информацию об исполнителе
+        contractor_profile = db.query(ContractorProfile).filter(
+            ContractorProfile.id == ver.contractor_id
+        ).first()
+        
+        contractor_name = None
+        contractor_email = None
+        contractor_phone = None
+        contractor_data = None
+        
+        if contractor_profile:
+            user = db.query(User).filter(User.id == contractor_profile.user_id).first()
+            if user:
+                contractor_name = f"{user.first_name} {user.last_name}"
+                contractor_email = user.email
+                contractor_phone = user.phone
+                
+                # Добавляем дополнительную информацию об исполнителе
+                contractor_data = {
+                    "id": contractor_profile.id,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "phone": user.phone,
+                    "email": user.email,
+                    "specializations": contractor_profile.specializations or [],
+                    "equipment_brands_experience": contractor_profile.equipment_brands_experience or [],
+                    "certifications": contractor_profile.certifications or [],
+                    "work_regions": contractor_profile.work_regions or [],
+                    "hourly_rate": contractor_profile.hourly_rate,
+                    "availability_status": contractor_profile.availability_status or "unknown",
+                    "general_description": contractor_profile.general_description
+                }
+        
+        # Создаем объект ответа с дополнительными полями
+        verification_data = SecurityVerificationResponse(
+            id=ver.id,
+            contractor_id=ver.contractor_id,
+            verification_status=ver.verification_status,
+            verification_notes=ver.verification_notes,
+            checked_by=ver.checked_by,
+            created_at=ver.created_at,
+            updated_at=ver.updated_at,
+            contractor_name=contractor_name,
+            contractor_email=contractor_email,
+            contractor_phone=contractor_phone,
+            contractor=contractor_data
+        )
+        
         result.append(verification_data)
     
     return result

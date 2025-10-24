@@ -60,7 +60,6 @@ const RepairRequestsPage: React.FC = () => {
     register,
     handleSubmit,
     reset,
-    formState: { errors },
   } = useForm<RepairRequestCreate>();
 
   useEffect(() => {
@@ -266,7 +265,7 @@ const RepairRequestsPage: React.FC = () => {
                   {canDelete(request) && (
                     <IconButton
                       onClick={() => handleDeleteRequest(request.id)}
-                      color="error"
+                      color='error'
                     >
                       <Delete />
                     </IconButton>
@@ -319,7 +318,7 @@ const RepairRequestsPage: React.FC = () => {
                 />
                 <TextField
                   fullWidth
-                  label="Город"
+                  label='Город'
                   {...register('city')}
                 />
               </Box>

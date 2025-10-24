@@ -25,24 +25,33 @@ async def create_request(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Создание новой заявки заказчиком"""
-    if current_user.role != "customer":
+    """Создание новой заявки заказчиком или администратором"""
+    if current_user.role not in ["customer", "admin"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Только заказчики могут создавать заявки"
+            detail="Только заказчики и администраторы могут создавать заявки"
         )
     
-    # Получаем профиль заказчика
-    customer_profile = db.query(User).filter(User.id == current_user.id).first()
-    if not customer_profile or not customer_profile.customer_profile:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Профиль заказчика не найден"
-        )
+    # Получаем профиль заказчика (для админа это не обязательно)
+    customer_profile = None
+    if current_user.role == "customer":
+        customer_profile = db.query(User).filter(User.id == current_user.id).first()
+        if not customer_profile or not customer_profile.customer_profile:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Профиль заказчика не найден"
+            )
+        customer_id = customer_profile.customer_profile.id
+    else:
+        # Для админа используем ID заказчика из данных запроса или создаем заявку от имени системы
+        customer_id = getattr(request_data, 'customer_id', None)
+        if not customer_id:
+            # Если не указан customer_id, создаем заявку от имени системы (ID = 1)
+            customer_id = 1
     
     workflow_service = get_request_workflow_service(db)
     request = workflow_service.create_request(
-        customer_profile.customer_profile.id,
+        customer_id,
         request_data.dict()
     )
     

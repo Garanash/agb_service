@@ -272,192 +272,88 @@ const SecurityVerificationPage: React.FC = () => {
         </Alert>
       )}
 
-      {/* Современная статистика СБ */}
+      {/* Статистика СБ */}
       {stats && (
         <Grid container spacing={3} sx={{ mb: 4 }}>
           <Grid item xs={12} sm={6} md={3}>
-            <Card sx={{ 
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              color: 'white',
-              position: 'relative',
-              overflow: 'hidden',
-              '&::before': {
-                content: '""',
-                position: 'absolute',
-                top: 0,
-                right: 0,
-                width: '100px',
-                height: '100px',
-                background: 'rgba(255,255,255,0.1)',
-                borderRadius: '50%',
-                transform: 'translate(30px, -30px)',
-              }
-            }}>
+            <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
-                    <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
+                    <Typography variant="h4" component="div">
                       {stats.total_verifications}
                     </Typography>
-                    <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                    <Typography variant="body2" color="text.secondary">
                       Всего проверок
                     </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                      <Assignment sx={{ fontSize: 16, mr: 0.5 }} />
-                      <Typography variant="caption">
-                        За все время
-                      </Typography>
-                    </Box>
+                    <Typography variant="caption" color="text.secondary">
+                      За все время
+                    </Typography>
                   </Box>
-                  <Avatar sx={{ 
-                    bgcolor: 'rgba(255,255,255,0.2)', 
-                    width: 56, 
-                    height: 56,
-                    backdropFilter: 'blur(10px)'
-                  }}>
-                    <Assignment sx={{ fontSize: 28 }} />
-                  </Avatar>
+                  <Assignment sx={{ fontSize: 40, color: 'primary.main' }} />
                 </Box>
               </CardContent>
             </Card>
           </Grid>
-          
+
           <Grid item xs={12} sm={6} md={3}>
-            <Card sx={{ 
-              background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-              color: 'white',
-              position: 'relative',
-              overflow: 'hidden',
-              '&::before': {
-                content: '""',
-                position: 'absolute',
-                top: 0,
-                right: 0,
-                width: '100px',
-                height: '100px',
-                background: 'rgba(255,255,255,0.1)',
-                borderRadius: '50%',
-                transform: 'translate(30px, -30px)',
-              }
-            }}>
+            <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
-                    <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
+                    <Typography variant="h4" component="div">
                       {stats.pending_count}
                     </Typography>
-                    <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                    <Typography variant="body2" color="text.secondary">
                       Ожидают проверки
                     </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                      <Warning sx={{ fontSize: 16, mr: 0.5 }} />
-                      <Typography variant="caption">
-                        Требуют внимания
-                      </Typography>
-                    </Box>
+                    <Typography variant="caption" color="warning.main">
+                      Требуют внимания
+                    </Typography>
                   </Box>
-                  <Avatar sx={{ 
-                    bgcolor: 'rgba(255,255,255,0.2)', 
-                    width: 56, 
-                    height: 56,
-                    backdropFilter: 'blur(10px)'
-                  }}>
-                    <Warning sx={{ fontSize: 28 }} />
-                  </Avatar>
+                  <Warning sx={{ fontSize: 40, color: 'warning.main' }} />
                 </Box>
               </CardContent>
             </Card>
           </Grid>
-          
+
           <Grid item xs={12} sm={6} md={3}>
-            <Card sx={{ 
-              background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-              color: 'white',
-              position: 'relative',
-              overflow: 'hidden',
-              '&::before': {
-                content: '""',
-                position: 'absolute',
-                top: 0,
-                right: 0,
-                width: '100px',
-                height: '100px',
-                background: 'rgba(255,255,255,0.1)',
-                borderRadius: '50%',
-                transform: 'translate(30px, -30px)',
-              }
-            }}>
+            <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
-                    <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
+                    <Typography variant="h4" component="div">
                       {stats.approved_count}
                     </Typography>
-                    <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                    <Typography variant="body2" color="text.secondary">
                       Одобрено
                     </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                      <CheckCircle sx={{ fontSize: 16, mr: 0.5 }} />
-                      <Typography variant="caption">
-                        Проверены
-                      </Typography>
-                    </Box>
+                    <Typography variant="caption" color="success.main">
+                      Проверены
+                    </Typography>
                   </Box>
-                  <Avatar sx={{ 
-                    bgcolor: 'rgba(255,255,255,0.2)', 
-                    width: 56, 
-                    height: 56,
-                    backdropFilter: 'blur(10px)'
-                  }}>
-                    <CheckCircle sx={{ fontSize: 28 }} />
-                  </Avatar>
+                  <CheckCircle sx={{ fontSize: 40, color: 'success.main' }} />
                 </Box>
               </CardContent>
             </Card>
           </Grid>
-          
+
           <Grid item xs={12} sm={6} md={3}>
-            <Card sx={{ 
-              background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-              color: 'white',
-              position: 'relative',
-              overflow: 'hidden',
-              '&::before': {
-                content: '""',
-                position: 'absolute',
-                top: 0,
-                right: 0,
-                width: '100px',
-                height: '100px',
-                background: 'rgba(255,255,255,0.1)',
-                borderRadius: '50%',
-                transform: 'translate(30px, -30px)',
-              }
-            }}>
+            <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
-                    <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
+                    <Typography variant="h4" component="div">
                       {stats.approval_rate}%
                     </Typography>
-                    <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                    <Typography variant="body2" color="text.secondary">
                       Процент одобрения
                     </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                      <TrendingUp sx={{ fontSize: 16, mr: 0.5 }} />
-                      <Typography variant="caption">
-                        Эффективность
-                      </Typography>
-                    </Box>
+                    <Typography variant="caption" color="text.secondary">
+                      Эффективность
+                    </Typography>
                   </Box>
-                  <Avatar sx={{ 
-                    bgcolor: 'rgba(255,255,255,0.2)', 
-                    width: 56, 
-                    height: 56,
-                    backdropFilter: 'blur(10px)'
-                  }}>
-                    <TrendingUp sx={{ fontSize: 28 }} />
-                  </Avatar>
+                  <TrendingUp sx={{ fontSize: 40, color: 'info.main' }} />
                 </Box>
               </CardContent>
             </Card>

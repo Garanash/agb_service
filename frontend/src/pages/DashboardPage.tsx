@@ -3,6 +3,14 @@ import {
   Box,
   Grid,
   Typography,
+  Button,
+  Card,
+  CardContent,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  Chip,
 } from '@mui/material';
 import {
   Build,
@@ -17,9 +25,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from 'hooks/useAuth';
 import { apiService } from 'services/api';
 import { RepairRequest, RequestStatus, UserRole } from 'types/api';
-import ModernCard from 'components/modern/ModernCard';
-import ModernList from 'components/modern/ModernList';
-import ModernActions from 'components/modern/ModernActions';
 
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();
@@ -163,115 +168,183 @@ const DashboardPage: React.FC = () => {
 
       {getRoleSpecificActions()}
 
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-      {/* Современная статистика */}
+      {/* Статистика */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} sm={6} md={3}>
-          <ModernCard
-            title="Всего заявок"
-            value={analytics?.overview?.total_requests || 0}
-            subtitle={`+${analytics?.overview?.recent_requests_7d || 0} за неделю`}
-            icon={<Build sx={{ fontSize: 28 }} />}
-            gradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
-            trend={{
-              value: `+${analytics?.overview?.recent_requests_7d || 0} за неделю`,
-              isPositive: true
-            }}
-          />
+          <Card>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box>
+                  <Typography variant="h4" component="div">
+                    {analytics?.overview?.total_requests || 0}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Всего заявок
+                  </Typography>
+                  <Typography variant="caption" color="success.main">
+                    +{analytics?.overview?.recent_requests_7d || 0} за неделю
+                  </Typography>
+                </Box>
+                <Build sx={{ fontSize: 40, color: 'primary.main' }} />
+              </Box>
+            </CardContent>
+          </Card>
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
-          <ModernCard
-            title="Активные заявки"
-            value={analytics?.overview?.active_requests || 0}
-            subtitle="В работе"
-            icon={<TrendingUp sx={{ fontSize: 28 }} />}
-            gradient="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
-          />
+          <Card>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box>
+                  <Typography variant="h4" component="div">
+                    {analytics?.overview?.active_requests || 0}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Активные заявки
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    В работе
+                  </Typography>
+                </Box>
+                <TrendingUp sx={{ fontSize: 40, color: 'success.main' }} />
+              </Box>
+            </CardContent>
+          </Card>
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
-          <ModernCard
-            title="Исполнители"
-            value={analytics?.overview?.total_contractors || 0}
-            subtitle="Зарегистрированы"
-            icon={<People sx={{ fontSize: 28 }} />}
-            gradient="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"
-          />
+          <Card>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box>
+                  <Typography variant="h4" component="div">
+                    {analytics?.overview?.total_contractors || 0}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Исполнители
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Зарегистрированы
+                  </Typography>
+                </Box>
+                <People sx={{ fontSize: 40, color: 'info.main' }} />
+              </Box>
+            </CardContent>
+          </Card>
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
-          <ModernCard
-            title="Заказчики"
-            value={analytics?.overview?.total_customers || 0}
-            subtitle="Компании"
-            icon={<Business sx={{ fontSize: 28 }} />}
-            gradient="linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)"
-          />
+          <Card>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box>
+                  <Typography variant="h4" component="div">
+                    {analytics?.overview?.total_customers || 0}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Заказчики
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Компании
+                  </Typography>
+                </Box>
+                <Business sx={{ fontSize: 40, color: 'warning.main' }} />
+              </Box>
+            </CardContent>
+          </Card>
         </Grid>
       </Grid>
 
       {/* Основной контент */}
-      <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-        {/* Современные последние заявки */}
-        <Box sx={{ flex: '2 1 400px', minWidth: '400px' }}>
-          <ModernList
-            title="Последние заявки"
-            items={recentRequests?.map(request => ({
-              id: request.id,
-              title: request.title,
-              subtitle: request.description,
-              description: request.address,
-              status: {
-                label: getStatusText(request.status),
-                color: getStatusColor(request.status) as any
-              },
-              avatar: {
-                icon: <Build sx={{ fontSize: 20 }} />,
-                color: getStatusColor(request.status) === 'success' ? '#4caf50' : 
-                       getStatusColor(request.status) === 'warning' ? '#ff9800' :
-                       getStatusColor(request.status) === 'error' ? '#f44336' : '#2196f3'
-              },
-              metadata: [
-                {
-                  icon: <Assignment sx={{ fontSize: 14 }} />,
-                  text: new Date(request.created_at).toLocaleDateString('ru-RU')
-                }
-              ]
-            })) || []}
-            emptyMessage="Нет заявок"
-            emptyIcon={<Build sx={{ fontSize: 32, color: 'grey.400' }} />}
-          />
-        </Box>
+      <Grid container spacing={3}>
+        {/* Последние заявки */}
+        <Grid item xs={12} md={8}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Последние заявки
+              </Typography>
+              {recentRequests.length > 0 ? (
+                <List>
+                  {recentRequests.map((request) => (
+                    <ListItem key={request.id} divider>
+                      <ListItemIcon>
+                        <Build />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={request.title}
+                        secondary={
+                          <Box>
+                            <Typography variant="body2" color="text.secondary">
+                              {request.description}
+                            </Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+                              <Chip
+                                label={getStatusText(request.status)}
+                                color={getStatusColor(request.status) as any}
+                                size="small"
+                              />
+                              <Typography variant="caption" color="text.secondary">
+                                {new Date(request.created_at).toLocaleDateString('ru-RU')}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        }
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              ) : (
+                <Box sx={{ textAlign: 'center', py: 4 }}>
+                  <Build sx={{ fontSize: 48, color: 'grey.400', mb: 2 }} />
+                  <Typography variant="h6" color="text.secondary">
+                    Нет заявок
+                  </Typography>
+                </Box>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
 
-        {/* Современные быстрые действия */}
-        <Box sx={{ flex: '1 1 300px', minWidth: '300px' }}>
-          <ModernActions
-            title="Быстрые действия"
-            actions={[
-              {
-                label: "Все заявки",
-                icon: <Build />,
-                onClick: () => navigate('/repair-requests'),
-                variant: 'primary'
-              },
-              ...(user?.role === UserRole.CUSTOMER ? [{
-                label: "Новая заявка",
-                icon: <Add />,
-                onClick: () => navigate('/repair-requests/new'),
-                variant: 'secondary'
-              }] : []),
-              {
-                label: "Мой профиль",
-                icon: <AccountCircle />,
-                onClick: () => navigate('/profile'),
-                variant: 'outline'
-              }
-            ]}
-          />
-        </Box>
-      </Box>
-      </Box>
+        {/* Быстрые действия */}
+        <Grid item xs={12} md={4}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Быстрые действия
+              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Button
+                  variant="contained"
+                  startIcon={<Build />}
+                  onClick={() => navigate('/repair-requests')}
+                  fullWidth
+                >
+                  Все заявки
+                </Button>
+                {user?.role === UserRole.CUSTOMER && (
+                  <Button
+                    variant="outlined"
+                    startIcon={<Add />}
+                    onClick={() => navigate('/repair-requests/new')}
+                    fullWidth
+                  >
+                    Новая заявка
+                  </Button>
+                )}
+                <Button
+                  variant="outlined"
+                  startIcon={<AccountCircle />}
+                  onClick={() => navigate('/profile')}
+                  fullWidth
+                >
+                  Мой профиль
+                </Button>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
     </Box>
   );
 };
