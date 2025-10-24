@@ -1,19 +1,19 @@
 import os
 import logging
-from .simple_email_service import simple_email_service
+from .file_email_service import file_email_service
 
 logger = logging.getLogger(__name__)
 
 class EmailService:
     def __init__(self):
         """Инициализация сервиса отправки почты"""
-        self.simple_service = simple_email_service
+        self.file_service = file_email_service
 
     async def send_email_verification(self, user_email: str, user_name: str, verification_token: str) -> bool:
         """Отправка письма подтверждения email"""
         try:
             logger.info(f"📧 Отправка письма подтверждения на {user_email}")
-            return self.simple_service.send_email_verification(user_email, user_name, verification_token)
+            return self.file_service.send_email_verification(user_email, user_name, verification_token)
         except Exception as e:
             logger.error(f"❌ Ошибка отправки письма подтверждения: {e}")
             return False
@@ -23,7 +23,7 @@ class EmailService:
         try:
             logger.info(f"📧 Отправка приветственного письма на {user_email}")
             # Для простоты используем тот же метод, что и для подтверждения
-            return self.simple_service.send_email_verification(user_email, user_name, "welcome")
+            return self.file_service.send_email_verification(user_email, user_name, "welcome")
         except Exception as e:
             logger.error(f"❌ Ошибка отправки приветственного письма: {e}")
             return False
@@ -32,7 +32,7 @@ class EmailService:
         """Отправка уведомительного письма"""
         try:
             logger.info(f"📧 Отправка уведомления на {user_email}")
-            return self.simple_service.send_email_via_smtp(user_email, subject, message, message)
+            return self.file_service.send_email_via_file(user_email, subject, message, message)
         except Exception as e:
             logger.error(f"❌ Ошибка отправки уведомления: {e}")
             return False
