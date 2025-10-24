@@ -13,7 +13,6 @@ from database import get_db
 from models import User, CustomerProfile, ContractorProfile, RepairRequest, SecurityVerification, HRDocument, RequestStatus, UserRole
 from api.v1.schemas import RepairRequestResponse, UserResponse
 from api.v1.dependencies import get_current_user
-from services.file_email_service import file_email_service
 
 logger = logging.getLogger(__name__)
 
@@ -634,27 +633,3 @@ async def get_admin_statistics(
         "avg_processing_time_hours": round(avg_processing_time, 1),
         "total_completed_requests": len(completed_requests)
     }
-
-@router.get("/emails")
-async def get_emails(
-    current_user: User = Depends(get_current_user)
-):
-    """Получить список отправленных писем"""
-    try:
-        # Проверяем права доступа
-        if current_user.role not in ["admin", "manager"]:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Недостаточно прав для просмотра писем"
-            )
-        
-        emails = file_email_service.get_emails()
-        logger.info(f"Получено {len(emails)} писем")
-        return {"emails": emails}
-        
-    except Exception as e:
-        logger.error(f"Ошибка получения писем: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Ошибка получения списка писем"
-        )

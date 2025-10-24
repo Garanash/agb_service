@@ -1,40 +1,62 @@
 import os
 import logging
-import json
-from datetime import datetime
+import smtplib
+import ssl
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-class FileEmailService:
+class PythonEmailService:
     def __init__(self):
-        """Инициализация сервиса отправки почты через файл"""
+        """Инициализация сервиса отправки почты через Python smtplib"""
+        self.smtp_server = os.getenv("MAIL_SERVER", "smtp.mail.ru")
+        self.smtp_port = int(os.getenv("MAIL_PORT", "587"))
+        self.username = os.getenv("MAIL_USERNAME", "almazgeobur@mail.ru")
+        self.password = os.getenv("MAIL_PASSWORD", "")
         self.from_email = os.getenv("MAIL_FROM", "almazgeobur@mail.ru")
         self.from_name = os.getenv("MAIL_FROM_NAME", "AGB SERVICE")
-        self.email_file = "/tmp/sent_emails.json"
+        self.use_tls = os.getenv("MAIL_TLS", "true").lower() == "true"
 
-    def send_email_via_file(self, to_email: str, subject: str, html_content: str, plain_text: str = None) -> bool:
-        """Отправка письма через сохранение в файл"""
+    def send_email(self, to_email: str, subject: str, html_content: str, plain_text: str = None) -> bool:
+        """Отправка письма через Python smtplib"""
         try:
-            email_data = {
-                'to': to_email,
-                'subject': subject,
-                'html': html_content,
-                'text': plain_text or html_content,
-                'from': self.from_email,
-                'from_name': self.from_name,
-                'timestamp': datetime.now().isoformat(),
-                'status': 'sent_to_file'
-            }
+            # Создаем сообщение
+            msg = MIMEMultipart('alternative')
+            msg['Subject'] = subject
+            msg['From'] = f"{self.from_name} <{self.from_email}>"
+            msg['To'] = to_email
+
+            # Добавляем текстовую версию
+            if plain_text:
+                text_part = MIMEText(plain_text, 'plain', 'utf-8')
+                msg.attach(text_part)
+
+            # Добавляем HTML версию
+            html_part = MIMEText(html_content, 'html', 'utf-8')
+            msg.attach(html_part)
+
+            logger.info(f"📧 Подключение к SMTP серверу {self.smtp_server}:{self.smtp_port}")
             
-            # Сохраняем в файл
-            with open(self.email_file, 'a', encoding='utf-8') as f:
-                f.write(json.dumps(email_data, ensure_ascii=False, indent=2) + '\n')
+            # Создаем SSL контекст
+            context = ssl.create_default_context()
             
-            logger.info(f"✅ Письмо сохранено в файл для {to_email}")
+            # Подключаемся к серверу и отправляем письмо
+            with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
+                if self.use_tls:
+                    server.starttls(context=context)
+                
+                if self.username and self.password:
+                    server.login(self.username, self.password)
+                
+                server.send_message(msg)
+            
+            logger.info(f"✅ Письмо успешно отправлено на {to_email}")
             return True
+            
         except Exception as e:
-            logger.error(f"❌ Ошибка сохранения письма в файл: {e}")
+            logger.error(f"❌ Ошибка отправки письма на {to_email}: {e}")
             return False
 
     def send_email_verification(self, user_email: str, user_name: str, verification_token: str) -> bool:
@@ -124,32 +146,11 @@ http://91.222.236.58:3000/verify-email?token={verification_token}
 © 2025 Neurofork. Все права защищены.
             """
             
-            return self.send_email_via_file(user_email, "Подтверждение email адреса", html_content, plain_text)
+            return self.send_email(user_email, "Подтверждение email адреса", html_content, plain_text)
             
         except Exception as e:
             logger.error(f"❌ Ошибка отправки письма подтверждения: {e}")
             return False
 
-    def get_emails(self) -> list:
-        """Получить список отправленных писем"""
-        try:
-            if not os.path.exists(self.email_file):
-                return []
-            
-            emails = []
-            with open(self.email_file, 'r', encoding='utf-8') as f:
-                for line in f:
-                    if line.strip():
-                        try:
-                            email_data = json.loads(line.strip())
-                            emails.append(email_data)
-                        except json.JSONDecodeError:
-                            continue
-            
-            return emails
-        except Exception as e:
-            logger.error(f"❌ Ошибка чтения писем: {e}")
-            return []
-
 # Создаем экземпляр сервиса
-file_email_service = FileEmailService()
+python_email_service = PythonEmailService()
