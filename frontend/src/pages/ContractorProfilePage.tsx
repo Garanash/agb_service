@@ -122,7 +122,14 @@ const ContractorProfilePage: React.FC = () => {
     setValue,
     watch,
     formState: { errors },
-  } = useForm<ContractorProfileForm>();
+  } = useForm<any>({
+    defaultValues: {
+      specializations: [],
+      equipment_brands_experience: [],
+      certifications: [],
+      work_regions: [],
+    },
+  });
 
   const { fields: specializationFields, append: appendSpecialization, remove: removeSpecialization } = useFieldArray({
     control,
@@ -340,7 +347,7 @@ const ContractorProfilePage: React.FC = () => {
                       label="Фамилия *"
                       {...register('last_name', { required: 'Фамилия обязательна' })}
                       error={!!errors.last_name}
-                      helperText={errors.last_name?.message}
+                      helperText={errors.last_name?.message as any}
                     />
                   </Grid>
                   <Grid item xs={12} sm={4}>
@@ -349,7 +356,7 @@ const ContractorProfilePage: React.FC = () => {
                       label="Имя *"
                       {...register('first_name', { required: 'Имя обязательно' })}
                       error={!!errors.first_name}
-                      helperText={errors.first_name?.message}
+                      helperText={errors.first_name?.message as any}
                     />
                   </Grid>
                   <Grid item xs={12} sm={4}>
@@ -365,7 +372,7 @@ const ContractorProfilePage: React.FC = () => {
                       label="Телефон *"
                       {...register('phone', { required: 'Телефон обязателен' })}
                       error={!!errors.phone}
-                      helperText={errors.phone?.message}
+                      helperText={errors.phone?.message as any}
                     />
                   </Grid>
                   <Grid item xs={12} sm={6}>
@@ -381,7 +388,7 @@ const ContractorProfilePage: React.FC = () => {
                         }
                       })}
                       error={!!errors.email}
-                      helperText={errors.email?.message}
+                      helperText={errors.email?.message as any}
                     />
                   </Grid>
                 </Grid>
@@ -410,7 +417,7 @@ const ContractorProfilePage: React.FC = () => {
                       label="Серия паспорта *"
                       {...register('passport_series', { required: 'Серия паспорта обязательна' })}
                       error={!!errors.passport_series}
-                      helperText={errors.passport_series?.message}
+                      helperText={errors.passport_series?.message as any}
                     />
                   </Grid>
                   <Grid item xs={12} sm={6}>
@@ -419,7 +426,7 @@ const ContractorProfilePage: React.FC = () => {
                       label="Номер паспорта *"
                       {...register('passport_number', { required: 'Номер паспорта обязателен' })}
                       error={!!errors.passport_number}
-                      helperText={errors.passport_number?.message}
+                      helperText={errors.passport_number?.message as any}
                     />
                   </Grid>
                   <Grid item xs={12}>
@@ -428,7 +435,7 @@ const ContractorProfilePage: React.FC = () => {
                       label="Кем выдан *"
                       {...register('passport_issued_by', { required: 'Кем выдан обязателен' })}
                       error={!!errors.passport_issued_by}
-                      helperText={errors.passport_issued_by?.message}
+                      helperText={errors.passport_issued_by?.message as any}
                     />
                   </Grid>
                   <Grid item xs={12} sm={4}>
@@ -437,7 +444,7 @@ const ContractorProfilePage: React.FC = () => {
                       label="Дата выдачи *"
                       {...register('passport_issued_date', { required: 'Дата выдачи обязательна' })}
                       error={!!errors.passport_issued_date}
-                      helperText={errors.passport_issued_date?.message}
+                      helperText={errors.passport_issued_date?.message as any}
                     />
                   </Grid>
                   <Grid item xs={12} sm={4}>
@@ -446,7 +453,7 @@ const ContractorProfilePage: React.FC = () => {
                       label="Код подразделения *"
                       {...register('passport_issued_code', { required: 'Код подразделения обязателен' })}
                       error={!!errors.passport_issued_code}
-                      helperText={errors.passport_issued_code?.message}
+                      helperText={errors.passport_issued_code?.message as any}
                     />
                   </Grid>
                   <Grid item xs={12} sm={4}>
@@ -455,7 +462,7 @@ const ContractorProfilePage: React.FC = () => {
                       label="ИНН *"
                       {...register('inn', { required: 'ИНН обязателен' })}
                       error={!!errors.inn}
-                      helperText={errors.inn?.message}
+                      helperText={errors.inn?.message as any}
                     />
                   </Grid>
                   <Grid item xs={12} sm={6}>
@@ -464,7 +471,7 @@ const ContractorProfilePage: React.FC = () => {
                       label="Дата рождения *"
                       {...register('birth_date', { required: 'Дата рождения обязательна' })}
                       error={!!errors.birth_date}
-                      helperText={errors.birth_date?.message}
+                      helperText={errors.birth_date?.message as any}
                     />
                   </Grid>
                   <Grid item xs={12} sm={6}>
@@ -473,7 +480,7 @@ const ContractorProfilePage: React.FC = () => {
                       label="Место рождения *"
                       {...register('birth_place', { required: 'Место рождения обязательно' })}
                       error={!!errors.birth_place}
-                      helperText={errors.birth_place?.message}
+                      helperText={errors.birth_place?.message as any}
                     />
                   </Grid>
                 </Grid>
@@ -753,7 +760,7 @@ const EducationForm: React.FC<{ onSubmit: (data: EducationRecord) => void }> = (
         label="Название учебного заведения *"
         {...register('institution_name', { required: 'Название обязательно' })}
         error={!!errors.institution_name}
-        helperText={errors.institution_name?.message}
+        helperText={errors.institution_name?.message as any}
         sx={{ mb: 2 }}
       />
       <TextField
@@ -761,7 +768,7 @@ const EducationForm: React.FC<{ onSubmit: (data: EducationRecord) => void }> = (
         label="Степень/квалификация *"
         {...register('degree', { required: 'Степень обязательна' })}
         error={!!errors.degree}
-        helperText={errors.degree?.message}
+        helperText={errors.degree?.message as any}
         sx={{ mb: 2 }}
       />
       <TextField
@@ -769,7 +776,7 @@ const EducationForm: React.FC<{ onSubmit: (data: EducationRecord) => void }> = (
         label="Специализация *"
         {...register('specialization', { required: 'Специализация обязательна' })}
         error={!!errors.specialization}
-        helperText={errors.specialization?.message}
+        helperText={errors.specialization?.message as any}
         sx={{ mb: 2 }}
       />
       <TextField

@@ -325,7 +325,7 @@ const CustomersPage: React.FC = () => {
                     <TableCell>
                       {canEdit() && (
                         <IconButton
-                          onClick={() => openEditDialog(customer)}
+                          onClick={() => openEditDialog(customer as any)}
                           color='primary'
                           size='small'
                         >

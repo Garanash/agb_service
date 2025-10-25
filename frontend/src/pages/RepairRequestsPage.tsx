@@ -58,7 +58,7 @@ const RepairRequestsPage: React.FC = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  const { register, handleSubmit, reset } = useForm<RepairRequestCreate>();
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<RepairRequestCreate>();
 
   useEffect(() => {
     fetchRequests();
@@ -314,7 +314,7 @@ const RepairRequestsPage: React.FC = () => {
                 label='Название'
                 {...register('title', { required: 'Название обязательно' })}
                 error={!!errors.title}
-                helperText={errors.title?.message}
+                helperText={errors.title?.message as any}
               />
               <TextField
                 fullWidth
@@ -325,7 +325,7 @@ const RepairRequestsPage: React.FC = () => {
                   required: 'Описание обязательно',
                 })}
                 error={!!errors.description}
-                helperText={errors.description?.message}
+                helperText={errors.description?.message as any}
               />
               <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                 <TextField

@@ -16,6 +16,7 @@ export interface User {
   position?: string;
   created_at: string;
   updated_at?: string;
+  contractor_profile?: any;
 }
 
 export enum UserRole {

@@ -105,7 +105,7 @@ const ContractorsPage: React.FC = () => {
         );
       } else {
         // Для исполнителя используем обычный endpoint
-        await apiService.updateContractorProfile(data);
+        await apiService.updateContractorProfile(editingContractor.id, data);
       }
       setOpenDialog(false);
       setEditingContractor(null);

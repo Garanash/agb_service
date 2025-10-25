@@ -24,7 +24,7 @@ import { apiService } from '../services/api';
 import AvatarUpload from '../components/AvatarUpload';
 
 const ProfileSettingsPage: React.FC = () => {
-  const { user, updateUser } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -63,8 +63,8 @@ const ProfileSettingsPage: React.FC = () => {
 
   const handleAvatarChange = (newAvatarUrl: string | null) => {
     setAvatarUrl(newAvatarUrl);
-    if (updateUser) {
-      updateUser({ ...user, avatar_url: newAvatarUrl });
+    if (refreshUser) {
+      refreshUser();
     }
   };
 
@@ -79,8 +79,8 @@ const ProfileSettingsPage: React.FC = () => {
       // Обновляем профиль пользователя
       const updatedUser = await apiService.updateUser(user.id, formData);
       
-      if (updateUser) {
-        updateUser(updatedUser);
+      if (refreshUser) {
+        refreshUser();
       }
       
       setSuccess('Профиль успешно обновлен!');

@@ -243,11 +243,6 @@ class ApiService {
   }
 
   // Security Verification методы
-  async getPendingVerifications(): Promise<any[]> {
-    const response = await this.api.get('/api/v1/security/pending');
-    return response.data;
-  }
-
   async getVerifiedContractors(): Promise<any[]> {
     const response = await this.api.get('/api/v1/security/verified');
     return response.data;
@@ -456,32 +451,6 @@ class ApiService {
   }
 
   // Customer Cabinet методы
-  async getCustomerProfile(): Promise<any> {
-    const response = await this.api.get('/api/v1/customer/profile');
-    return response.data;
-  }
-
-  async updateCustomerProfile(profileData: any): Promise<any> {
-    const response = await this.api.put(
-      '/api/v1/customer/profile',
-      profileData,
-    );
-    return response.data;
-  }
-
-  async getCustomerRequests(
-    statusFilter?: string,
-    limit = 20,
-    offset = 0,
-  ): Promise<any[]> {
-    const params = new URLSearchParams();
-    if (statusFilter) params.append('status_filter', statusFilter);
-    params.append('limit', limit.toString());
-    params.append('offset', offset.toString());
-
-    const response = await this.api.get(`/api/v1/customer/requests?${params}`);
-    return response.data;
-  }
 
   async createCustomerRequest(requestData: any): Promise<any> {
     const response = await this.api.post(
@@ -681,16 +650,6 @@ class ApiService {
   async getContractorProfile(): Promise<ContractorProfile> {
     const response: AxiosResponse<ContractorProfile> = await this.api.get(
       '/api/v1/contractors/profile',
-    );
-    return response.data;
-  }
-
-  async updateContractorProfile(
-    data: ContractorProfileCreate,
-  ): Promise<ContractorProfile> {
-    const response: AxiosResponse<ContractorProfile> = await this.api.put(
-      '/api/v1/contractors/profile',
-      data,
     );
     return response.data;
   }

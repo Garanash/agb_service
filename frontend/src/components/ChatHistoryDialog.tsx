@@ -20,7 +20,7 @@ import {
 import {
   Close,
   Person,
-  Bot,
+  SmartToy,
   MarkAsUnread,
 } from '@mui/icons-material';
 import { apiService } from '../services/api';
@@ -165,7 +165,7 @@ const ChatHistoryDialog: React.FC<ChatHistoryDialogProps> = ({
                           ml: message.is_from_bot ? 2 : 0,
                         }}
                       >
-                        {message.is_from_bot ? <Bot /> : <Person />}
+                        {message.is_from_bot ? <SmartToy /> : <Person />}
                       </Avatar>
                       
                       <Box

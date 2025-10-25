@@ -191,7 +191,7 @@ const CustomerCabinetPage: React.FC = () => {
         apiService.getCustomerStatistics(),
       ]);
 
-      setProfile(profileData);
+      setProfile(profileData as any);
       setRequests(requestsData);
       setStats(statsData);
     } catch (err: any) {
@@ -203,7 +203,7 @@ const CustomerCabinetPage: React.FC = () => {
 
   const handleUpdateProfile = async () => {
     try {
-      await apiService.updateCustomerProfile(editingProfile);
+      await apiService.updateCustomerProfile(editingProfile as any);
       setProfileDialogOpen(false);
       setEditingProfile({});
       await loadCustomerData();

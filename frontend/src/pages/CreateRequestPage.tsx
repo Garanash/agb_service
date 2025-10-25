@@ -170,7 +170,7 @@ const CreateRequestPage: React.FC = () => {
                   label='Название заявки'
                   {...register('title', { required: 'Название обязательно' })}
                   error={!!errors.title}
-                  helperText={errors.title?.message}
+                  helperText={errors.title?.message as any}
                 />
               </Grid>
 
@@ -202,7 +202,7 @@ const CreateRequestPage: React.FC = () => {
                     required: 'Описание обязательно',
                   })}
                   error={!!errors.description}
-                  helperText={errors.description?.message}
+                  helperText={errors.description?.message as any}
                   placeholder='Подробно опишите проблему с оборудованием...'
                 />
               </Grid>
@@ -252,7 +252,7 @@ const CreateRequestPage: React.FC = () => {
                   label='Модель оборудования'
                   {...register('equipment_model')}
                   error={!!errors.equipment_model}
-                  helperText={errors.equipment_model?.message}
+                  helperText={errors.equipment_model?.message as any}
                 />
               </Grid>
 
@@ -264,7 +264,7 @@ const CreateRequestPage: React.FC = () => {
                   label='Детальное описание неисправности'
                   {...register('problem_description')}
                   error={!!errors.problem_description}
-                  helperText={errors.problem_description?.message}
+                  helperText={errors.problem_description?.message as any}
                   placeholder='Опишите симптомы, когда возникла проблема, что происходило перед поломкой...'
                 />
               </Grid>
@@ -282,7 +282,7 @@ const CreateRequestPage: React.FC = () => {
                   label='Регион'
                   {...register('region', { required: 'Регион обязателен' })}
                   error={!!errors.region}
-                  helperText={errors.region?.message}
+                  helperText={errors.region?.message as any}
                 />
               </Grid>
 
@@ -292,7 +292,7 @@ const CreateRequestPage: React.FC = () => {
                   label='Город'
                   {...register('city')}
                   error={!!errors.city}
-                  helperText={errors.city?.message}
+                  helperText={errors.city?.message as any}
                 />
               </Grid>
 
@@ -302,7 +302,7 @@ const CreateRequestPage: React.FC = () => {
                   label='Адрес'
                   {...register('address')}
                   error={!!errors.address}
-                  helperText={errors.address?.message}
+                  helperText={errors.address?.message as any}
                   value={selectedLocation?.address || ''}
                 />
               </Grid>
@@ -347,7 +347,7 @@ const CreateRequestPage: React.FC = () => {
                   InputLabelProps={{ shrink: true }}
                   {...register('preferred_date')}
                   error={!!errors.preferred_date}
-                  helperText={errors.preferred_date?.message}
+                  helperText={errors.preferred_date?.message as any}
                 />
               </Grid>
 
