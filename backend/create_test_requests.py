@@ -158,10 +158,10 @@ def create_test_requests():
             response = ContractorResponse(
                 request_id=new_request.id,
                 contractor_id=contractor.id,
-                proposed_cost=request_data["estimated_cost"] * random.uniform(0.8, 1.2),
-                estimated_duration_days=random.randint(1, 14),
-                message=f"Готов выполнить работу по заявке '{new_request.title}'. Имею опыт работы с данным типом оборудования.",
-                status="accepted",
+                proposed_price=int(request_data["estimated_cost"] * random.uniform(0.8, 1.2)),
+                estimated_time=f"{random.randint(1, 14)} дней",
+                comment=f"Готов выполнить работу по заявке '{new_request.title}'. Имею опыт работы с данным типом оборудования.",
+                is_accepted=True,
                 created_at=new_request.created_at + timedelta(hours=random.randint(1, 24)),
             )
             
