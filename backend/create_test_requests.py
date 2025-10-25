@@ -13,8 +13,8 @@ import random
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__))))
 
-from backend.database import Base, get_db
-from backend.models import User, RepairRequest, CustomerProfile, ContractorProfile, ContractorResponse
+from database import Base, get_db
+from models import User, RepairRequest, CustomerProfile, ContractorProfile, ContractorResponse
 
 # Database setup
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/agregator_db")
