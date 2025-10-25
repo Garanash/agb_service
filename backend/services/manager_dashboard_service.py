@@ -72,7 +72,7 @@ class ManagerDashboardService:
             avg_processing_time = total_time / len(completed_requests)
         
         # Активные исполнители
-        active_contractors = self.db.query(ContractorProfile).join(User).filter(
+        active_contractors = self.db.query(ContractorProfile).join(User, ContractorProfile.user_id == User.id).filter(
             and_(
                 User.role == 'contractor',
                 User.is_active == True,
@@ -177,7 +177,7 @@ class ManagerDashboardService:
         """Получение загрузки исполнителей"""
         
         try:
-            contractors = self.db.query(ContractorProfile).join(User).filter(
+            contractors = self.db.query(ContractorProfile).join(User, ContractorProfile.user_id == User.id).filter(
                 and_(
                     User.role == 'contractor',
                     User.is_active == True
