@@ -155,6 +155,7 @@ def create_test_requests():
             # Выбираем случайного исполнителя
             contractor = random.choice(contractors)
             
+            # Создаем отклик исполнителя
             response = ContractorResponse(
                 request_id=new_request.id,
                 contractor_id=contractor.id,
