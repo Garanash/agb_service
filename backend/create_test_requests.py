@@ -168,8 +168,8 @@ def create_test_requests():
             db.add(response)
             db.commit()
             
-            # Назначаем исполнителя на заявку
-            new_request.assigned_contractor_id = contractor.id
+            # Назначаем исполнителя на заявку (используем user_id из contractor_profile)
+            new_request.assigned_contractor_id = contractor.user_id
             db.commit()
             
             print(f"  📝 Добавлен отклик исполнителя: {contractor.first_name} {contractor.last_name}")
