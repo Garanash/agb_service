@@ -34,13 +34,13 @@ def create_test_requests():
     print("Создание тестовых заявок...")
     
     # Получаем заказчиков
-    customers = db.query(CustomerProfile).join(User).filter(User.role == 'customer').all()
+    customers = db.query(CustomerProfile).join(User, CustomerProfile.user_id == User.id).filter(User.role == 'customer').all()
     if not customers:
         print("❌ Нет заказчиков для создания заявок")
         return
     
     # Получаем исполнителей
-    contractors = db.query(ContractorProfile).join(User).filter(User.role == 'contractor').all()
+    contractors = db.query(ContractorProfile).join(User, ContractorProfile.user_id == User.id).filter(User.role == 'contractor').all()
     if not contractors:
         print("❌ Нет исполнителей для создания заявок")
         return
