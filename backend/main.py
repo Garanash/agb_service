@@ -11,6 +11,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Depends, HTTPException, status, Request, Response
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -83,6 +84,9 @@ app.add_middleware(
     expose_headers=["*"],
     max_age=3600
 )
+
+# Монтирование статических файлов для аватаров
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # Middleware для логирования запросов
 @app.middleware("http")
