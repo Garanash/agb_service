@@ -902,6 +902,21 @@ class ApiService {
     const response: AxiosResponse<User> = await this.api.put(`/api/v1/users/${userId}`, userData);
     return response.data;
   }
+
+  // Методы для работы с Telegram чатом
+  async getChatHistory(telegramUserId: number): Promise<any> {
+    const response: AxiosResponse<any> = await this.api.get(`/api/v1/telegram-chat/chat-history/${telegramUserId}`);
+    return response.data;
+  }
+
+  async markMessagesRead(telegramUserId: number): Promise<void> {
+    await this.api.post(`/api/v1/telegram-chat/mark-messages-read/${telegramUserId}`);
+  }
+
+  async getUnreadCounts(): Promise<any> {
+    const response: AxiosResponse<any> = await this.api.get('/api/v1/telegram-chat/unread-counts');
+    return response.data;
+  }
 }
 
 export const apiService = new ApiService();

@@ -248,6 +248,22 @@ class TelegramUser(Base):
 
     # Связи
     user = relationship("User", lazy="selectin")
+    messages = relationship("TelegramMessage", back_populates="telegram_user", lazy="selectin")
+
+class TelegramMessage(Base):
+    """Сообщения Telegram бота"""
+    __tablename__ = "telegram_messages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    telegram_user_id = Column(Integer, ForeignKey("telegram_users.id"), nullable=False)
+    message_text = Column(Text, nullable=False)
+    message_type = Column(String, default="text")  # text, photo, document, etc.
+    is_from_bot = Column(Boolean, default=False)  # True если сообщение от бота к пользователю
+    is_read = Column(Boolean, default=False)  # True если сообщение прочитано
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Связи
+    telegram_user = relationship("TelegramUser", back_populates="messages", lazy="selectin")
 
 class ArticleMapping(Base):
     """Сопоставление артикулов для технических заявок"""

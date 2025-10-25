@@ -179,6 +179,9 @@ app.include_router(avatar_router, prefix="/api/v1/avatar", tags=["🖼️ Ава
 from api.v1.endpoints.users import router as users_router
 app.include_router(users_router, prefix="/api/v1/users", tags=["👤 Пользователи"])
 
+from api.v1.endpoints.telegram_chat import router as telegram_chat_router
+app.include_router(telegram_chat_router, prefix="/api/v1/telegram-chat", tags=["💬 Telegram чат"])
+
 # Глобальные обработчики исключений
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):

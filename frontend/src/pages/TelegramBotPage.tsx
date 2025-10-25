@@ -48,6 +48,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from 'hooks/useAuth';
 import { apiService } from 'services/api';
+import ChatHistoryDialog from '../components/ChatHistoryDialog';
 
 interface BotInfo {
   bot_configured: boolean;
@@ -101,6 +102,11 @@ const TelegramBotPage: React.FC = () => {
   const [selectedContractors, setSelectedContractors] = useState<number[]>([]);
   const [testResult, setTestResult] = useState<any>(null);
 
+  // Состояние для истории чата
+  const [chatHistoryOpen, setChatHistoryOpen] = useState(false);
+  const [selectedTelegramUser, setSelectedTelegramUser] = useState<any>(null);
+  const [unreadCounts, setUnreadCounts] = useState<any[]>([]);
+
   useEffect(() => {
     loadTelegramData();
   }, []);
@@ -109,13 +115,15 @@ const TelegramBotPage: React.FC = () => {
     try {
       setLoading(true);
 
-      const [botInfoData, contractorsData] = await Promise.all([
+      const [botInfoData, contractorsData, unreadData] = await Promise.all([
         apiService.getBotInfo(),
         apiService.getVerifiedContractorsForNotifications(),
+        apiService.getUnreadCounts(),
       ]);
 
       setBotInfo(botInfoData);
       setVerifiedContractors(contractorsData);
+      setUnreadCounts(unreadData.unread_counts || []);
     } catch (err: any) {
       setError(
         err.response?.data?.detail || 'Ошибка загрузки данных Telegram бота',
@@ -123,6 +131,31 @@ const TelegramBotPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleOpenChatHistory = (contractor: VerifiedContractor) => {
+    // Создаем объект telegram пользователя из данных исполнителя
+    const telegramUser = {
+      id: contractor.contractor_id,
+      username: contractor.telegram_username,
+      first_name: contractor.name.split(' ')[0] || '',
+      last_name: contractor.name.split(' ').slice(1).join(' ') || '',
+    };
+    
+    setSelectedTelegramUser(telegramUser);
+    setChatHistoryOpen(true);
+  };
+
+  const handleCloseChatHistory = () => {
+    setChatHistoryOpen(false);
+    setSelectedTelegramUser(null);
+    // Перезагружаем данные для обновления счетчиков
+    loadTelegramData();
+  };
+
+  const getUnreadCountForContractor = (contractorId: number) => {
+    const unreadData = unreadCounts.find(item => item.telegram_user_id === contractorId);
+    return unreadData ? unreadData.unread_count : 0;
   };
 
   const handleSendNotification = async () => {
@@ -343,9 +376,29 @@ const TelegramBotPage: React.FC = () => {
                 {verifiedContractors.map(contractor => (
                   <TableRow key={contractor.contractor_id}>
                     <TableCell>
-                      <Typography variant='subtitle2'>
-                        {contractor.name}
-                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Typography variant='subtitle2'>
+                          {contractor.name}
+                        </Typography>
+                        {getUnreadCountForContractor(contractor.contractor_id) > 0 && (
+                          <Box
+                            sx={{
+                              width: 20,
+                              height: 20,
+                              bgcolor: 'error.main',
+                              borderRadius: '50%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: 'white',
+                              fontSize: '12px',
+                              fontWeight: 'bold',
+                            }}
+                          >
+                            {getUnreadCountForContractor(contractor.contractor_id)}
+                          </Box>
+                        )}
+                      </Box>
                     </TableCell>
                     <TableCell>
                       <Typography variant='body2'>
@@ -386,17 +439,27 @@ const TelegramBotPage: React.FC = () => {
                       />
                     </TableCell>
                     <TableCell>
-                      <Tooltip title='Отправить уведомление'>
-                        <IconButton
-                          size='small'
-                          onClick={() => {
-                            setSelectedContractor(contractor);
-                            setNotificationDialogOpen(true);
-                          }}
-                        >
-                          <Send />
-                        </IconButton>
-                      </Tooltip>
+                      <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Tooltip title='История переписки'>
+                          <IconButton
+                            size='small'
+                            onClick={() => handleOpenChatHistory(contractor)}
+                          >
+                            <Message />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title='Отправить уведомление'>
+                          <IconButton
+                            size='small'
+                            onClick={() => {
+                              setSelectedContractor(contractor);
+                              setNotificationDialogOpen(true);
+                            }}
+                          >
+                            <Send />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -563,6 +626,14 @@ const TelegramBotPage: React.FC = () => {
           <Button onClick={() => setTestDialogOpen(false)}>Закрыть</Button>
         </DialogActions>
       </Dialog>
+
+      {/* Диалог истории чата */}
+      <ChatHistoryDialog
+        open={chatHistoryOpen}
+        onClose={handleCloseChatHistory}
+        telegramUserId={selectedTelegramUser?.id || 0}
+        telegramUser={selectedTelegramUser}
+      />
     </Box>
   );
 };
