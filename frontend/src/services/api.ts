@@ -870,6 +870,38 @@ class ApiService {
     );
     return response.data;
   }
+
+  // Методы для работы с аватарами
+  async uploadAvatar(file: File): Promise<{ avatar_url: string; avatar_urls: Record<string, string> }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const response: AxiosResponse<{ avatar_url: string; avatar_urls: Record<string, string> }> = await this.api.post(
+      '/api/v1/avatar/upload',
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      },
+    );
+    return response.data;
+  }
+
+  async removeAvatar(): Promise<void> {
+    await this.api.delete('/api/v1/avatar/remove');
+  }
+
+  async getAvatarInfo(): Promise<{ has_avatar: boolean; avatar_url: string; avatar_urls: Record<string, string> }> {
+    const response: AxiosResponse<{ has_avatar: boolean; avatar_url: string; avatar_urls: Record<string, string> }> = await this.api.get('/api/v1/avatar/info');
+    return response.data;
+  }
+
+  // Методы для обновления пользователя
+  async updateUser(userId: number, userData: Partial<User>): Promise<User> {
+    const response: AxiosResponse<User> = await this.api.put(`/api/v1/users/${userId}`, userData);
+    return response.data;
+  }
 }
 
 export const apiService = new ApiService();

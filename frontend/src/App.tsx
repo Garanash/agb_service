@@ -19,6 +19,7 @@ import RepairRequestsPage from './pages/RepairRequestsPage';
 import ContractorsPage from './pages/ContractorsPage';
 import CustomersPage from './pages/CustomersPage';
 import ProfilePage from './pages/ProfilePage';
+import ProfileSettingsPage from './pages/ProfileSettingsPage';
 import ManagerWorkflowPage from './pages/ManagerWorkflowPage';
 import ManagerDashboardPage from './pages/ManagerDashboardPage';
 import SecurityVerificationPage from './pages/SecurityVerificationPage';
@@ -140,6 +141,17 @@ const AppRoutes: React.FC = () => {
           <ProtectedRoute>
             <Layout>
               <ProfilePage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path='/profile/settings'
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <ProfileSettingsPage />
             </Layout>
           </ProtectedRoute>
         }

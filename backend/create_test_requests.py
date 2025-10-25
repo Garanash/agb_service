@@ -1,0 +1,173 @@
+"""
+Скрипт для создания тестовых заявок
+"""
+
+import os
+import sys
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from datetime import datetime, timezone, timedelta
+import random
+
+# Add the backend directory to the Python path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__))))
+
+from backend.database import Base, get_db
+from backend.models import User, RepairRequest, CustomerProfile, ContractorProfile, ContractorResponse
+
+# Database setup
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/agregator_db")
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+def get_db_session():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+def create_test_requests():
+    db = next(get_db_session())
+    
+    print("Создание тестовых заявок...")
+    
+    # Получаем заказчиков
+    customers = db.query(CustomerProfile).join(User).filter(User.role == 'customer').all()
+    if not customers:
+        print("❌ Нет заказчиков для создания заявок")
+        return
+    
+    # Получаем исполнителей
+    contractors = db.query(ContractorProfile).join(User).filter(User.role == 'contractor').all()
+    if not contractors:
+        print("❌ Нет исполнителей для создания заявок")
+        return
+    
+    print(f"📊 Найдено заказчиков: {len(customers)}")
+    print(f"📊 Найдено исполнителей: {len(contractors)}")
+    
+    # Удаляем существующие тестовые заявки
+    existing_requests = db.query(RepairRequest).filter(RepairRequest.title.like('Тестовая заявка%')).all()
+    for request in existing_requests:
+        db.delete(request)
+    db.commit()
+    print(f"🗑️ Удалено существующих тестовых заявок: {len(existing_requests)}")
+    
+    # Создаем тестовые заявки
+    test_requests_data = [
+        {
+            "title": "Тестовая заявка - Ремонт буровой установки",
+            "description": "Требуется ремонт буровой установки на участке №1. Обнаружены неисправности в гидравлической системе.",
+            "equipment_type": "Буровая установка",
+            "priority": "high",
+            "status": "pending",
+            "location": "Участок №1, г. Москва",
+            "estimated_cost": 150000.0,
+        },
+        {
+            "title": "Тестовая заявка - Техническое обслуживание",
+            "description": "Плановое техническое обслуживание оборудования. Замена фильтров, проверка систем.",
+            "equipment_type": "Оборудование",
+            "priority": "medium",
+            "status": "in_progress",
+            "location": "Склад №2, г. Санкт-Петербург",
+            "estimated_cost": 75000.0,
+        },
+        {
+            "title": "Тестовая заявка - Аварийный ремонт",
+            "description": "Срочный ремонт насосного оборудования. Остановка производства.",
+            "equipment_type": "Насосное оборудование",
+            "priority": "urgent",
+            "status": "completed",
+            "location": "Производство №3, г. Екатеринбург",
+            "estimated_cost": 200000.0,
+        },
+        {
+            "title": "Тестовая заявка - Модернизация системы",
+            "description": "Модернизация системы управления. Установка нового программного обеспечения.",
+            "equipment_type": "Система управления",
+            "priority": "low",
+            "status": "pending",
+            "location": "Цех №4, г. Новосибирск",
+            "estimated_cost": 300000.0,
+        },
+        {
+            "title": "Тестовая заявка - Диагностика оборудования",
+            "description": "Комплексная диагностика всего оборудования на объекте. Составление отчета.",
+            "equipment_type": "Диагностическое оборудование",
+            "priority": "medium",
+            "status": "in_progress",
+            "location": "Объект №5, г. Казань",
+            "estimated_cost": 120000.0,
+        },
+    ]
+    
+    created_requests = []
+    
+    for i, request_data in enumerate(test_requests_data):
+        # Выбираем случайного заказчика
+        customer = random.choice(customers)
+        
+        # Создаем заявку
+        new_request = RepairRequest(
+            title=request_data["title"],
+            description=request_data["description"],
+            customer_id=customer.id,
+            equipment_type=request_data["equipment_type"],
+            priority=request_data["priority"],
+            status=request_data["status"],
+            location=request_data["location"],
+            estimated_cost=request_data["estimated_cost"],
+            created_at=datetime.now(timezone.utc) - timedelta(days=random.randint(1, 30)),
+            updated_at=datetime.now(timezone.utc) - timedelta(days=random.randint(0, 5)),
+        )
+        
+        # Если заявка в работе или завершена, добавляем даты
+        if request_data["status"] in ["in_progress", "completed"]:
+            new_request.assigned_at = new_request.created_at + timedelta(days=random.randint(1, 3))
+        
+        if request_data["status"] == "completed":
+            new_request.processed_at = new_request.assigned_at + timedelta(days=random.randint(1, 7))
+        
+        db.add(new_request)
+        db.commit()
+        db.refresh(new_request)
+        created_requests.append(new_request)
+        
+        print(f"✅ Создана заявка: {new_request.title}")
+        
+        # Если заявка в работе или завершена, создаем отклики исполнителей
+        if request_data["status"] in ["in_progress", "completed"]:
+            # Выбираем случайного исполнителя
+            contractor = random.choice(contractors)
+            
+            response = ContractorResponse(
+                request_id=new_request.id,
+                contractor_id=contractor.id,
+                proposed_cost=request_data["estimated_cost"] * random.uniform(0.8, 1.2),
+                estimated_duration_days=random.randint(1, 14),
+                message=f"Готов выполнить работу по заявке '{new_request.title}'. Имею опыт работы с данным типом оборудования.",
+                status="accepted",
+                created_at=new_request.created_at + timedelta(hours=random.randint(1, 24)),
+            )
+            
+            db.add(response)
+            db.commit()
+            
+            # Назначаем исполнителя на заявку
+            new_request.assigned_contractor_id = contractor.id
+            db.commit()
+            
+            print(f"  📝 Добавлен отклик исполнителя: {contractor.first_name} {contractor.last_name}")
+    
+    print(f"\n📊 Итого создано заявок: {len(created_requests)}")
+    print("📋 Список созданных заявок:")
+    for request in created_requests:
+        print(f"  - {request.title} ({request.status}) - {request.priority}")
+    
+    db.close()
+
+if __name__ == "__main__":
+    create_test_requests()

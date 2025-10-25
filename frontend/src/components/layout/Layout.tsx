@@ -71,6 +71,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     navigate('/profile');
   };
 
+  const handleProfileSettings = () => {
+    handleProfileMenuClose();
+    navigate('/profile/settings');
+  };
+
   const handleLogoutClick = () => {
     handleProfileMenuClose();
     logout();
@@ -328,6 +333,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <Edit fontSize='small' />
           </ListItemIcon>
           <ListItemText>Изменить профиль</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={handleProfileSettings}>
+          <ListItemIcon>
+            <Settings fontSize='small' />
+          </ListItemIcon>
+          <ListItemText>Настройки профиля</ListItemText>
         </MenuItem>
         <MenuItem onClick={handleLogoutClick}>
           <ListItemIcon>
