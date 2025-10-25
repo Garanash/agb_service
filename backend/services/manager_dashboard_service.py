@@ -32,7 +32,7 @@ class ManagerDashboardService:
         status_counts = {status: count for status, count in status_stats}
         
         # Общее количество заявок
-        total_requests = sum(status_counts.values())
+        total_requests = sum(status_counts.values()) if status_counts else 0
         
         # Заявки за последние 30 дней
         thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
@@ -176,117 +176,132 @@ class ManagerDashboardService:
     def get_contractor_workload(self, manager_id: int) -> List[Dict[str, Any]]:
         """Получение загрузки исполнителей"""
         
-        contractors = self.db.query(ContractorProfile).join(User).filter(
-            and_(
-                User.role == 'contractor',
-                User.is_active == True
-            )
-        ).all()
-        
-        workload_data = []
-        
-        for contractor in contractors:
-            # Активные заявки исполнителя
-            active_requests = self.db.query(RepairRequest).filter(
+        try:
+            contractors = self.db.query(ContractorProfile).join(User).filter(
                 and_(
-                    RepairRequest.assigned_contractor_id == contractor.user_id,
-                    RepairRequest.status.in_([
-                        "assigned",
-                        "in_progress"
-                    ])
+                    User.role == 'contractor',
+                    User.is_active == True
                 )
-            ).count()
+            ).all()
             
-            # Завершенные заявки за месяц
-            month_ago = datetime.now(timezone.utc) - timedelta(days=30)
-            completed_requests = self.db.query(RepairRequest).filter(
-                and_(
-                    RepairRequest.assigned_contractor_id == contractor.user_id,
-                    RepairRequest.status == "completed",
-                    RepairRequest.assigned_at >= month_ago
-                )
-            ).count()
+            workload_data = []
             
-            # Средняя оценка (пока заглушка)
-            avg_rating = 4.5
+            for contractor in contractors:
+                # Активные заявки исполнителя
+                active_requests = self.db.query(RepairRequest).filter(
+                    and_(
+                        RepairRequest.assigned_contractor_id == contractor.user_id,
+                        RepairRequest.status.in_([
+                            "assigned",
+                            "in_progress"
+                        ])
+                    )
+                ).count()
+                
+                # Завершенные заявки за месяц
+                month_ago = datetime.now(timezone.utc) - timedelta(days=30)
+                completed_requests = self.db.query(RepairRequest).filter(
+                    and_(
+                        RepairRequest.assigned_contractor_id == contractor.user_id,
+                        RepairRequest.status == "completed",
+                        RepairRequest.assigned_at >= month_ago
+                    )
+                ).count()
+                
+                # Средняя оценка (пока заглушка)
+                avg_rating = 4.5
+                
+                workload_data.append({
+                    'contractor_id': contractor.user_id,
+                    'name': f"{contractor.first_name} {contractor.last_name}",
+                    'specializations': contractor.specializations or [],
+                    'active_requests': active_requests,
+                    'completed_requests': completed_requests,
+                    'avg_rating': avg_rating,
+                    'availability_status': contractor.availability_status,
+                    'hourly_rate': contractor.hourly_rate,
+                    'workload_percentage': min(active_requests * 20, 100)  # Простая формула загрузки
+                })
             
-            workload_data.append({
-                'contractor_id': contractor.user_id,
-                'name': f"{contractor.first_name} {contractor.last_name}",
-                'specializations': contractor.specializations or [],
-                'active_requests': active_requests,
-                'completed_requests': completed_requests,
-                'avg_rating': avg_rating,
-                'availability_status': contractor.availability_status,
-                'hourly_rate': contractor.hourly_rate,
-                'workload_percentage': min(active_requests * 20, 100)  # Простая формула загрузки
-            })
-        
-        return sorted(workload_data, key=lambda x: x['workload_percentage'], reverse=True)
+            return sorted(workload_data, key=lambda x: x['workload_percentage'], reverse=True)
+            
+        except Exception as e:
+            logger.error(f"Ошибка получения загрузки исполнителей: {e}")
+            return []
     
     def get_recent_activity(self, manager_id: int, limit: int = 10) -> List[Dict[str, Any]]:
         """Получение последней активности"""
         
-        # Последние изменения в заявках
-        recent_requests = self.db.query(RepairRequest).filter(
-            RepairRequest.manager_id == manager_id
-        ).order_by(RepairRequest.updated_at.desc()).limit(limit).all()
-        
-        activities = []
-        
-        for request in recent_requests:
-            activity_type = self._get_activity_type(request)
-            activities.append({
-                'id': request.id,
-                'type': activity_type,
-                'title': request.title,
-                'status': request.status,
-                'status_text': self._get_status_text(request.status),
-                'timestamp': request.updated_at.isoformat(),
-                'customer_name': request.customer.company_name if request.customer else 'Неизвестно',
-                'contractor_name': f"{request.assigned_contractor.first_name} {request.assigned_contractor.last_name}" 
-                                 if request.assigned_contractor else None,
-                'icon': self._get_activity_icon(activity_type)
-            })
-        
-        return activities
+        try:
+            # Последние изменения в заявках
+            recent_requests = self.db.query(RepairRequest).filter(
+                RepairRequest.manager_id == manager_id
+            ).order_by(RepairRequest.updated_at.desc()).limit(limit).all()
+            
+            activities = []
+            
+            for request in recent_requests:
+                activity_type = self._get_activity_type(request)
+                activities.append({
+                    'id': request.id,
+                    'type': activity_type,
+                    'title': request.title,
+                    'status': request.status,
+                    'status_text': self._get_status_text(request.status),
+                    'timestamp': request.updated_at.isoformat(),
+                    'customer_name': request.customer.company_name if request.customer else 'Неизвестно',
+                    'contractor_name': f"{request.assigned_contractor.first_name} {request.assigned_contractor.last_name}" 
+                                     if request.assigned_contractor else None,
+                    'icon': self._get_activity_icon(activity_type)
+                })
+            
+            return activities
+            
+        except Exception as e:
+            logger.error(f"Ошибка получения последней активности: {e}")
+            return []
     
     def get_upcoming_deadlines(self, manager_id: int) -> List[Dict[str, Any]]:
         """Получение предстоящих дедлайнов"""
         
-        # Заявки с предпочтительными датами в ближайшие 7 дней
-        seven_days_later = datetime.now(timezone.utc) + timedelta(days=7)
-        
-        upcoming_requests = self.db.query(RepairRequest).filter(
-            and_(
-                RepairRequest.manager_id == manager_id,
-                RepairRequest.preferred_date <= seven_days_later,
-                RepairRequest.preferred_date >= datetime.now(timezone.utc),
-                RepairRequest.status.in_([
-                    "manager_review",
-                    "clarification",
-                    "sent_to_contractors"
-                ])
-            )
-        ).order_by(RepairRequest.preferred_date).all()
-        
-        deadlines = []
-        
-        for request in upcoming_requests:
-            days_until = (request.preferred_date.date() - datetime.now(timezone.utc).date()).days
+        try:
+            # Заявки с предпочтительными датами в ближайшие 7 дней
+            seven_days_later = datetime.now(timezone.utc) + timedelta(days=7)
             
-            deadlines.append({
-                'id': request.id,
-                'title': request.title,
-                'deadline': request.preferred_date.isoformat(),
-                'days_until': days_until,
-                'status': request.status,
-                'customer_name': request.customer.company_name if request.customer else 'Неизвестно',
-                'priority': request.priority or 'normal',
-                'urgency': 'high' if days_until <= 1 else 'medium' if days_until <= 3 else 'low'
-            })
-        
-        return deadlines
+            upcoming_requests = self.db.query(RepairRequest).filter(
+                and_(
+                    RepairRequest.manager_id == manager_id,
+                    RepairRequest.preferred_date <= seven_days_later,
+                    RepairRequest.preferred_date >= datetime.now(timezone.utc),
+                    RepairRequest.status.in_([
+                        "manager_review",
+                        "clarification",
+                        "sent_to_contractors"
+                    ])
+                )
+            ).order_by(RepairRequest.preferred_date).all()
+            
+            deadlines = []
+            
+            for request in upcoming_requests:
+                days_until = (request.preferred_date.date() - datetime.now(timezone.utc).date()).days
+                
+                deadlines.append({
+                    'id': request.id,
+                    'title': request.title,
+                    'deadline': request.preferred_date.isoformat(),
+                    'days_until': days_until,
+                    'status': request.status,
+                    'customer_name': request.customer.company_name if request.customer else 'Неизвестно',
+                    'priority': request.priority or 'normal',
+                    'urgency': 'high' if days_until <= 1 else 'medium' if days_until <= 3 else 'low'
+                })
+            
+            return deadlines
+            
+        except Exception as e:
+            logger.error(f"Ошибка получения предстоящих дедлайнов: {e}")
+            return []
     
     def _get_status_color(self, status: str) -> str:
         """Получение цвета для статуса"""
