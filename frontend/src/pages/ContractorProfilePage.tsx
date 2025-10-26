@@ -160,18 +160,9 @@ const ContractorProfilePage: React.FC = () => {
   const loadContractorProfile = async () => {
     try {
       setLoading(true);
-      // Простой endpoint для получения профиля
-      const response = await fetch('/api/v1/contractors/profile', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-        },
-      });
       
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-      
-      const profile = await response.json();
+      // Используем apiService вместо прямого fetch
+      const profile = await apiService.getContractorProfile() as any;
       
       // Заполняем форму данными профиля
       if (profile.first_name) setValue('first_name', profile.first_name);
@@ -193,20 +184,8 @@ const ContractorProfilePage: React.FC = () => {
       if (profile.bank_account) setValue('bank_account', profile.bank_account);
       if (profile.bank_bik) setValue('bank_bik', profile.bank_bik);
       
-      // Загрузка образования и документов через расширенный endpoint
-      try {
-        const extendedProfile = await apiService.getContractorProfileExtended(user!.contractor_profile!.id);
-        setEducationRecords(extendedProfile.education_records || []);
-        setDocuments(extendedProfile.documents || []);
-        setVerificationStatus(extendedProfile.verification?.overall_status || 'incomplete');
-      } catch (extErr) {
-        console.warn('Could not load extended profile data:', extErr);
-        setEducationRecords([]);
-        setDocuments([]);
-        setVerificationStatus('incomplete');
-      }
-      
     } catch (err: any) {
+      console.error('Error loading contractor profile:', err);
       setError(err.response?.data?.detail || 'Ошибка загрузки профиля');
     } finally {
       setLoading(false);
