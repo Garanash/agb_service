@@ -74,10 +74,13 @@ class PythonEmailService:
                         logger.info(f"📧 Попытка аутентификации как {self.username}")
                         server.login(self.username, self.password)
                         logger.info("✅ Аутентификация успешна")
+                    except smtplib.SMTPAuthenticationError as auth_error:
+                        logger.error(f"❌ Ошибка аутентификации: {auth_error}")
+                        logger.error("⚠️ Пароль может быть неверным или требуется пароль приложения")
+                        logger.error(f"⚠️ Код ошибки: {auth_error.smtp_code if hasattr(auth_error, 'smtp_code') else 'unknown'}")
+                        raise
                     except Exception as auth_error:
-                        logger.error(f"❌ Аутентификация не удалась: {auth_error}")
-                        logger.error("⚠️ Это может быть из-за того, что Mail.ru требует пароль приложения вместо обычного пароля")
-                        logger.error("⚠️ Получите пароль приложения: https://help.mail.ru/mail/security/protection/external")
+                        logger.error(f"❌ Неожиданная ошибка при аутентификации: {auth_error}")
                         raise
                 
                 server.send_message(msg)
