@@ -17,6 +17,10 @@ import {
   IconButton,
   Card,
   CardContent,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import { Visibility, VisibilityOff, Person, Lock, Email, Business } from '@mui/icons-material';
 import { useForm } from 'react-hook-form';
@@ -334,44 +338,43 @@ const RegistrationPage: React.FC = () => {
         </Card>
 
         {/* Диалог успешной регистрации */}
-        <Alert
-          severity="success"
-          sx={{
-            mt: 2,
-            borderRadius: 2,
-            display: successDialogOpen ? 'block' : 'none',
-          }}
+        <Dialog 
+          open={successDialogOpen} 
+          onClose={handleCloseSuccessDialog}
+          maxWidth="sm"
+          fullWidth
         >
-          <Typography variant="h6" gutterBottom>
+          <DialogTitle sx={{ bgcolor: '#4caf50', color: 'white' }}>
             ✓ Регистрация успешна!
-          </Typography>
-          <Typography variant="body2" sx={{ mb: 2 }}>
-            Спасибо за регистрацию в системе AGB SERVICE!
-          </Typography>
-          <Typography variant="body2" sx={{ mb: 2 }}>
-            Мы отправили вам на почту{' '}
-            <strong>{registeredEmail}</strong>{' '}
-            код подтверждения. Пожалуйста, проверьте вашу почту и перейдите по ссылке для активации аккаунта.
-          </Typography>
-          <Typography variant="body2" sx={{ mb: 2 }}>
-            Если письмо не пришло, проверьте папку "Спам" или обратитесь к администратору.
-          </Typography>
-          <Box sx={{ mt: 2 }}>
-            <Button
-              variant="contained"
-              onClick={handleCloseSuccessDialog}
-              sx={{ mr: 1 }}
-            >
-              Перейти к входу
-            </Button>
+          </DialogTitle>
+          <DialogContent sx={{ mt: 2 }}>
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              Спасибо за регистрацию в системе AGB SERVICE!
+            </Typography>
+            <Typography variant="body2" sx={{ mb: 2 }}>
+              Мы отправили вам на почту{' '}
+              <strong>{registeredEmail}</strong>{' '}
+              код подтверждения. Пожалуйста, проверьте вашу почту и перейдите по ссылке для активации аккаунта.
+            </Typography>
+            <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
+              Если письмо не пришло, проверьте папку "Спам" или обратитесь к администратору.
+            </Typography>
+          </DialogContent>
+          <DialogActions sx={{ p: 2 }}>
             <Button
               variant="outlined"
               onClick={() => setSuccessDialogOpen(false)}
             >
               Остаться на странице
             </Button>
-          </Box>
-        </Alert>
+            <Button
+              variant="contained"
+              onClick={handleCloseSuccessDialog}
+            >
+              Перейти к входу
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Container>
     </Box>
   );

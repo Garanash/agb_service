@@ -65,7 +65,10 @@ class PythonEmailService:
                 if self.use_tls:
                     server.starttls(context=context)
                 
-                # Пробуем без аутентификации
+                # Пробуем с аутентификацией если есть пароль
+                if self.username and self.password:
+                    server.login(self.username, self.password)
+                
                 server.send_message(msg)
             
             logger.info(f"✅ Письмо успешно отправлено на {to_email}")
