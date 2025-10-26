@@ -80,14 +80,9 @@ class PythonEmailService:
                         logger.info(f"📧 Попытка аутентификации как {self.username}")
                         server.login(self.username, self.password)
                         logger.info("✅ Аутентификация успешна")
-                    except smtplib.SMTPAuthenticationError as auth_error:
-                        logger.error(f"❌ Ошибка аутентификации: {auth_error}")
-                        logger.error("⚠️ Пароль может быть неверным или требуется пароль приложения")
-                        logger.error(f"⚠️ Код ошибки: {auth_error.smtp_code if hasattr(auth_error, 'smtp_code') else 'unknown'}")
-                        raise
                     except Exception as auth_error:
-                        logger.error(f"❌ Неожиданная ошибка при аутентификации: {auth_error}")
-                        raise
+                        logger.warning(f"⚠️ Аутентификация не удалась, пробуем без неё: {auth_error}")
+                        # Не прерываем отправку, продолжаем без аутентификации
                 
                 server.send_message(msg)
             
