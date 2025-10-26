@@ -14,6 +14,7 @@ import 'dayjs/locale/ru';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import LoginPage from './pages/LoginPage';
 import RegistrationPage from './pages/RegistrationPage';
+import VerifyEmailPage from './pages/VerifyEmailPage';
 import DashboardPage from './pages/DashboardPage';
 import RepairRequestsPage from './pages/RepairRequestsPage';
 import ContractorsPage from './pages/ContractorsPage';
@@ -89,6 +90,11 @@ const AppRoutes: React.FC = () => {
             <RegistrationPage />
           </PublicRoute>
         }
+      />
+
+      <Route
+        path='/verify-email'
+        element={<VerifyEmailPage />}
       />
 
       <Route

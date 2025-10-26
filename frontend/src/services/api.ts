@@ -105,6 +105,11 @@ class ApiService {
     return response.data;
   }
 
+  async verifyEmail(token: string): Promise<any> {
+    const response = await this.api.post('/api/v1/auth/verify-email', { token });
+    return response.data;
+  }
+
   async getCurrentUser(): Promise<User> {
     const response: AxiosResponse<User> = await this.api.get('/api/v1/auth/me');
     return response.data;
