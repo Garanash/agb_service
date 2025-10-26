@@ -29,6 +29,7 @@ import TelegramBotPage from './pages/TelegramBotPage';
 import CustomerCabinetPage from './pages/CustomerCabinetPage';
 import CreateRequestPage from './pages/CreateRequestPage';
 import AdminPanelPage from './pages/AdminPanelPage';
+import ContractorProfilePage from './pages/ContractorProfilePage';
 import Layout from './components/layout/Layout';
 import LoadingSpinner from './components/common/LoadingSpinner';
 
@@ -158,6 +159,17 @@ const AppRoutes: React.FC = () => {
           <ProtectedRoute>
             <Layout>
               <ProfileSettingsPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path='/contractor/profile'
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <ContractorProfilePage />
             </Layout>
           </ProtectedRoute>
         }

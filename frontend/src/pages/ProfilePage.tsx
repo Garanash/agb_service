@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -34,6 +35,7 @@ import { UserRole } from 'types/api';
 
 const ProfilePage: React.FC = () => {
   const { user, refreshUser } = useAuth();
+  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -345,9 +347,7 @@ const ProfilePage: React.FC = () => {
                   variant='outlined'
                   fullWidth
                   sx={{ mt: 2 }}
-                  onClick={() => {
-                    /* Переход к редактированию профиля исполнителя */
-                  }}
+                  onClick={() => navigate('/contractor/profile')}
                 >
                   Редактировать профиль исполнителя
                 </Button>
