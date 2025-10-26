@@ -65,9 +65,12 @@ class PythonEmailService:
                 if self.use_tls:
                     server.starttls(context=context)
                 
-                # Пробуем с аутентификацией если есть пароль
-                if self.username and self.password:
-                    server.login(self.username, self.password)
+                # Пробуем с аутентификацией только если пароль указан и не равен placeholder
+                if self.username and self.password and self.password != "YOUR_MAILRU_PASSWORD" and self.password != "your_mail_ru_password" and self.password != "":
+                    try:
+                        server.login(self.username, self.password)
+                    except Exception as auth_error:
+                        logger.warning(f"⚠️ Аутентификация не удалась, пробуем без неё: {auth_error}")
                 
                 server.send_message(msg)
             
