@@ -18,6 +18,9 @@ class PythonEmailService:
         self.from_email = os.getenv("MAIL_FROM", "almazgeobur@mail.ru")
         self.from_name = os.getenv("MAIL_FROM_NAME", "AGB SERVICE")
         self.use_tls = os.getenv("MAIL_TLS", "true").lower() == "true"
+        
+        # Проверяем, это пароль приложения или обычный пароль
+        self.has_app_password = len(self.password) >= 16 and not any(c in self.password for c in [' ', '\t', '\n'])
 
     def send_email(self, to_email: str, subject: str, html_content: str, plain_text: str = None) -> bool:
         """Отправка письма через Python smtplib"""
@@ -65,12 +68,17 @@ class PythonEmailService:
                 if self.use_tls:
                     server.starttls(context=context)
                 
-                # Пробуем с аутентификацией только если пароль указан и не равен placeholder
+                # Пробуем с аутентификацией только если пароль указан
                 if self.username and self.password and self.password != "YOUR_MAILRU_PASSWORD" and self.password != "your_mail_ru_password" and self.password != "":
                     try:
+                        logger.info(f"📧 Попытка аутентификации как {self.username}")
                         server.login(self.username, self.password)
+                        logger.info("✅ Аутентификация успешна")
                     except Exception as auth_error:
-                        logger.warning(f"⚠️ Аутентификация не удалась, пробуем без неё: {auth_error}")
+                        logger.error(f"❌ Аутентификация не удалась: {auth_error}")
+                        logger.error("⚠️ Это может быть из-за того, что Mail.ru требует пароль приложения вместо обычного пароля")
+                        logger.error("⚠️ Получите пароль приложения: https://help.mail.ru/mail/security/protection/external")
+                        raise
                 
                 server.send_message(msg)
             
