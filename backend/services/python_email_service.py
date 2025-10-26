@@ -71,19 +71,8 @@ class PythonEmailService:
             
             # Подключаемся к серверу и отправляем письмо
             with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
-                if self.use_tls:
-                    server.starttls(context=context)
-                
-                # Пробуем с аутентификацией только если пароль указан
-                if self.username and self.password and self.password != "YOUR_MAILRU_PASSWORD" and self.password != "your_mail_ru_password" and self.password != "":
-                    try:
-                        logger.info(f"📧 Попытка аутентификации как {self.username}")
-                        server.login(self.username, self.password)
-                        logger.info("✅ Аутентификация успешна")
-                    except Exception as auth_error:
-                        logger.warning(f"⚠️ Аутентификация не удалась, пробуем без неё: {auth_error}")
-                        # Не прерываем отправку, продолжаем без аутентификации
-                
+                server.starttls(context=context)
+                server.login(self.username, self.password)
                 server.send_message(msg)
             
             logger.info(f"✅ Письмо успешно отправлено на {to_email}")
