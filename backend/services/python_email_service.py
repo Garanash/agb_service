@@ -24,13 +24,19 @@ class PythonEmailService:
 
     def send_email(self, to_email: str, subject: str, html_content: str, plain_text: str = None) -> bool:
         """Отправка письма через Python smtplib"""
+        logger.info(f"📧 Начало отправки письма на {to_email}")
+        
         try:
             # Сначала пробуем отправить через SMTP
-            if self._try_smtp_send(to_email, subject, html_content, plain_text):
+            smtp_result = self._try_smtp_send(to_email, subject, html_content, plain_text)
+            logger.info(f"📧 Результат SMTP отправки: {smtp_result}")
+            
+            if smtp_result:
+                logger.info(f"✅ Письмо успешно отправлено через SMTP на {to_email}")
                 return True
             
             # Если SMTP не работает, сохраняем в лог
-            logger.info(f"📧 SMTP не работает, сохраняем письмо в лог")
+            logger.warning(f"⚠️ SMTP не работает, сохраняем письмо в лог")
             self._log_email(to_email, subject, html_content, plain_text)
             return True
             
