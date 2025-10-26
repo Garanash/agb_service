@@ -160,18 +160,51 @@ const ContractorProfilePage: React.FC = () => {
   const loadContractorProfile = async () => {
     try {
       setLoading(true);
-      const profile = await apiService.getContractorProfileExtended(user!.contractor_profile!.id);
-      
-      // Заполняем форму данными профиля
-      Object.keys(profile).forEach(key => {
-        if (profile[key] !== null && profile[key] !== undefined) {
-          setValue(key as keyof ContractorProfileForm, profile[key]);
-        }
+      // Простой endpoint для получения профиля
+      const response = await fetch('/api/v1/contractors/profile', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+        },
       });
       
-      setEducationRecords(profile.education_records || []);
-      setDocuments(profile.documents || []);
-      setVerificationStatus(profile.verification?.overall_status || 'incomplete');
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      
+      const profile = await response.json();
+      
+      // Заполняем форму данными профиля
+      if (profile.first_name) setValue('first_name', profile.first_name);
+      if (profile.last_name) setValue('last_name', profile.last_name);
+      if (profile.patronymic) setValue('patronymic', profile.patronymic);
+      if (profile.phone) setValue('phone', profile.phone);
+      if (profile.email) setValue('email', profile.email);
+      if (profile.passport_series) setValue('passport_series', profile.passport_series);
+      if (profile.passport_number) setValue('passport_number', profile.passport_number);
+      if (profile.passport_issued_by) setValue('passport_issued_by', profile.passport_issued_by);
+      if (profile.passport_issued_date) setValue('passport_issued_date', profile.passport_issued_date);
+      if (profile.passport_issued_code) setValue('passport_issued_code', profile.passport_issued_code);
+      if (profile.birth_date) setValue('birth_date', profile.birth_date);
+      if (profile.birth_place) setValue('birth_place', profile.birth_place);
+      if (profile.inn) setValue('inn', profile.inn);
+      if (profile.general_description) setValue('general_description', profile.general_description);
+      if (profile.telegram_username) setValue('telegram_username', profile.telegram_username);
+      if (profile.website) setValue('website', profile.website);
+      if (profile.bank_account) setValue('bank_account', profile.bank_account);
+      if (profile.bank_bik) setValue('bank_bik', profile.bank_bik);
+      
+      // Загрузка образования и документов через расширенный endpoint
+      try {
+        const extendedProfile = await apiService.getContractorProfileExtended(user!.contractor_profile!.id);
+        setEducationRecords(extendedProfile.education_records || []);
+        setDocuments(extendedProfile.documents || []);
+        setVerificationStatus(extendedProfile.verification?.overall_status || 'incomplete');
+      } catch (extErr) {
+        console.warn('Could not load extended profile data:', extErr);
+        setEducationRecords([]);
+        setDocuments([]);
+        setVerificationStatus('incomplete');
+      }
       
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Ошибка загрузки профиля');
