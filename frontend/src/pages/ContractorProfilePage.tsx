@@ -152,7 +152,7 @@ const ContractorProfilePage: React.FC = () => {
   });
 
   useEffect(() => {
-    if (user?.contractor_profile) {
+    if (user) {
       loadContractorProfile();
     }
   }, [user]);
