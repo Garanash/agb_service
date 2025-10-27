@@ -881,6 +881,26 @@ class ApiService {
     const response: AxiosResponse<any> = await this.api.get('/api/v1/telegram-chat/unread-counts');
     return response.data;
   }
+
+  // Manager verification methods
+  async verifyContractorByManager(contractorId: number, notes: string): Promise<any> {
+    const response = await this.api.post(`/api/v1/manager/verify-contractor/${contractorId}`, {
+      notes,
+    });
+    return response.data;
+  }
+
+  async rejectContractorByManager(contractorId: number, reason: string): Promise<any> {
+    const response = await this.api.post(`/api/v1/manager/reject-contractor/${contractorId}`, {
+      reason,
+    });
+    return response.data;
+  }
+
+  async getContractorProfileDetails(contractorId: number): Promise<any> {
+    const response = await this.api.get(`/api/v1/contractors/profile/${contractorId}`);
+    return response.data;
+  }
 }
 
 export const apiService = new ApiService();

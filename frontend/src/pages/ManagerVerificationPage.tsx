@@ -111,7 +111,7 @@ const ManagerVerificationPage: React.FC = () => {
       setLoading(true);
       
       // Загружаем данные о подтвержденных и отклоненных исполнителях
-      const profiles = await apiService.getContractorProfiles();
+      const profiles = await apiService.getAllContractorProfiles();
       setPendingVerifications(profiles.filter((p: any) => !p.manager_verified));
       setVerifiedContractors(profiles.filter((p: any) => p.manager_verified));
     } catch (err: any) {
