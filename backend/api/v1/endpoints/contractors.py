@@ -225,8 +225,8 @@ def update_contractor_profile(
             )
         
         # Проверяем, что профиль существует
-        profile_query = "SELECT id FROM contractor_profiles WHERE user_id = %s"
-        profile_result = db.execute(text(profile_query), [current_user.id]).fetchone()
+        profile_query = "SELECT id FROM contractor_profiles WHERE user_id = :user_id"
+        profile_result = db.execute(text(profile_query), {"user_id": current_user.id}).fetchone()
         
         if not profile_result:
             raise HTTPException(
@@ -310,12 +310,12 @@ def update_contractor_profile(
         
         update_query = f"""
             UPDATE contractor_profiles 
-            SET {', '.join(update_fields)}, updated_at = %s
-            WHERE user_id = %s
+            SET {', '.join(update_fields)}, updated_at = NOW()
+            WHERE user_id = :user_id
         """
         
-        params.extend(["NOW()", current_user.id])
-        db.execute(text(update_query), params)
+        params.append(current_user.id)
+        db.execute(text(update_query), dict(zip(range(len(params)), params)) | {"user_id": current_user.id})
         db.commit()
         
         # Возвращаем обновленный профиль
