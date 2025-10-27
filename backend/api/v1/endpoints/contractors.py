@@ -166,10 +166,10 @@ def get_contractor_profile(
                    specializations, equipment_brands_experience, certifications, work_regions,
                    created_at, updated_at
             FROM contractor_profiles
-            WHERE user_id = %s
+            WHERE user_id = :user_id
         """
         
-        result = db.execute(text(query), [current_user.id]).fetchone()
+        result = db.execute(text(query), {"user_id": current_user.id}).fetchone()
         
         if not result:
             raise HTTPException(
