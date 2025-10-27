@@ -25,6 +25,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from 'hooks/useAuth';
 import { apiService } from 'services/api';
 import { RepairRequest, RequestStatus, UserRole } from 'types/api';
+import DevelopmentBanner from 'components/common/DevelopmentBanner';
 
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();
@@ -155,6 +156,8 @@ const DashboardPage: React.FC = () => {
 
   return (
     <Box>
+      <DevelopmentBanner />
+      
       <Typography variant='h4' gutterBottom>
         Добро пожаловать, {user?.first_name}!
       </Typography>
@@ -174,8 +177,9 @@ const DashboardPage: React.FC = () => {
 
       {getRoleSpecificActions()}
 
-      {/* Статистика */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
+      {/* Статистика - не показываем для исполнителя */}
+      {user?.role !== UserRole.CONTRACTOR && (
+        <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
@@ -284,11 +288,12 @@ const DashboardPage: React.FC = () => {
           </Card>
         </Grid>
       </Grid>
+      )}
 
       {/* Основной контент */}
       <Grid container spacing={3}>
         {/* Последние заявки */}
-        <Grid item xs={12} md={8}>
+        <Grid item xs={12} md={user?.role === UserRole.CONTRACTOR ? 12 : 8}>
           <Card>
             <CardContent>
               <Typography variant='h6' gutterBottom>
@@ -348,8 +353,9 @@ const DashboardPage: React.FC = () => {
           </Card>
         </Grid>
 
-        {/* Быстрые действия */}
-        <Grid item xs={12} md={4}>
+        {/* Быстрые действия - не показываем для исполнителя */}
+        {user?.role !== UserRole.CONTRACTOR && (
+          <Grid item xs={12} md={4}>
           <Card>
             <CardContent>
               <Typography variant='h6' gutterBottom>
@@ -386,6 +392,7 @@ const DashboardPage: React.FC = () => {
             </CardContent>
           </Card>
         </Grid>
+        )}
       </Grid>
     </Box>
   );

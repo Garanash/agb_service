@@ -24,8 +24,11 @@ import {
 } from '@mui/icons-material';
 import { apiService } from '../services/api';
 import { RepairRequest, RequestStatus } from '../types/api';
+import { useAuth } from '../hooks/useAuth';
+import DevelopmentBanner from '../components/common/DevelopmentBanner';
 
 const ContractorArchivePage: React.FC = () => {
+  const { user } = useAuth();
   const [requests, setRequests] = useState<RepairRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -42,11 +45,14 @@ const ContractorArchivePage: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      // Получаем все заявки и фильтруем только выполненные
+      // Получаем все заявки
       const response = await apiService.getRepairRequests();
       const allRequests = Array.isArray(response) ? response : response.items || [];
+      
+      // Фильтруем заявки где текущий пользователь назначен как исполнитель И статус завершен
       const completedRequests = allRequests.filter(
-        (req) => req.status === RequestStatus.COMPLETED
+        (req) => req.status === RequestStatus.COMPLETED &&
+        req.assigned_contractor_id === user?.id
       );
       
       setRequests(completedRequests);
@@ -92,6 +98,8 @@ const ContractorArchivePage: React.FC = () => {
 
   return (
     <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
+      <DevelopmentBanner />
+      
       <Typography variant='h4' gutterBottom sx={{ mb: 4 }}>
         Архив заявок
       </Typography>

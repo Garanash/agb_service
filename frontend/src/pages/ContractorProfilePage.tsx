@@ -41,6 +41,7 @@ import {
 import { useForm, useFieldArray } from 'react-hook-form';
 import { useAuth } from 'hooks/useAuth';
 import { apiService } from 'services/api';
+import DevelopmentBanner from 'components/common/DevelopmentBanner';
 
 interface EducationRecord {
   id?: number;
@@ -317,6 +318,8 @@ const ContractorProfilePage: React.FC = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <DevelopmentBanner />
+      
       <Typography variant="h4" component="h1" gutterBottom>
         Профиль исполнителя
       </Typography>
