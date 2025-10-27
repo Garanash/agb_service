@@ -161,9 +161,10 @@ def get_contractor_profile(
         
         query = """
             SELECT id, user_id, last_name, first_name, patronymic, phone, email,
-                   professional_info, education, bank_name, bank_account, bank_bik,
+                   professional_info, bank_name, bank_account, bank_bik,
                    telegram_username, website, general_description, profile_photo_path,
-                   portfolio_files, document_files, created_at, updated_at
+                   specializations, equipment_brands_experience, certifications, work_regions,
+                   created_at, updated_at
             FROM contractor_profiles
             WHERE user_id = %s
         """
@@ -184,19 +185,20 @@ def get_contractor_profile(
             "patronymic": result[4],
             "phone": result[5],
             "email": result[6],
-            "professional_info": json.loads(result[7]) if result[7] else [],
-            "education": json.loads(result[8]) if result[8] else [],
-            "bank_name": result[9],
-            "bank_account": result[10],
-            "bank_bik": result[11],
-            "telegram_username": result[12],
-            "website": result[13],
-            "general_description": result[14],
-            "profile_photo_path": result[15],
-            "portfolio_files": json.loads(result[16]) if result[16] else [],
-            "document_files": json.loads(result[17]) if result[17] else [],
-            "created_at": result[18].isoformat() if result[18] else None,
-            "updated_at": result[19].isoformat() if result[19] else None
+            "professional_info": json.loads(result[7]) if result[7] else {},
+            "bank_name": result[8],
+            "bank_account": result[9],
+            "bank_bik": result[10],
+            "telegram_username": result[11],
+            "website": result[12],
+            "general_description": result[13],
+            "profile_photo_path": result[14],
+            "specializations": json.loads(result[15]) if result[15] else [],
+            "equipment_brands_experience": json.loads(result[16]) if result[16] else [],
+            "certifications": json.loads(result[17]) if result[17] else [],
+            "work_regions": json.loads(result[18]) if result[18] else [],
+            "created_at": result[19].isoformat() if result[19] else None,
+            "updated_at": result[20].isoformat() if result[20] else None
         }
         
         return profile_dict
