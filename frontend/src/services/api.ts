@@ -776,7 +776,7 @@ class ApiService {
 
   async updateContractorProfile(contractorId: number, profileData: any): Promise<any> {
     const response: AxiosResponse<any> = await this.api.put(
-      `/api/v1/contractor-verification/profile/${contractorId}`,
+      `/api/v1/contractors/profile`,
       profileData,
     );
     return response.data;
