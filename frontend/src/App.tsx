@@ -30,6 +30,7 @@ import CustomerCabinetPage from './pages/CustomerCabinetPage';
 import CreateRequestPage from './pages/CreateRequestPage';
 import AdminPanelPage from './pages/AdminPanelPage';
 import ContractorProfilePage from './pages/ContractorProfilePage';
+import ContractorArchivePage from './pages/ContractorArchivePage';
 import Layout from './components/layout/Layout';
 import LoadingSpinner from './components/common/LoadingSpinner';
 
@@ -258,6 +259,17 @@ const AppRoutes: React.FC = () => {
           <ProtectedRoute>
             <Layout>
               <AdminPanelPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path='/contractor/archive'
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <ContractorArchivePage />
             </Layout>
           </ProtectedRoute>
         }

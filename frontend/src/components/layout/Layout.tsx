@@ -90,8 +90,22 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     },
   ];
 
-  // Добавляем пункты меню в зависимости от роли пользователя
-  if (user?.role === UserRole.CONTRACTOR || user?.role === UserRole.ADMIN) {
+  // Меню для исполнителя - только 3 вкладки
+  if (user?.role === UserRole.CONTRACTOR) {
+    menuItems.push({
+      text: 'Архив заявок',
+      icon: <Build />,
+      path: '/contractor/archive',
+    });
+    menuItems.push({
+      text: 'Профиль исполнителя',
+      icon: <Person />,
+      path: '/contractor/profile',
+    });
+  }
+
+  // Добавляем пункты меню для админа
+  if (user?.role === UserRole.ADMIN) {
     menuItems.push({
       text: 'Исполнители',
       icon: <People />,
