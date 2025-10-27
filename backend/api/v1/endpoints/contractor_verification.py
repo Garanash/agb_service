@@ -76,8 +76,13 @@ async def get_contractor_profile_extended(
         ContractorVerification.contractor_id == contractor_id
     ).first()
     
+    # Создаем словарь из contractor, исключая поля которые передаются отдельно
+    contractor_data = contractor.__dict__.copy()
+    contractor_data.pop('education_records', None)
+    contractor_data.pop('documents', None)
+    
     return ContractorProfileExtended(
-        **contractor.__dict__,
+        **contractor_data,
         education_records=education_records,
         documents=documents,
         verification=verification
