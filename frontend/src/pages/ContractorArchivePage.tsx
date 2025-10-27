@@ -25,7 +25,6 @@ import {
 import { apiService } from '../services/api';
 import { RepairRequest, RequestStatus } from '../types/api';
 import { useAuth } from '../hooks/useAuth';
-import DevelopmentBanner from '../components/common/DevelopmentBanner';
 
 const ContractorArchivePage: React.FC = () => {
   const { user } = useAuth();
@@ -98,8 +97,6 @@ const ContractorArchivePage: React.FC = () => {
 
   return (
     <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
-      <DevelopmentBanner />
-      
       <Typography variant='h4' gutterBottom sx={{ mb: 4 }}>
         Архив заявок
       </Typography>

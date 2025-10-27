@@ -25,7 +25,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from 'hooks/useAuth';
 import { apiService } from 'services/api';
 import { RepairRequest, RequestStatus, UserRole } from 'types/api';
-import DevelopmentBanner from 'components/common/DevelopmentBanner';
 
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();
@@ -156,8 +155,6 @@ const DashboardPage: React.FC = () => {
 
   return (
     <Box>
-      <DevelopmentBanner />
-      
       <Typography variant='h4' gutterBottom>
         Добро пожаловать, {user?.first_name}!
       </Typography>

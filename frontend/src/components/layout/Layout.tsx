@@ -34,6 +34,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from 'hooks/useAuth';
 import { UserRole } from 'types/api';
 import Logo from 'components/Logo';
+import DevelopmentBanner from 'components/common/DevelopmentBanner';
 
 const drawerWidth = 240;
 
@@ -325,6 +326,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           width: { sm: `calc(100% - ${drawerWidth}px)` },
         }}
       >
+        <DevelopmentBanner />
         {children}
       </Box>
 
