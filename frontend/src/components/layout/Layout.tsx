@@ -139,6 +139,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       path: '/manager/requests',
     });
     menuItems.push({
+      text: 'Подтверждение исполнителей',
+      icon: <People />,
+      path: '/manager/verification',
+    });
+    menuItems.push({
       text: 'Календарь',
       icon: <Dashboard />,
       path: '/manager/calendar',

@@ -23,6 +23,7 @@ import ProfilePage from './pages/ProfilePage';
 import ProfileSettingsPage from './pages/ProfileSettingsPage';
 import ManagerWorkflowPage from './pages/ManagerWorkflowPage';
 import ManagerDashboardPage from './pages/ManagerDashboardPage';
+import ManagerVerificationPage from './pages/ManagerVerificationPage';
 import SecurityVerificationPage from './pages/SecurityVerificationPage';
 import HRDocumentsPage from './pages/HRDocumentsPage';
 import TelegramBotPage from './pages/TelegramBotPage';
@@ -193,6 +194,17 @@ const AppRoutes: React.FC = () => {
           <ProtectedRoute>
             <Layout>
               <ManagerDashboardPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path='/manager/verification'
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <ManagerVerificationPage />
             </Layout>
           </ProtectedRoute>
         }

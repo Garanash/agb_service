@@ -94,6 +94,12 @@ const ManagerWorkflowPage: React.FC = () => {
   );
   const [clarificationText, setClarificationText] = useState('');
   const [contractorId, setContractorId] = useState<number | ''>('');
+  
+  // Поля для редактирования заявки
+  const [editedTitle, setEditedTitle] = useState('');
+  const [editedDescription, setEditedDescription] = useState('');
+  const [editedEquipment, setEditedEquipment] = useState('');
+  const [editedAddress, setEditedAddress] = useState('');
 
   useEffect(() => {
     loadRequests();
@@ -126,18 +132,34 @@ const ManagerWorkflowPage: React.FC = () => {
   };
 
   const handleAddClarification = async () => {
-    if (!selectedRequest || !clarificationText.trim()) return;
+    if (!selectedRequest) return;
 
     try {
-      await apiService.addClarification(selectedRequest.id, {
-        clarification_details: clarificationText,
+      // Обновляем данные заявки
+      await apiService.updateRepairRequest(selectedRequest.id, {
+        title: editedTitle,
+        description: editedDescription,
+        equipment_type: editedEquipment,
+        address: editedAddress,
       });
+      
+      // Добавляем уточнение если есть комментарий
+      if (clarificationText.trim()) {
+        await apiService.addClarification(selectedRequest.id, {
+          clarification_details: clarificationText,
+        });
+      }
+      
       await loadRequests();
       setClarifyDialogOpen(false);
       setClarificationText('');
+      setEditedTitle('');
+      setEditedDescription('');
+      setEditedEquipment('');
+      setEditedAddress('');
       setSelectedRequest(null);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Ошибка добавления уточнений');
+      setError(err.response?.data?.detail || 'Ошибка редактирования заявки');
     }
   };
 
@@ -332,6 +354,10 @@ const ManagerWorkflowPage: React.FC = () => {
                             startIcon={<Edit />}
                             onClick={() => {
                               setSelectedRequest(request);
+                              setEditedTitle(request.title);
+                              setEditedDescription(request.description || '');
+                              setEditedEquipment(request.equipment_type || '');
+                              setEditedAddress(request.address || '');
                               setClarifyDialogOpen(true);
                             }}
                           >
@@ -485,24 +511,59 @@ const ManagerWorkflowPage: React.FC = () => {
         maxWidth='md'
         fullWidth
       >
-        <DialogTitle>Добавить уточнения</DialogTitle>
+        <DialogTitle>Уточнить заявку</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
             margin='dense'
-            label='Уточнения'
+            label='Название заявки'
+            fullWidth
+            value={editedTitle}
+            onChange={e => setEditedTitle(e.target.value)}
+            required
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            margin='dense'
+            label='Описание'
             fullWidth
             multiline
-            rows={4}
+            rows={3}
+            value={editedDescription}
+            onChange={e => setEditedDescription(e.target.value)}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            margin='dense'
+            label='Техника'
+            fullWidth
+            value={editedEquipment}
+            onChange={e => setEditedEquipment(e.target.value)}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            margin='dense'
+            label='Адрес'
+            fullWidth
+            value={editedAddress}
+            onChange={e => setEditedAddress(e.target.value)}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            margin='dense'
+            label='Комментарий'
+            fullWidth
+            multiline
+            rows={3}
             value={clarificationText}
             onChange={e => setClarificationText(e.target.value)}
-            placeholder='Опишите уточнения для заказчика...'
+            placeholder='Добавьте комментарий...'
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setClarifyDialogOpen(false)}>Отмена</Button>
           <Button onClick={handleAddClarification} variant='contained'>
-            Добавить
+            Сохранить
           </Button>
         </DialogActions>
       </Dialog>
