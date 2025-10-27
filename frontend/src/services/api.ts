@@ -898,7 +898,7 @@ class ApiService {
   }
 
   async getContractorProfileDetails(contractorId: number): Promise<any> {
-    const response = await this.api.get(`/api/v1/contractors/profile/${contractorId}`);
+    const response = await this.api.get(`/api/v1/contractor-verification/profile/${contractorId}`);
     return response.data;
   }
 }
