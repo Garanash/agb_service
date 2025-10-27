@@ -198,14 +198,14 @@ const ContractorProfilePage: React.FC = () => {
       setError(null);
       
       console.log('Submitting profile data:', data);
-      console.log('User contractor profile ID:', user?.contractor_profile?.id);
+      console.log('User contractor profile ID:', user?.contractor_profile_id);
       
-      if (!user?.contractor_profile?.id) {
+      if (!user?.contractor_profile_id) {
         setError('Профиль исполнителя не найден');
         return;
       }
       
-      await apiService.updateContractorProfile(user.contractor_profile.id, data);
+      await apiService.updateContractorProfile(user.contractor_profile_id, data);
       setSuccess('Профиль успешно обновлен!');
       
     } catch (err: any) {

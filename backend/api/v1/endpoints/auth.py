@@ -152,10 +152,36 @@ async def register(
 
 @router.get("/me", response_model=UserResponse)
 def get_current_user_info(
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
     """Получение информации о текущем пользователе"""
-    return UserResponse.from_orm(current_user)
+    # Загружаем профиль исполнителя если он существует
+    contractor_profile_id = None
+    if current_user.contractor_profile:
+        contractor_profile_id = current_user.contractor_profile.id
+    
+    # Создаем словарь с данными пользователя
+    user_data = {
+        "id": current_user.id,
+        "username": current_user.username,
+        "email": current_user.email,
+        "first_name": current_user.first_name,
+        "last_name": current_user.last_name,
+        "middle_name": current_user.middle_name,
+        "role": current_user.role,
+        "is_active": current_user.is_active,
+        "is_password_changed": current_user.is_password_changed,
+        "email_verified": current_user.email_verified,
+        "avatar_url": current_user.avatar_url,
+        "phone": current_user.phone,
+        "position": current_user.position,
+        "created_at": current_user.created_at,
+        "updated_at": current_user.updated_at,
+        "contractor_profile_id": contractor_profile_id
+    }
+    
+    return UserResponse(**user_data)
 
 @router.post("/change-password")
 def change_password(

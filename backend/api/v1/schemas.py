@@ -79,6 +79,7 @@ class UserResponse(UserBase):
     avatar_url: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
+    contractor_profile_id: Optional[int] = None
 
 # Профили заказчиков
 class CustomerProfileBase(BaseModel):
