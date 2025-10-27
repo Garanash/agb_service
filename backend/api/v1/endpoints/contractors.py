@@ -185,7 +185,7 @@ def get_contractor_profile(
             "patronymic": result[4],
             "phone": result[5],
             "email": result[6],
-            "professional_info": result[7] if result[7] else {},
+            "professional_info": result[7] if result[7] and isinstance(result[7], list) else [],
             "bank_name": result[8],
             "bank_account": result[9],
             "bank_bik": result[10],
