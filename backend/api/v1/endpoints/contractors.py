@@ -25,8 +25,13 @@ def get_all_contractor_profiles(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Получение всех профилей исполнителей"""
-    # Просмотр списка исполнителей доступен всем авторизованным пользователям
+    """Получение всех профилей исполнителей (только для администраторов и менеджеров)"""
+    if current_user.role not in ["admin", "manager"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Доступ разрешен только администраторам и менеджерам"
+        )
+    
     profiles = db.query(ContractorProfile).offset(offset).limit(limit).all()
     return profiles
 
