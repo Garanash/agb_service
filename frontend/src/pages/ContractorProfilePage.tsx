@@ -197,10 +197,19 @@ const ContractorProfilePage: React.FC = () => {
       setSaving(true);
       setError(null);
       
-      await apiService.updateContractorProfile(user!.contractor_profile!.id, data);
+      console.log('Submitting profile data:', data);
+      console.log('User contractor profile ID:', user?.contractor_profile?.id);
+      
+      if (!user?.contractor_profile?.id) {
+        setError('Профиль исполнителя не найден');
+        return;
+      }
+      
+      await apiService.updateContractorProfile(user.contractor_profile.id, data);
       setSuccess('Профиль успешно обновлен!');
       
     } catch (err: any) {
+      console.error('Error saving profile:', err);
       setError(err.response?.data?.detail || 'Ошибка сохранения профиля');
     } finally {
       setSaving(false);
