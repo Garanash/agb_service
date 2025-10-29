@@ -451,7 +451,7 @@ class ContractorVerificationBase(BaseModel):
     documents_uploaded: bool = False
     security_check_passed: bool = False
     manager_approval: bool = False
-    overall_status: VerificationStatus = VerificationStatus.INCOMPLETE
+    overall_status: Optional[Union[str, VerificationStatus]] = None
     security_notes: Optional[str] = None
     manager_notes: Optional[str] = None
 
