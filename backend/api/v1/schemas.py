@@ -467,6 +467,9 @@ class ContractorVerificationResponse(ContractorVerificationBase):
     manager_checked_at: Optional[datetime] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
+    verification_status: Optional[str] = None
+    security_check_passed: Optional[bool] = None
+    contractor: Optional[Dict[str, Any]] = None
 
 # Расширенная схема профиля исполнителя
 class ContractorProfileExtended(ContractorProfileResponse):
