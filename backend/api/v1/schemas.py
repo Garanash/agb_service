@@ -52,7 +52,7 @@ class CustomerRegistrationRequest(UserBase):
 class ContractorRegistrationRequest(UserBase):
     password: str = Field(..., min_length=6)
     # Новые поля для специализации
-    specializations: Optional[List[str]] = Field(None)
+    specializations: Optional[List[Dict[str, str]]] = Field(None, description="Специализации в формате [{\"specialization\": \"электрика\", \"level\": \"эксперт\"}]")
     equipment_brands_experience: Optional[List[str]] = Field(None)
     certifications: Optional[List[str]] = Field(None)
     work_regions: Optional[List[str]] = Field(None)
@@ -128,7 +128,7 @@ class ContractorProfileBase(BaseModel):
     portfolio_files: Optional[List[str]] = Field(default_factory=list)
     document_files: Optional[List[str]] = Field(default_factory=list)
     # Новые поля для специализации по обслуживанию техники
-    specializations: Optional[List[str]] = Field(None, description="Специализации (электрика, ходовая часть, гидравлика и т.д.)")
+    specializations: Optional[List[Dict[str, str]]] = Field(None, description="Специализации в формате [{\"specialization\": \"электрика\", \"level\": \"эксперт\"}]")
     equipment_brands_experience: Optional[List[str]] = Field(None, description="Опыт работы с брендами техники")
     certifications: Optional[List[str]] = Field(None, description="Сертификаты и квалификации")
     work_regions: Optional[List[str]] = Field(None, description="Регионы работы")

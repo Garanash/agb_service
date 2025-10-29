@@ -194,7 +194,7 @@ def get_contractor_profile(
             "website": profile.website,
             "general_description": profile.general_description,
             "profile_photo_path": profile.profile_photo_path,
-            "specializations": profile.specializations if profile.specializations else [],
+            "specializations": profile.specializations if profile.specializations and isinstance(profile.specializations, list) else [],
             "equipment_brands_experience": profile.equipment_brands_experience if profile.equipment_brands_experience else [],
             "certifications": profile.certifications if profile.certifications else [],
             "work_regions": profile.work_regions if profile.work_regions else [],
@@ -307,8 +307,8 @@ def update_contractor_profile(
                         detail="Почасовая ставка не может быть отрицательной"
                     )
             except (ValueError, TypeError) as e:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Почасовая ставка должна быть числом"
                 )
         
