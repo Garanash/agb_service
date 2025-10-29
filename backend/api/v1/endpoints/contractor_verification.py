@@ -89,6 +89,15 @@ async def get_contractor_profile_extended(
             else:
                 overall_status_str = str(verification_obj.overall_status).lower()
         
+        # Преобразуем overall_status в правильный формат
+        final_overall_status = overall_status_str
+        if not final_overall_status:
+            if verification_obj.overall_status:
+                if hasattr(verification_obj.overall_status, 'value'):
+                    final_overall_status = verification_obj.overall_status.value
+                else:
+                    final_overall_status = str(verification_obj.overall_status)
+        
         verification_dict = {
             "id": verification_obj.id,
             "contractor_id": verification_obj.contractor_id,
@@ -96,7 +105,7 @@ async def get_contractor_profile_extended(
             "documents_uploaded": verification_obj.documents_uploaded,
             "security_check_passed": verification_obj.security_check_passed,
             "manager_approval": verification_obj.manager_approval,
-            "overall_status": overall_status_str or (verification_obj.overall_status.value if hasattr(verification_obj.overall_status, 'value') else str(verification_obj.overall_status)),
+            "overall_status": final_overall_status if final_overall_status else "incomplete",
             "security_notes": verification_obj.security_notes,
             "manager_notes": verification_obj.manager_notes,
             "security_checked_by": verification_obj.security_checked_by,
@@ -105,6 +114,8 @@ async def get_contractor_profile_extended(
             "manager_checked_at": verification_obj.manager_checked_at.isoformat() if verification_obj.manager_checked_at else None,
             "created_at": verification_obj.created_at.isoformat() if verification_obj.created_at else None,
             "updated_at": verification_obj.updated_at.isoformat() if verification_obj.updated_at else None,
+            "verification_status": "pending" if not verification_obj.security_check_passed else ("approved" if verification_obj.security_check_passed and verification_obj.manager_approval else "pending_manager"),
+            "security_check_passed": verification_obj.security_check_passed,
         }
     
     # Преобразуем даты в строки для корректной сериализации
