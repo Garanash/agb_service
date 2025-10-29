@@ -52,16 +52,15 @@ def delete_test_users():
                     print(f"  ✓ Удалено заявок: {result.rowcount}")
             
             if user.role == "contractor":
-                # Удаляем отклики исполнителя
-                result = db.execute(text("DELETE FROM contractor_responses WHERE contractor_id = :user_id"), {"user_id": user.id})
-                if result.rowcount > 0:
-                    print(f"  ✓ Удалено откликов: {result.rowcount}")
-                
-                # Получаем contractor_id для удаления связанных данных
+                # Получаем contractor_profile_id для удаления связанных данных
                 profile_result = db.execute(text("SELECT id FROM contractor_profiles WHERE user_id = :user_id"), {"user_id": user.id})
                 profile_row = profile_result.fetchone()
                 if profile_row:
                     contractor_profile_id = profile_row[0]
+                    # Удаляем отклики исполнителя (ссылаются на contractor_profiles.id)
+                    result = db.execute(text("DELETE FROM contractor_responses WHERE contractor_id = :contractor_id"), {"contractor_id": contractor_profile_id})
+                    if result.rowcount > 0:
+                        print(f"  ✓ Удалено откликов: {result.rowcount}")
                     # Удаляем связанные данные профиля
                     db.execute(text("DELETE FROM contractor_documents WHERE contractor_id = :contractor_id"), {"contractor_id": contractor_profile_id})
                     db.execute(text("DELETE FROM contractor_education WHERE contractor_id = :contractor_id"), {"contractor_id": contractor_profile_id})
