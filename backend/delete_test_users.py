@@ -88,14 +88,24 @@ def delete_test_users():
                     print(f"  ✓ Удален профиль исполнителя")
             
             if user.role == "customer":
-                # Сначала удаляем заявки заказчика (если они еще есть)
-                customer_requests = db.execute(text("SELECT id FROM repair_requests WHERE customer_id = :user_id"), {"user_id": user.id})
-                customer_req_ids = [row[0] for row in customer_requests.fetchall()]
-                if customer_req_ids:
-                    for req_id in customer_req_ids:
-                        db.execute(text("DELETE FROM contractor_responses WHERE request_id = :request_id"), {"request_id": req_id})
-                        db.execute(text("DELETE FROM repair_requests WHERE id = :request_id"), {"request_id": req_id})
-                    print(f"  ✓ Удалено заявок заказчика: {len(customer_req_ids)}")
+                # Получаем customer_profile_id
+                profile_result = db.execute(text("SELECT id FROM customer_profiles WHERE user_id = :user_id"), {"user_id": user.id})
+                profile_row = profile_result.fetchone()
+                if profile_row:
+                    customer_profile_id = profile_row[0]
+                    # Получаем заявки заказчика (ссылаются на customer_profiles.id)
+                    customer_requests = db.execute(text("SELECT id FROM repair_requests WHERE customer_id = :customer_profile_id"), {"customer_profile_id": customer_profile_id})
+                    customer_req_ids = [row[0] for row in customer_requests.fetchall()]
+                    if customer_req_ids:
+                        # Удаляем отклики на заявки
+                        for req_id in customer_req_ids:
+                            db.execute(text("DELETE FROM contractor_responses WHERE request_id = :request_id"), {"request_id": req_id})
+                        db.flush()
+                        # Удаляем заявки
+                        for req_id in customer_req_ids:
+                            db.execute(text("DELETE FROM repair_requests WHERE id = :request_id"), {"request_id": req_id})
+                        db.flush()
+                        print(f"  ✓ Удалено заявок заказчика: {len(customer_req_ids)}")
                 
                 result = db.execute(text("DELETE FROM customer_profiles WHERE user_id = :user_id"), {"user_id": user.id})
                 if result.rowcount > 0:
