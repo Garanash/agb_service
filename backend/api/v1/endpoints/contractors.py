@@ -179,6 +179,14 @@ def get_contractor_profile(
                 detail="Профиль исполнителя не найден"
             )
         
+        # Безопасное преобразование hourly_rate
+        hourly_rate_value = None
+        if len(result) > 27 and result[27] is not None:
+            try:
+                hourly_rate_value = float(result[27])
+            except (ValueError, TypeError):
+                hourly_rate_value = None
+        
         profile_dict = {
             "id": result[0],
             "user_id": result[1],
@@ -187,29 +195,29 @@ def get_contractor_profile(
             "patronymic": result[4],
             "phone": result[5],
             "email": result[6],
-            "passport_series": result[7],
-            "passport_number": result[8],
-            "passport_issued_by": result[9],
-            "passport_issued_date": result[10],
-            "passport_issued_code": result[11],
-            "birth_date": result[12],
-            "birth_place": result[13],
-            "inn": result[14],
-            "professional_info": result[15] if result[15] and isinstance(result[15], list) else [],
-            "bank_name": result[16],
-            "bank_account": result[17],
-            "bank_bik": result[18],
-            "telegram_username": result[19],
-            "website": result[20],
-            "general_description": result[21],
-            "profile_photo_path": result[22],
-            "specializations": result[23] if result[23] else [],
-            "equipment_brands_experience": result[24] if result[24] else [],
-            "certifications": result[25] if result[25] else [],
-            "work_regions": result[26] if result[26] else [],
-            "hourly_rate": float(result[27]) if result[27] is not None else None,
-            "created_at": result[28].isoformat() if result[28] else None,
-            "updated_at": result[29].isoformat() if result[29] else None
+            "passport_series": result[7] if len(result) > 7 else None,
+            "passport_number": result[8] if len(result) > 8 else None,
+            "passport_issued_by": result[9] if len(result) > 9 else None,
+            "passport_issued_date": result[10] if len(result) > 10 else None,
+            "passport_issued_code": result[11] if len(result) > 11 else None,
+            "birth_date": result[12] if len(result) > 12 else None,
+            "birth_place": result[13] if len(result) > 13 else None,
+            "inn": result[14] if len(result) > 14 else None,
+            "professional_info": result[15] if len(result) > 15 and result[15] and isinstance(result[15], list) else [],
+            "bank_name": result[16] if len(result) > 16 else None,
+            "bank_account": result[17] if len(result) > 17 else None,
+            "bank_bik": result[18] if len(result) > 18 else None,
+            "telegram_username": result[19] if len(result) > 19 else None,
+            "website": result[20] if len(result) > 20 else None,
+            "general_description": result[21] if len(result) > 21 else None,
+            "profile_photo_path": result[22] if len(result) > 22 else None,
+            "specializations": result[23] if len(result) > 23 and result[23] else [],
+            "equipment_brands_experience": result[24] if len(result) > 24 and result[24] else [],
+            "certifications": result[25] if len(result) > 25 and result[25] else [],
+            "work_regions": result[26] if len(result) > 26 and result[26] else [],
+            "hourly_rate": hourly_rate_value,
+            "created_at": result[28].isoformat() if len(result) > 28 and result[28] else None,
+            "updated_at": result[29].isoformat() if len(result) > 29 and result[29] else None
         }
         
         return profile_dict
