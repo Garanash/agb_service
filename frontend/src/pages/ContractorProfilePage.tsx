@@ -122,6 +122,7 @@ const ContractorProfilePage: React.FC = () => {
     watch,
     formState: { errors },
   } = useForm<any>({
+    mode: 'onChange',
     defaultValues: {
       specializations: [],
       equipment_brands_experience: [],
@@ -406,7 +407,12 @@ const ContractorProfilePage: React.FC = () => {
           <Stepper activeStep={activeStep} orientation="vertical">
             {/* Шаг 1: Личные данные */}
             <Step>
-              <StepLabel>Личные данные</StepLabel>
+              <StepLabel 
+                onClick={() => setActiveStep(0)}
+                sx={{ cursor: 'pointer' }}
+              >
+                Личные данные
+              </StepLabel>
               <StepContent>
                 <Grid container spacing={3}>
                   <Grid item xs={12} sm={4}>
@@ -492,7 +498,12 @@ const ContractorProfilePage: React.FC = () => {
 
             {/* Шаг 2: Паспортные данные */}
             <Step>
-              <StepLabel>Паспортные данные</StepLabel>
+              <StepLabel 
+                onClick={() => setActiveStep(1)}
+                sx={{ cursor: 'pointer' }}
+              >
+                Паспортные данные
+              </StepLabel>
               <StepContent>
                 <Alert severity="info" sx={{ mb: 3 }}>
                   Паспортные данные и ИНН обязательны для проверки службой безопасности
@@ -633,7 +644,12 @@ const ContractorProfilePage: React.FC = () => {
 
             {/* Шаг 3: Образование */}
             <Step>
-              <StepLabel>Образование</StepLabel>
+              <StepLabel 
+                onClick={() => setActiveStep(2)}
+                sx={{ cursor: 'pointer' }}
+              >
+                Образование
+              </StepLabel>
               <StepContent>
                 <Box sx={{ mb: 3 }}>
                   <Button
@@ -694,7 +710,12 @@ const ContractorProfilePage: React.FC = () => {
 
             {/* Шаг 4: Документы */}
             <Step>
-              <StepLabel>Документы</StepLabel>
+              <StepLabel 
+                onClick={() => setActiveStep(3)}
+                sx={{ cursor: 'pointer' }}
+              >
+                Документы
+              </StepLabel>
               <StepContent>
                 <Alert severity="info" sx={{ mb: 3 }}>
                   Загрузите копии документов для проверки. Поддерживаются форматы: PDF, JPG, PNG, DOC, DOCX
@@ -761,7 +782,12 @@ const ContractorProfilePage: React.FC = () => {
 
             {/* Шаг 5: Профессиональная информация */}
             <Step>
-              <StepLabel>Профессиональная информация</StepLabel>
+              <StepLabel 
+                onClick={() => setActiveStep(4)}
+                sx={{ cursor: 'pointer' }}
+              >
+                Профессиональная информация
+              </StepLabel>
               <StepContent>
                 <Grid container spacing={3}>
                   <Grid item xs={12}>
@@ -867,24 +893,6 @@ const ContractorProfilePage: React.FC = () => {
                     sx={{ mr: 1 }}
                   >
                     Назад
-                  </Button>
-                  <Button
-                    variant="contained"
-                    onClick={async () => {
-                      const formData = watch();
-                      const stepData = {
-                        specializations: formData.specializations,
-                        equipment_brands_experience: formData.equipment_brands_experience,
-                        certifications: formData.certifications,
-                        work_regions: formData.work_regions,
-                        hourly_rate: formData.hourly_rate,
-                        general_description: formData.general_description,
-                      };
-                      await saveStepData(stepData);
-                    }}
-                    sx={{ mr: 1 }}
-                  >
-                    Сохранить и далее
                   </Button>
                   <Button
                     type="submit"

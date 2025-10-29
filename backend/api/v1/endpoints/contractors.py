@@ -225,11 +225,10 @@ def update_contractor_profile(
                 detail="Доступ запрещен"
             )
         
-        # Проверяем, что профиль существует
-        profile_query = "SELECT id FROM contractor_profiles WHERE user_id = :user_id"
-        profile_result = db.execute(text(profile_query), {"user_id": current_user.id}).fetchone()
+        # Получаем профиль через ORM
+        profile = db.query(ContractorProfile).filter(ContractorProfile.user_id == current_user.id).first()
         
-        if not profile_result:
+        if not profile:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Профиль исполнителя не найден"
@@ -312,65 +311,16 @@ def update_contractor_profile(
                     detail="Почасовая ставка должна быть числом"
                 )
         
-        # Строим запрос обновления с использованием именованных параметров
-        update_fields = []
-        params_dict = {}
-        param_counter = 0
+        # Обновляем поля напрямую через ORM
+        from datetime import datetime
+        for field, value in profile_data.items():
+            if hasattr(profile, field) and value is not None:
+                # Для JSON полей значения уже должны быть в правильном формате
+                setattr(profile, field, value)
         
-        field_mapping = {
-            'last_name': 'last_name',
-            'first_name': 'first_name',
-            'patronymic': 'patronymic',
-            'phone': 'phone',
-            'email': 'email',
-            'passport_series': 'passport_series',
-            'passport_number': 'passport_number',
-            'passport_issued_by': 'passport_issued_by',
-            'passport_issued_date': 'passport_issued_date',
-            'passport_issued_code': 'passport_issued_code',
-            'birth_date': 'birth_date',
-            'birth_place': 'birth_place',
-            'inn': 'inn',
-            'telegram_username': 'telegram_username',
-            'website': 'website',
-            'general_description': 'general_description',
-            'bank_name': 'bank_name',
-            'bank_account': 'bank_account',
-            'bank_bik': 'bank_bik',
-            'hourly_rate': 'hourly_rate',
-        }
-        
-        json_fields = ['specializations', 'equipment_brands_experience', 'certifications', 'work_regions', 'professional_info']
-        
-        for key, db_field in field_mapping.items():
-            if key in profile_data and profile_data[key] is not None:
-                param_name = f"param_{param_counter}"
-                update_fields.append(f"{db_field} = :{param_name}")
-                params_dict[param_name] = profile_data[key]
-                param_counter += 1
-        
-        for key in json_fields:
-            if key in profile_data and profile_data[key] is not None:
-                param_name = f"param_{param_counter}"
-                update_fields.append(f"{key} = :{param_name}::jsonb")
-                params_dict[param_name] = json.dumps(profile_data[key])
-                param_counter += 1
-        
-        if not update_fields:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Нет данных для обновления"
-            )
-        
-        update_query = f"""
-            UPDATE contractor_profiles 
-            SET {', '.join(update_fields)}, updated_at = NOW()
-            WHERE user_id = :user_id
-        """
-        
-        params_dict['user_id'] = current_user.id
-        db.execute(text(update_query), params_dict)
+        profile.updated_at = datetime.utcnow()
         db.commit()
+        db.refresh(profile)
         
         # Возвращаем обновленный профиль
         return get_contractor_profile(current_user, db)
