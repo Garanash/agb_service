@@ -628,6 +628,9 @@ async def get_pending_verifications(
         if contractor:
             user = db.query(User).filter(User.id == contractor.user_id).first()
             
+            # Логируем для отладки
+            logger.debug(f"Загружаем данные для contractor_id={contractor.id}: first_name={contractor.first_name}, last_name={contractor.last_name}, inn={contractor.inn}, passport_series={contractor.passport_series}")
+            
             # Преобразуем verification в словарь и добавляем данные профиля
             # Получаем overall_status как строку
             overall_status_str = None
