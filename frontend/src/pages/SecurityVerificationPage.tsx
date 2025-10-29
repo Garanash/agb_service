@@ -78,6 +78,13 @@ interface PendingVerification {
     phone?: string;
     email?: string;
     inn?: string;
+    passport_series?: string;
+    passport_number?: string;
+    passport_issued_by?: string;
+    passport_issued_date?: string;
+    passport_issued_code?: string;
+    birth_date?: string;
+    birth_place?: string;
     specializations?: string[] | Array<{specialization: string; level: string}>;
     equipment_brands_experience?: string[];
     certifications?: string[];
