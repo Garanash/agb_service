@@ -73,8 +73,10 @@ interface PendingVerification {
     id: number;
     first_name?: string;
     last_name?: string;
+    patronymic?: string;
     phone?: string;
     email?: string;
+    inn?: string;
     specializations?: string[] | Array<{specialization: string; level: string}>;
     equipment_brands_experience?: string[];
     certifications?: string[];
