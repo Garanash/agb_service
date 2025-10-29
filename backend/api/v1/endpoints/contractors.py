@@ -161,10 +161,12 @@ def get_contractor_profile(
         
         query = """
             SELECT id, user_id, last_name, first_name, patronymic, phone, email,
+                   passport_series, passport_number, passport_issued_by, passport_issued_date,
+                   passport_issued_code, birth_date, birth_place, inn,
                    professional_info, bank_name, bank_account, bank_bik,
                    telegram_username, website, general_description, profile_photo_path,
                    specializations, equipment_brands_experience, certifications, work_regions,
-                   created_at, updated_at
+                   hourly_rate, created_at, updated_at
             FROM contractor_profiles
             WHERE user_id = :user_id
         """
@@ -185,20 +187,29 @@ def get_contractor_profile(
             "patronymic": result[4],
             "phone": result[5],
             "email": result[6],
-            "professional_info": result[7] if result[7] and isinstance(result[7], list) else [],
-            "bank_name": result[8],
-            "bank_account": result[9],
-            "bank_bik": result[10],
-            "telegram_username": result[11],
-            "website": result[12],
-            "general_description": result[13],
-            "profile_photo_path": result[14],
-            "specializations": result[15] if result[15] else [],
-            "equipment_brands_experience": result[16] if result[16] else [],
-            "certifications": result[17] if result[17] else [],
-            "work_regions": result[18] if result[18] else [],
-            "created_at": result[19].isoformat() if result[19] else None,
-            "updated_at": result[20].isoformat() if result[20] else None
+            "passport_series": result[7],
+            "passport_number": result[8],
+            "passport_issued_by": result[9],
+            "passport_issued_date": result[10],
+            "passport_issued_code": result[11],
+            "birth_date": result[12],
+            "birth_place": result[13],
+            "inn": result[14],
+            "professional_info": result[15] if result[15] and isinstance(result[15], list) else [],
+            "bank_name": result[16],
+            "bank_account": result[17],
+            "bank_bik": result[18],
+            "telegram_username": result[19],
+            "website": result[20],
+            "general_description": result[21],
+            "profile_photo_path": result[22],
+            "specializations": result[23] if result[23] else [],
+            "equipment_brands_experience": result[24] if result[24] else [],
+            "certifications": result[25] if result[25] else [],
+            "work_regions": result[26] if result[26] else [],
+            "hourly_rate": float(result[27]) if result[27] is not None else None,
+            "created_at": result[28].isoformat() if result[28] else None,
+            "updated_at": result[29].isoformat() if result[29] else None
         }
         
         return profile_dict
@@ -212,7 +223,7 @@ def get_contractor_profile(
 
 @router.put("/profile", response_model=ContractorProfileResponse)
 def update_contractor_profile(
-    profile_data: ContractorProfileCreate,
+    profile_data: dict,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -234,73 +245,126 @@ def update_contractor_profile(
                 detail="Профиль исполнителя не найден"
             )
         
-        # Строим запрос обновления
+        # Валидация паспортных данных
+        if 'passport_series' in profile_data and profile_data['passport_series']:
+            if not isinstance(profile_data['passport_series'], str) or not profile_data['passport_series'].isdigit() or len(profile_data['passport_series']) != 4:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Серия паспорта должна состоять из 4 цифр"
+                )
+        
+        if 'passport_number' in profile_data and profile_data['passport_number']:
+            if not isinstance(profile_data['passport_number'], str) or not profile_data['passport_number'].isdigit() or len(profile_data['passport_number']) != 6:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Номер паспорта должен состоять из 6 цифр"
+                )
+        
+        if 'passport_issued_code' in profile_data and profile_data['passport_issued_code']:
+            if not isinstance(profile_data['passport_issued_code'], str) or not profile_data['passport_issued_code'].isdigit() or len(profile_data['passport_issued_code']) != 6:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Код подразделения должен состоять из 6 цифр"
+                )
+        
+        # Валидация ИНН
+        if 'inn' in profile_data and profile_data['inn']:
+            if not isinstance(profile_data['inn'], str) or not profile_data['inn'].isdigit() or len(profile_data['inn']) != 12:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="ИНН должен состоять из 12 цифр"
+                )
+        
+        # Валидация специализаций
+        if 'specializations' in profile_data and profile_data['specializations'] is not None:
+            valid_specializations = ['электрика', 'гидравлика', 'двс', 'агрегаты', 'перфораторы', 'другое']
+            valid_levels = ['начальный', 'средний', 'продвинутый', 'эксперт']
+            
+            if not isinstance(profile_data['specializations'], list):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Специализации должны быть списком"
+                )
+            
+            for spec in profile_data['specializations']:
+                if isinstance(spec, dict):
+                    if 'specialization' not in spec or 'level' not in spec:
+                        raise HTTPException(
+                            status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Каждая специализация должна содержать поля 'specialization' и 'level'"
+                        )
+                    if spec['specialization'] not in valid_specializations:
+                        raise HTTPException(
+                            status_code=status.HTTP_400_BAD_REQUEST,
+                            detail=f"Неверная специализация: {spec['specialization']}. Доступные: {', '.join(valid_specializations)}"
+                        )
+                    if spec['level'] not in valid_levels:
+                        raise HTTPException(
+                            status_code=status.HTTP_400_BAD_REQUEST,
+                            detail=f"Неверный уровень владения: {spec['level']}. Доступные: {', '.join(valid_levels)}"
+                        )
+        
+        # Обрабатываем hourly_rate - убеждаемся что это число
+        if 'hourly_rate' in profile_data and profile_data['hourly_rate'] is not None:
+            try:
+                if isinstance(profile_data['hourly_rate'], str):
+                    profile_data['hourly_rate'] = float(profile_data['hourly_rate'])
+                elif not isinstance(profile_data['hourly_rate'], (int, float)):
+                    raise ValueError("hourly_rate должен быть числом")
+                if profile_data['hourly_rate'] < 0:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Почасовая ставка не может быть отрицательной"
+                    )
+            except (ValueError, TypeError) as e:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Почасовая ставка должна быть числом"
+                )
+        
+        # Строим запрос обновления с использованием именованных параметров
         update_fields = []
-        params = []
+        params_dict = {}
+        param_counter = 0
         
-        if profile_data.last_name is not None:
-            update_fields.append("last_name = %s")
-            params.append(profile_data.last_name)
+        field_mapping = {
+            'last_name': 'last_name',
+            'first_name': 'first_name',
+            'patronymic': 'patronymic',
+            'phone': 'phone',
+            'email': 'email',
+            'passport_series': 'passport_series',
+            'passport_number': 'passport_number',
+            'passport_issued_by': 'passport_issued_by',
+            'passport_issued_date': 'passport_issued_date',
+            'passport_issued_code': 'passport_issued_code',
+            'birth_date': 'birth_date',
+            'birth_place': 'birth_place',
+            'inn': 'inn',
+            'telegram_username': 'telegram_username',
+            'website': 'website',
+            'general_description': 'general_description',
+            'bank_name': 'bank_name',
+            'bank_account': 'bank_account',
+            'bank_bik': 'bank_bik',
+            'hourly_rate': 'hourly_rate',
+        }
         
-        if profile_data.first_name is not None:
-            update_fields.append("first_name = %s")
-            params.append(profile_data.first_name)
+        json_fields = ['specializations', 'equipment_brands_experience', 'certifications', 'work_regions', 'professional_info']
         
-        if profile_data.patronymic is not None:
-            update_fields.append("patronymic = %s")
-            params.append(profile_data.patronymic)
+        for key, db_field in field_mapping.items():
+            if key in profile_data and profile_data[key] is not None:
+                param_name = f"param_{param_counter}"
+                update_fields.append(f"{db_field} = :{param_name}")
+                params_dict[param_name] = profile_data[key]
+                param_counter += 1
         
-        if profile_data.phone is not None:
-            update_fields.append("phone = %s")
-            params.append(profile_data.phone)
-        
-        if profile_data.email is not None:
-            update_fields.append("email = %s")
-            params.append(profile_data.email)
-        
-        if profile_data.professional_info is not None:
-            update_fields.append("professional_info = %s")
-            params.append(json.dumps(profile_data.professional_info))
-        
-        if profile_data.education is not None:
-            update_fields.append("education = %s")
-            params.append(json.dumps(profile_data.education))
-        
-        if profile_data.bank_name is not None:
-            update_fields.append("bank_name = %s")
-            params.append(profile_data.bank_name)
-        
-        if profile_data.bank_account is not None:
-            update_fields.append("bank_account = %s")
-            params.append(profile_data.bank_account)
-        
-        if profile_data.bank_bik is not None:
-            update_fields.append("bank_bik = %s")
-            params.append(profile_data.bank_bik)
-        
-        if profile_data.telegram_username is not None:
-            update_fields.append("telegram_username = %s")
-            params.append(profile_data.telegram_username)
-        
-        if profile_data.website is not None:
-            update_fields.append("website = %s")
-            params.append(profile_data.website)
-        
-        if profile_data.general_description is not None:
-            update_fields.append("general_description = %s")
-            params.append(profile_data.general_description)
-        
-        if profile_data.profile_photo_path is not None:
-            update_fields.append("profile_photo_path = %s")
-            params.append(profile_data.profile_photo_path)
-        
-        if profile_data.portfolio_files is not None:
-            update_fields.append("portfolio_files = %s")
-            params.append(json.dumps(profile_data.portfolio_files))
-        
-        if profile_data.document_files is not None:
-            update_fields.append("document_files = %s")
-            params.append(json.dumps(profile_data.document_files))
+        for key in json_fields:
+            if key in profile_data and profile_data[key] is not None:
+                param_name = f"param_{param_counter}"
+                update_fields.append(f"{key} = :{param_name}::jsonb")
+                params_dict[param_name] = json.dumps(profile_data[key])
+                param_counter += 1
         
         if not update_fields:
             raise HTTPException(
@@ -314,16 +378,20 @@ def update_contractor_profile(
             WHERE user_id = :user_id
         """
         
-        params.append(current_user.id)
-        db.execute(text(update_query), dict(zip(range(len(params)), params)) | {"user_id": current_user.id})
+        params_dict['user_id'] = current_user.id
+        db.execute(text(update_query), params_dict)
         db.commit()
         
         # Возвращаем обновленный профиль
         return get_contractor_profile(current_user, db)
         
+    except HTTPException:
+        raise
     except Exception as e:
         db.rollback()
         print(f"Ошибка в update_contractor_profile: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Ошибка при обновлении профиля: {str(e)}"
