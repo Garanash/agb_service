@@ -373,3 +373,64 @@ def upload_file(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Ошибка при загрузке файла: {str(e)}"
         )
+
+
+@router.get("/profiles")
+def list_contractor_profiles(
+    limit: int = 20,
+    offset: int = 0,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Список профилей исполнителей для админ-панели.
+    Возвращает массив объектов `ContractorProfile`.
+    """
+    if limit < 1:
+        limit = 20
+    if offset < 0:
+        offset = 0
+
+    if current_user.role not in ["admin", "manager"]:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Доступ запрещен")
+
+    try:
+        profiles = (
+            db.query(ContractorProfile)
+            .order_by(ContractorProfile.id.asc())
+            .offset(offset)
+            .limit(limit)
+            .all()
+        )
+
+        result = []
+        for p in profiles:
+            result.append({
+                "id": p.id,
+                "user_id": p.user_id,
+                "last_name": p.last_name or "",
+                "first_name": p.first_name or "",
+                "patronymic": p.patronymic or "",
+                "phone": p.phone or "",
+                "email": p.email or "",
+                "professional_info": p.professional_info if isinstance(p.professional_info, list) else [],
+                "education": p.education if isinstance(getattr(p, "education", None), list) else [],
+                "bank_name": p.bank_name or "",
+                "bank_account": p.bank_account or "",
+                "bank_bik": p.bank_bik or "",
+                "telegram_username": p.telegram_username or "",
+                "website": p.website or "",
+                "general_description": p.general_description or "",
+                "profile_photo_path": p.profile_photo_path or "",
+                "portfolio_files": p.portfolio_files if isinstance(p.portfolio_files, list) else [],
+                "document_files": p.document_files if isinstance(p.document_files, list) else [],
+                "created_at": p.created_at.isoformat() if p.created_at else None,
+                "updated_at": p.updated_at.isoformat() if p.updated_at else None,
+            })
+
+        return result
+    except Exception as e:
+        print(f"Ошибка при получении списка исполнителей: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Не удалось получить список исполнителей"
+        )
