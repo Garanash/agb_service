@@ -159,70 +159,47 @@ def get_contractor_profile(
                 detail="Доступ запрещен"
             )
         
-        query = """
-            SELECT id, user_id, last_name, first_name, patronymic, phone, email,
-                   passport_series, passport_number, passport_issued_by, passport_issued_date,
-                   passport_issued_code, birth_date, birth_place, inn,
-                   professional_info, bank_name, bank_account, bank_bik,
-                   telegram_username, website, general_description, profile_photo_path,
-                   specializations, equipment_brands_experience, certifications, work_regions,
-                   hourly_rate, created_at, updated_at
-            FROM contractor_profiles
-            WHERE user_id = :user_id
-        """
+        # Используем ORM для надежности
+        profile = db.query(ContractorProfile).filter(ContractorProfile.user_id == current_user.id).first()
         
-        result = db.execute(text(query), {"user_id": current_user.id}).fetchone()
-        
-        if not result:
+        if not profile:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Профиль исполнителя не найден"
             )
         
-        # Логирование для отладки
-        print(f"DEBUG: result type: {type(result)}, length: {len(result) if hasattr(result, '__len__') else 'N/A'}")
-        print(f"DEBUG: result: {result}")
-        
-        # Безопасное преобразование hourly_rate
-        hourly_rate_value = None
-        try:
-            if len(result) > 27 and result[27] is not None:
-                hourly_rate_value = float(result[27])
-        except (ValueError, TypeError, IndexError) as e:
-            print(f"DEBUG: Error converting hourly_rate: {e}")
-            hourly_rate_value = None
-        
+        # Формируем словарь из модели
         profile_dict = {
-            "id": result[0],
-            "user_id": result[1],
-            "last_name": result[2],
-            "first_name": result[3],
-            "patronymic": result[4],
-            "phone": result[5],
-            "email": result[6],
-            "passport_series": result[7] if len(result) > 7 else None,
-            "passport_number": result[8] if len(result) > 8 else None,
-            "passport_issued_by": result[9] if len(result) > 9 else None,
-            "passport_issued_date": result[10] if len(result) > 10 else None,
-            "passport_issued_code": result[11] if len(result) > 11 else None,
-            "birth_date": result[12] if len(result) > 12 else None,
-            "birth_place": result[13] if len(result) > 13 else None,
-            "inn": result[14] if len(result) > 14 else None,
-            "professional_info": result[15] if len(result) > 15 and result[15] and isinstance(result[15], list) else [],
-            "bank_name": result[16] if len(result) > 16 else None,
-            "bank_account": result[17] if len(result) > 17 else None,
-            "bank_bik": result[18] if len(result) > 18 else None,
-            "telegram_username": result[19] if len(result) > 19 else None,
-            "website": result[20] if len(result) > 20 else None,
-            "general_description": result[21] if len(result) > 21 else None,
-            "profile_photo_path": result[22] if len(result) > 22 else None,
-            "specializations": result[23] if len(result) > 23 and result[23] else [],
-            "equipment_brands_experience": result[24] if len(result) > 24 and result[24] else [],
-            "certifications": result[25] if len(result) > 25 and result[25] else [],
-            "work_regions": result[26] if len(result) > 26 and result[26] else [],
-            "hourly_rate": hourly_rate_value,
-            "created_at": result[28].isoformat() if len(result) > 28 and result[28] else None,
-            "updated_at": result[29].isoformat() if len(result) > 29 and result[29] else None
+            "id": profile.id,
+            "user_id": profile.user_id,
+            "last_name": profile.last_name,
+            "first_name": profile.first_name,
+            "patronymic": profile.patronymic,
+            "phone": profile.phone,
+            "email": profile.email,
+            "passport_series": profile.passport_series,
+            "passport_number": profile.passport_number,
+            "passport_issued_by": profile.passport_issued_by,
+            "passport_issued_date": profile.passport_issued_date.isoformat() if profile.passport_issued_date else None,
+            "passport_issued_code": profile.passport_issued_code,
+            "birth_date": profile.birth_date.isoformat() if profile.birth_date else None,
+            "birth_place": profile.birth_place,
+            "inn": profile.inn,
+            "professional_info": profile.professional_info if profile.professional_info and isinstance(profile.professional_info, list) else [],
+            "bank_name": profile.bank_name,
+            "bank_account": profile.bank_account,
+            "bank_bik": profile.bank_bik,
+            "telegram_username": profile.telegram_username,
+            "website": profile.website,
+            "general_description": profile.general_description,
+            "profile_photo_path": profile.profile_photo_path,
+            "specializations": profile.specializations if profile.specializations else [],
+            "equipment_brands_experience": profile.equipment_brands_experience if profile.equipment_brands_experience else [],
+            "certifications": profile.certifications if profile.certifications else [],
+            "work_regions": profile.work_regions if profile.work_regions else [],
+            "hourly_rate": float(profile.hourly_rate) if profile.hourly_rate is not None else None,
+            "created_at": profile.created_at.isoformat() if profile.created_at else None,
+            "updated_at": profile.updated_at.isoformat() if profile.updated_at else None
         }
         
         return profile_dict
