@@ -120,6 +120,7 @@ class ManagerDashboardService:
         scheduled_requests = self.db.query(RepairRequest).filter(
             and_(
                 RepairRequest.manager_id == manager_id,
+                RepairRequest.scheduled_date.isnot(None),
                 RepairRequest.scheduled_date.between(start_date, end_date),
                 RepairRequest.status.in_([
                     "assigned",
@@ -129,25 +130,45 @@ class ManagerDashboardService:
         ).all()
         
         for request in scheduled_requests:
-            events.append({
-                'id': f"request_{request.id}",
-                'title': request.title,
-                'start': request.scheduled_date.isoformat(),
-                'end': (request.scheduled_date + timedelta(hours=8)).isoformat(),  # Предполагаем 8 часов работы
-                'type': 'request',
-                'status': request.status,
-                'contractor_name': f"{request.assigned_contractor.first_name} {request.assigned_contractor.last_name}" 
-                                 if request.assigned_contractor else 'Не назначен',
-                'customer_name': request.customer.company_name if request.customer else 'Неизвестно',
-                'equipment_type': request.equipment_type,
-                'address': request.address,
-                'color': self._get_status_color(request.status)
-            })
+            try:
+                contractor_name = 'Не назначен'
+                if request.assigned_contractor_id:
+                    contractor = self.db.query(ContractorProfile).filter(
+                        ContractorProfile.id == request.assigned_contractor_id
+                    ).first()
+                    if contractor:
+                        contractor_name = f"{contractor.first_name or ''} {contractor.last_name or ''}".strip() or 'Не назначен'
+                
+                customer_name = 'Неизвестно'
+                if request.customer_id:
+                    customer = self.db.query(CustomerProfile).filter(
+                        CustomerProfile.id == request.customer_id
+                    ).first()
+                    if customer:
+                        customer_name = customer.company_name or customer.contact_name or 'Неизвестно'
+                
+                events.append({
+                    'id': f"request_{request.id}",
+                    'title': request.title or 'Без названия',
+                    'start': request.scheduled_date.isoformat() if request.scheduled_date else start_date.isoformat(),
+                    'end': (request.scheduled_date + timedelta(hours=8)).isoformat() if request.scheduled_date else (start_date + timedelta(hours=8)).isoformat(),
+                    'type': 'request',
+                    'status': request.status or 'unknown',
+                    'contractor_name': contractor_name,
+                    'customer_name': customer_name,
+                    'equipment_type': request.equipment_type or 'Не указано',
+                    'address': request.address or 'Не указано',
+                    'color': self._get_status_color(request.status) if request.status else '#666666'
+                })
+            except Exception as e:
+                logger.error(f"Ошибка обработки заявки {request.id} для календаря: {e}")
+                continue
         
         # Заявки с предпочтительными датами
         preferred_requests = self.db.query(RepairRequest).filter(
             and_(
                 RepairRequest.manager_id == manager_id,
+                RepairRequest.preferred_date.isnot(None),
                 RepairRequest.preferred_date.between(start_date, end_date),
                 RepairRequest.status.in_([
                     "manager_review",
@@ -158,14 +179,23 @@ class ManagerDashboardService:
         ).all()
         
         for request in preferred_requests:
-            events.append({
-                'id': f"preferred_{request.id}",
-                'title': f"📅 {request.title}",
-                'start': request.preferred_date.isoformat(),
-                'end': (request.preferred_date + timedelta(hours=1)).isoformat(),
-                'type': 'preferred',
-                'status': request.status,
-                'customer_name': request.customer.company_name if request.customer else 'Неизвестно',
+            try:
+                customer_name = 'Неизвестно'
+                if request.customer_id:
+                    customer = self.db.query(CustomerProfile).filter(
+                        CustomerProfile.id == request.customer_id
+                    ).first()
+                    if customer:
+                        customer_name = customer.company_name or customer.contact_name or 'Неизвестно'
+                
+                events.append({
+                    'id': f"preferred_{request.id}",
+                    'title': f"📅 {request.title or 'Без названия'}",
+                    'start': request.preferred_date.isoformat() if request.preferred_date else start_date.isoformat(),
+                    'end': (request.preferred_date + timedelta(hours=1)).isoformat() if request.preferred_date else (start_date + timedelta(hours=1)).isoformat(),
+                    'type': 'preferred',
+                    'status': request.status or 'unknown',
+                    'customer_name': customer_name,
                 'equipment_type': request.equipment_type,
                 'address': request.address,
                 'color': '#ff9800'  # Оранжевый для предпочтительных дат
