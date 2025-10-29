@@ -116,6 +116,16 @@ class ContractorProfileBase(BaseModel):
     patronymic: Optional[str] = Field(None, max_length=100)
     phone: Optional[str] = Field(None, max_length=20)
     email: Optional[str] = Field(None, pattern=r'^[^@]+@[^@]+\.[^@]+$')
+    # Паспортные данные
+    passport_series: Optional[str] = Field(None, max_length=4)
+    passport_number: Optional[str] = Field(None, max_length=6)
+    passport_issued_by: Optional[str] = Field(None, max_length=200)
+    passport_issued_date: Optional[str] = Field(None, max_length=20)
+    passport_issued_code: Optional[str] = Field(None, max_length=6)
+    birth_date: Optional[str] = Field(None, max_length=20)
+    birth_place: Optional[str] = Field(None, max_length=200)
+    # ИНН
+    inn: Optional[str] = Field(None, max_length=12)
     professional_info: Optional[List[Dict[str, Any]]] = Field(default_factory=list)
     education: Optional[List[Dict[str, Any]]] = Field(default_factory=list)
     bank_name: Optional[str] = Field(None, max_length=200)

@@ -549,9 +549,12 @@ const SecurityVerificationPage: React.FC = () => {
                 <TableRow key={verification.id || verification.contractor_id}>
                   <TableCell>
                     <Typography variant='subtitle2'>
-                      {verification.contractor?.last_name || ''}{' '}
-                      {verification.contractor?.first_name || 'Не указано'}{' '}
-                      {verification.contractor?.patronymic || ''}
+                      {(() => {
+                        const lastName = verification.contractor?.last_name || '';
+                        const firstName = verification.contractor?.first_name || 'Не указано';
+                        const patronymic = verification.contractor?.patronymic || '';
+                        return `${lastName} ${firstName} ${patronymic}`.trim() || 'Не указано';
+                      })()}
                     </Typography>
                   </TableCell>
                   <TableCell>
