@@ -45,11 +45,10 @@ def delete_test_users():
             print(f"🗑️ Удаление пользователя: {user.username} (email: {user.email}, роль: {user.role})")
             
             # Удаляем все связанные данные через SQL
-            if user.role == "customer":
-                # Удаляем заявки заказчика
-                result = db.execute(text("DELETE FROM repair_requests WHERE customer_id = :user_id"), {"user_id": user.id})
-                if result.rowcount > 0:
-                    print(f"  ✓ Удалено заявок: {result.rowcount}")
+            # Удаляем заявки, где пользователь является заказчиком или назначенным исполнителем
+            result = db.execute(text("DELETE FROM repair_requests WHERE customer_id = :user_id OR assigned_contractor_id = :user_id"), {"user_id": user.id})
+            if result.rowcount > 0:
+                print(f"  ✓ Удалено заявок: {result.rowcount}")
             
             if user.role == "contractor":
                 # Получаем contractor_profile_id для удаления связанных данных
