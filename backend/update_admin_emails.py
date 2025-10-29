@@ -33,14 +33,27 @@ def update_admin_emails():
         new_email = "dolgov_am@mail.ru"
         updated_count = 0
         
+        # Обновляем через SQL для обхода уникальности email
+        from sqlalchemy import text
+        
         for user in users:
             old_email = user.email
-            user.email = new_email
-            updated_count += 1
-            print(f"✓ Обновлен {user.username} (роль: {user.role}, старый email: {old_email})")
+            
+            # Проверяем, используется ли уже этот email другим пользователем
+            existing = db.execute(text("SELECT id FROM users WHERE email = :email AND id != :user_id"), 
+                                 {"email": new_email, "user_id": user.id}).first()
+            if existing:
+                # Если email уже занят другим пользователем, пропускаем
+                print(f"⚠ Пропущен {user.username} (роль: {user.role}): email уже используется другим пользователем")
+            else:
+                db.execute(text("UPDATE users SET email = :new_email WHERE id = :user_id"), 
+                          {"new_email": new_email, "user_id": user.id})
+                updated_count += 1
+                print(f"✓ Обновлен {user.username} (роль: {user.role}, старый email: {old_email})")
+            db.flush()
         
         db.commit()
-        print(f"\n✅ Успешно обновлено email для {updated_count} пользователей на {new_email}")
+        print(f"\n✅ Успешно обновлено email для {updated_count} из {len(users)} пользователей на {new_email}")
         
     except Exception as e:
         db.rollback()

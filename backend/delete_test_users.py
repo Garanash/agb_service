@@ -84,6 +84,15 @@ def delete_test_users():
                     print(f"  ✓ Удален профиль исполнителя")
             
             if user.role == "customer":
+                # Сначала удаляем заявки заказчика (если они еще есть)
+                customer_requests = db.execute(text("SELECT id FROM repair_requests WHERE customer_id = :user_id"), {"user_id": user.id})
+                customer_req_ids = [row[0] for row in customer_requests.fetchall()]
+                if customer_req_ids:
+                    for req_id in customer_req_ids:
+                        db.execute(text("DELETE FROM contractor_responses WHERE request_id = :request_id"), {"request_id": req_id})
+                        db.execute(text("DELETE FROM repair_requests WHERE id = :request_id"), {"request_id": req_id})
+                    print(f"  ✓ Удалено заявок заказчика: {len(customer_req_ids)}")
+                
                 result = db.execute(text("DELETE FROM customer_profiles WHERE user_id = :user_id"), {"user_id": user.id})
                 if result.rowcount > 0:
                     print(f"  ✓ Удален профиль заказчика")
