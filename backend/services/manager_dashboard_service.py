@@ -196,10 +196,13 @@ class ManagerDashboardService:
                     'type': 'preferred',
                     'status': request.status or 'unknown',
                     'customer_name': customer_name,
-                'equipment_type': request.equipment_type,
-                'address': request.address,
-                'color': '#ff9800'  # Оранжевый для предпочтительных дат
-            })
+                    'equipment_type': request.equipment_type or 'Не указано',
+                    'address': request.address or 'Не указано',
+                    'color': '#ff9800'  # Оранжевый для предпочтительных дат
+                })
+            except Exception as e:
+                logger.error(f"Ошибка обработки заявки {request.id} для календаря (preferred): {e}")
+                continue
         
         return events
     
