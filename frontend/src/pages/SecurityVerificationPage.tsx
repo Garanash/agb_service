@@ -356,6 +356,10 @@ const SecurityVerificationPage: React.FC = () => {
   };
 
   const getStatusText = (status: string) => {
+    if (!status) return 'Неизвестно';
+    
+    const statusLower = status.toLowerCase().replace(/-/g, '_');
+    
     const texts: { [key: string]: string } = {
       pending: 'Ожидает проверки',
       approved: 'Одобрен',
@@ -364,11 +368,9 @@ const SecurityVerificationPage: React.FC = () => {
       incomplete: 'Не завершен',
       pending_security: 'Ожидает проверки СБ',
       pending_manager: 'Ожидает одобрения менеджера',
-      approved: 'Одобрен',
     };
-    // Если статус в формате "PENDING_SECURITY", преобразуем в lowercase
-    const statusKey = status?.toLowerCase().replace('_', '') || '';
-    return texts[status?.toLowerCase()] || texts[statusKey] || status || 'Неизвестно';
+    
+    return texts[statusLower] || status;
   };
 
   if (loading) {
@@ -596,7 +598,13 @@ const SecurityVerificationPage: React.FC = () => {
                           <Visibility />
                         </IconButton>
                       </Tooltip>
-                      {(!verification.security_check_passed && (verification.overall_status === 'pending_security' || verification.verification_status === 'pending')) && (
+                      {(!verification.security_check_passed && (
+                          !verification.overall_status || 
+                          verification.overall_status === 'pending_security' || 
+                          verification.overall_status === 'PENDING_SECURITY' ||
+                          verification.verification_status === 'pending' ||
+                          verification.security_check_passed === false
+                        )) && (
                         <>
                           <Tooltip title='Согласовать'>
                             <IconButton

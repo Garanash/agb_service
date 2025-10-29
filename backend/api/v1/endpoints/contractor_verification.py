@@ -663,7 +663,7 @@ async def get_pending_verifications(
                 },
                 "verification_status": "pending" if not verification.security_check_passed else ("approved" if verification.security_check_passed and verification.manager_approval else "pending_manager"),
                 "security_check_passed": verification.security_check_passed,
-                "overall_status": verification.overall_status.value if hasattr(verification.overall_status, 'value') else str(verification.overall_status)
+                "overall_status": verification.overall_status.value if hasattr(verification.overall_status, 'value') else (str(verification.overall_status).lower() if verification.overall_status else None)
             }
             result.append(verification_dict)
         else:
