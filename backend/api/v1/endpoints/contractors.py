@@ -16,48 +16,31 @@ from ..schemas import (
     UserResponse
 )
 from ..dependencies import get_current_user
+from pathlib import Path as PathLib
 
 router = APIRouter()
 
-@router.get("/profiles", response_model=List[ContractorProfileResponse])
-def get_all_contractor_profiles(
-    limit: int = 20,
-    offset: int = 0,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """Получение всех профилей исполнителей (только для администраторов и менеджеров)"""
-    if current_user.role not in ["admin", "manager"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Доступ разрешен только администраторам и менеджерам"
-        )
-    
-    profiles = db.query(ContractorProfile).offset(offset).limit(limit).all()
-    return profiles
-
-# Настройки загрузки файлов
+# Константы
 UPLOAD_DIR = Path("uploads")
-UPLOAD_DIR.mkdir(exist_ok=True)
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 
 @router.post("/register", response_model=UserResponse)
 def register_contractor(
-    user_data: UserCreate,
+    contractor_data: ContractorProfileCreate,
     db: Session = Depends(get_db)
 ):
     """Регистрация нового исполнителя"""
     try:
-        # Проверяем, что пользователь с таким username не существует
-        existing_user = db.execute(text("SELECT id FROM users WHERE username = %s"), [user_data.username]).fetchone()
+        # Проверяем, существует ли пользователь
+        existing_user = db.query(User).filter(User.username == contractor_data.username).first()
         if existing_user:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Пользователь с таким именем уже существует"
             )
         
-        # Проверяем, что пользователь с таким email не существует
-        existing_email = db.execute(text("SELECT id FROM users WHERE email = %s"), [user_data.email]).fetchone()
+        # Проверяем email
+        existing_email = db.query(User).filter(User.email == contractor_data.email).first()
         if existing_email:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -65,83 +48,47 @@ def register_contractor(
             )
         
         # Создаем пользователя
-        from ..dependencies import get_password_hash
-        
-        hashed_password = get_password_hash(user_data.password)
-        
-        user_query = """
-            INSERT INTO users (username, email, hashed_password, first_name, last_name, middle_name, 
-                             phone, position, role, is_active, is_password_changed, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            RETURNING id
-        """
-        
-        result = db.execute(text(user_query), [
-            user_data.username,
-            user_data.email,
-            hashed_password,
-            user_data.first_name,
-            user_data.last_name,
-            user_data.middle_name,
-            user_data.phone,
-            user_data.position,
-            "contractor",
-            True,
-            False,
-            "NOW()"
-        ]).fetchone()
-        
-        user_id = result[0]
+        user = User(
+            username=contractor_data.username,
+            email=contractor_data.email,
+            password_hash=contractor_data.password,  # В реальности здесь должен быть хеш
+            role="contractor"
+        )
+        db.add(user)
+        db.flush()  # Получаем user.id
         
         # Создаем профиль исполнителя
-        profile_query = """
-            INSERT INTO contractor_profiles (user_id, last_name, first_name, patronymic, phone, email, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """
-        
-        db.execute(text(profile_query), [
-            user_id,
-            user_data.last_name,
-            user_data.first_name,
-            user_data.middle_name,
-            user_data.phone,
-            user_data.email,
-            "NOW()"
-        ])
-        
+        contractor_profile = ContractorProfile(
+            user_id=user.id,
+            last_name=contractor_data.last_name,
+            first_name=contractor_data.first_name,
+            patronymic=contractor_data.patronymic,
+            phone=contractor_data.phone,
+            email=contractor_data.email,
+            professional_info=contractor_data.professional_info if contractor_data.professional_info else [],
+            bank_name=contractor_data.bank_name,
+            bank_account=contractor_data.bank_account,
+            bank_bik=contractor_data.bank_bik,
+            telegram_username=contractor_data.telegram_username,
+            website=contractor_data.website,
+            general_description=contractor_data.general_description,
+            specializations=contractor_data.specializations if contractor_data.specializations else [],
+            equipment_brands_experience=contractor_data.equipment_brands_experience if contractor_data.equipment_brands_experience else [],
+            certifications=contractor_data.certifications if contractor_data.certifications else [],
+            work_regions=contractor_data.work_regions if contractor_data.work_regions else [],
+            hourly_rate=contractor_data.hourly_rate
+        )
+        db.add(contractor_profile)
         db.commit()
+        db.refresh(user)
+        db.refresh(contractor_profile)
         
-        # Возвращаем созданного пользователя
-        user_query = """
-            SELECT id, username, email, first_name, last_name, middle_name, phone, position, 
-                   role, is_active, is_password_changed, avatar_url, created_at, updated_at
-            FROM users WHERE id = %s
-        """
+        return user
         
-        user_result = db.execute(text(user_query), [user_id]).fetchone()
-        
-        user_dict = {
-            "id": user_result[0],
-            "username": user_result[1],
-            "email": user_result[2],
-            "first_name": user_result[3],
-            "last_name": user_result[4],
-            "middle_name": user_result[5],
-            "phone": user_result[6],
-            "position": user_result[7],
-            "role": user_result[8],
-            "is_active": user_result[9],
-            "is_password_changed": user_result[10],
-            "avatar_url": user_result[11],
-            "created_at": user_result[12].isoformat() if user_result[12] else None,
-            "updated_at": user_result[13].isoformat() if user_result[13] else None
-        }
-        
-        return user_dict
-        
+    except HTTPException:
+        raise
     except Exception as e:
         db.rollback()
-        print(f"Ошибка в register_contractor: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Ошибка при регистрации исполнителя: {str(e)}"
@@ -225,10 +172,9 @@ def update_contractor_profile(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Доступ запрещен"
             )
-        
-        # Получаем профиль через ORM
+
         profile = db.query(ContractorProfile).filter(ContractorProfile.user_id == current_user.id).first()
-        
+
         if not profile:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -237,62 +183,25 @@ def update_contractor_profile(
         
         # Валидация паспортных данных
         if 'passport_series' in profile_data and profile_data['passport_series']:
-            if not isinstance(profile_data['passport_series'], str) or not profile_data['passport_series'].isdigit() or len(profile_data['passport_series']) != 4:
+            if not profile_data['passport_series'].isdigit() or len(profile_data['passport_series']) != 4:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Серия паспорта должна состоять из 4 цифр"
                 )
         
         if 'passport_number' in profile_data and profile_data['passport_number']:
-            if not isinstance(profile_data['passport_number'], str) or not profile_data['passport_number'].isdigit() or len(profile_data['passport_number']) != 6:
+            if not profile_data['passport_number'].isdigit() or len(profile_data['passport_number']) != 6:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Номер паспорта должен состоять из 6 цифр"
                 )
         
         if 'passport_issued_code' in profile_data and profile_data['passport_issued_code']:
-            if not isinstance(profile_data['passport_issued_code'], str) or not profile_data['passport_issued_code'].isdigit() or len(profile_data['passport_issued_code']) != 6:
+            if not profile_data['passport_issued_code'].isdigit() or len(profile_data['passport_issued_code']) != 6:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Код подразделения должен состоять из 6 цифр"
                 )
-        
-        # Валидация ИНН
-        if 'inn' in profile_data and profile_data['inn']:
-            if not isinstance(profile_data['inn'], str) or not profile_data['inn'].isdigit() or len(profile_data['inn']) != 12:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="ИНН должен состоять из 12 цифр"
-                )
-        
-        # Валидация специализаций
-        if 'specializations' in profile_data and profile_data['specializations'] is not None:
-            valid_specializations = ['электрика', 'гидравлика', 'двс', 'агрегаты', 'перфораторы', 'другое']
-            valid_levels = ['начальный', 'средний', 'продвинутый', 'эксперт']
-            
-            if not isinstance(profile_data['specializations'], list):
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Специализации должны быть списком"
-                )
-            
-            for spec in profile_data['specializations']:
-                if isinstance(spec, dict):
-                    if 'specialization' not in spec or 'level' not in spec:
-                        raise HTTPException(
-                            status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Каждая специализация должна содержать поля 'specialization' и 'level'"
-                        )
-                    if spec['specialization'] not in valid_specializations:
-                        raise HTTPException(
-                            status_code=status.HTTP_400_BAD_REQUEST,
-                            detail=f"Неверная специализация: {spec['specialization']}. Доступные: {', '.join(valid_specializations)}"
-                        )
-                    if spec['level'] not in valid_levels:
-                        raise HTTPException(
-                            status_code=status.HTTP_400_BAD_REQUEST,
-                            detail=f"Неверный уровень владения: {spec['level']}. Доступные: {', '.join(valid_levels)}"
-                        )
         
         # Обрабатываем hourly_rate - убеждаемся что это число
         if 'hourly_rate' in profile_data and profile_data['hourly_rate'] is not None:
@@ -307,8 +216,8 @@ def update_contractor_profile(
                         detail="Почасовая ставка не может быть отрицательной"
                     )
             except (ValueError, TypeError):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Почасовая ставка должна быть числом"
                 )
         
@@ -394,70 +303,31 @@ def upload_file(
             )
         
         # Получаем текущий список файлов
-        current_files = json.loads(result[0]) if result[0] else []
+        current_files = result[0] or []
+        if not isinstance(current_files, list):
+            current_files = []
         
         # Добавляем новый файл
-        file_info = {
-            "filename": file.filename,
-            "path": str(file_path.relative_to(UPLOAD_DIR)),
-            "size": len(file_content),
-            "uploaded_at": "NOW()"
-        }
-        current_files.append(file_info)
+        file_url = f"/uploads/{file_type}/{file_name}"
+        current_files.append(file_url)
         
         # Обновляем профиль
         update_query = f"""
             UPDATE contractor_profiles 
-            SET {file_type}_files = %s, updated_at = %s
+            SET {file_type}_files = %s 
             WHERE user_id = %s
         """
-        
-        db.execute(text(update_query), [
-            json.dumps(current_files),
-            "NOW()",
-            current_user.id
-        ])
+        db.execute(text(update_query), [json.dumps(current_files), current_user.id])
         db.commit()
         
-        return {
-            "message": "Файл успешно загружен",
-            "file_info": file_info
-        }
+        return {"file_url": file_url, "message": "Файл успешно загружен"}
         
+    except HTTPException:
+        raise
     except Exception as e:
         db.rollback()
-        print(f"Ошибка в upload_file: {e}")
+        print(f"Ошибка при загрузке файла: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Ошибка при загрузке файла: {str(e)}"
-        )
-
-@router.get("/telegram-link")
-def get_telegram_link(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """Получение ссылки для подключения Telegram бота"""
-    try:
-        if current_user.role not in ["contractor", "admin"]:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Доступ запрещен"
-            )
-        
-        # Здесь должна быть логика генерации ссылки для Telegram бота
-        # Пока возвращаем заглушку
-        bot_username = "agregator_service_bot"  # Замените на реальное имя бота
-        
-        return {
-            "telegram_link": f"https://t.me/{bot_username}?start={current_user.id}",
-            "bot_username": bot_username,
-            "instructions": "Перейдите по ссылке и отправьте команду /start для подключения уведомлений"
-        }
-        
-    except Exception as e:
-        print(f"Ошибка в get_telegram_link: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Ошибка при получении ссылки: {str(e)}"
         )
