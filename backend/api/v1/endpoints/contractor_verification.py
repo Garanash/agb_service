@@ -629,6 +629,16 @@ async def get_pending_verifications(
             user = db.query(User).filter(User.id == contractor.user_id).first()
             
             # Преобразуем verification в словарь и добавляем данные профиля
+            # Получаем overall_status как строку
+            overall_status_str = None
+            if verification.overall_status:
+                if hasattr(verification.overall_status, 'value'):
+                    overall_status_str = verification.overall_status.value
+                elif isinstance(verification.overall_status, str):
+                    overall_status_str = verification.overall_status.lower()
+                else:
+                    overall_status_str = str(verification.overall_status).lower()
+            
             verification_dict = {
                 "id": verification.id,
                 "contractor_id": verification.contractor_id,
@@ -636,7 +646,7 @@ async def get_pending_verifications(
                 "documents_uploaded": verification.documents_uploaded,
                 "security_check_passed": verification.security_check_passed,
                 "manager_approval": verification.manager_approval,
-                "overall_status": verification.overall_status,
+                "overall_status": overall_status_str,
                 "security_notes": verification.security_notes,
                 "manager_notes": verification.manager_notes,
                 "security_checked_by": verification.security_checked_by,
@@ -647,13 +657,13 @@ async def get_pending_verifications(
                 "updated_at": verification.updated_at.isoformat() if verification.updated_at else None,
                 "contractor": {
                     "id": contractor.id,
-                    "first_name": contractor.first_name or (user.first_name if user else None),
-                    "last_name": contractor.last_name or (user.last_name if user else None),
-                    "patronymic": contractor.patronymic,
-                    "phone": contractor.phone or (user.phone if user else None),
-                    "email": contractor.email or (user.email if user else None),
-                    "telegram_username": contractor.telegram_username,
-                    "inn": contractor.inn,
+                    "first_name": contractor.first_name or (user.first_name if user else None) or "",
+                    "last_name": contractor.last_name or (user.last_name if user else None) or "",
+                    "patronymic": contractor.patronymic or "",
+                    "phone": contractor.phone or (user.phone if user else None) or "",
+                    "email": contractor.email or (user.email if user else None) or "",
+                    "telegram_username": contractor.telegram_username or "",
+                    "inn": contractor.inn or "",
                     "specializations": contractor.specializations if contractor.specializations and isinstance(contractor.specializations, list) else [],
                     "equipment_brands_experience": contractor.equipment_brands_experience if contractor.equipment_brands_experience else [],
                     "certifications": contractor.certifications if contractor.certifications else [],
@@ -662,8 +672,7 @@ async def get_pending_verifications(
                     "availability_status": contractor.availability_status or "unknown"
                 },
                 "verification_status": "pending" if not verification.security_check_passed else ("approved" if verification.security_check_passed and verification.manager_approval else "pending_manager"),
-                "security_check_passed": verification.security_check_passed,
-                "overall_status": verification.overall_status.value if hasattr(verification.overall_status, 'value') else (str(verification.overall_status).lower() if verification.overall_status else None)
+                "security_check_passed": verification.security_check_passed
             }
             result.append(verification_dict)
         else:
