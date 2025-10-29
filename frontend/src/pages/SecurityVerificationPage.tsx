@@ -65,6 +65,7 @@ interface PendingVerification {
   contractor_id: number;
   verification_status?: string;
   overall_status?: string;
+  security_check_passed?: boolean;
   verification_notes?: string;
   checked_by?: number;
   checked_at?: string;
@@ -598,12 +599,12 @@ const SecurityVerificationPage: React.FC = () => {
                           <Visibility />
                         </IconButton>
                       </Tooltip>
-                      {(!verification.security_check_passed && (
+                      {((verification.security_check_passed === false || !verification.security_check_passed) && (
                           !verification.overall_status || 
                           verification.overall_status === 'pending_security' || 
                           verification.overall_status === 'PENDING_SECURITY' ||
-                          verification.verification_status === 'pending' ||
-                          verification.security_check_passed === false
+                          verification.overall_status?.toLowerCase() === 'pending_security' ||
+                          verification.verification_status === 'pending'
                         )) && (
                         <>
                           <Tooltip title='Согласовать'>
