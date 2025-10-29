@@ -6,9 +6,12 @@ from pathlib import Path
 from datetime import datetime, date
 import os
 import json
+import logging
 
 from database import get_db
 from models import ContractorProfile, User
+
+logger = logging.getLogger(__name__)
 from ..schemas import (
     ContractorProfileCreate, 
     ContractorProfileResponse,
@@ -111,10 +114,25 @@ async def get_contractor_profile(
         profile = db.query(ContractorProfile).filter(ContractorProfile.user_id == current_user.id).first()
         
         if not profile:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Профиль исполнителя не найден"
-            )
+            # Автоматически создаем профиль, если его нет у исполнителя
+            if current_user.role == "contractor":
+                profile = ContractorProfile(
+                    user_id=current_user.id,
+                    first_name=current_user.first_name,
+                    last_name=current_user.last_name,
+                    phone=current_user.phone,
+                    email=current_user.email,
+                    profile_completion_status="incomplete"
+                )
+                db.add(profile)
+                db.commit()
+                db.refresh(profile)
+                logger.info(f"✅ Автоматически создан профиль для исполнителя user_id={current_user.id}")
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Профиль исполнителя не найден"
+                )
         
         # Формируем словарь из модели
         profile_dict = {
@@ -176,10 +194,25 @@ async def update_contractor_profile(
         profile = db.query(ContractorProfile).filter(ContractorProfile.user_id == current_user.id).first()
 
         if not profile:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Профиль исполнителя не найден"
-            )
+            # Автоматически создаем профиль, если его нет у исполнителя
+            if current_user.role == "contractor":
+                profile = ContractorProfile(
+                    user_id=current_user.id,
+                    first_name=current_user.first_name,
+                    last_name=current_user.last_name,
+                    phone=current_user.phone,
+                    email=current_user.email,
+                    profile_completion_status="incomplete"
+                )
+                db.add(profile)
+                db.commit()
+                db.refresh(profile)
+                logger.info(f"✅ Автоматически создан профиль для исполнителя user_id={current_user.id} при обновлении")
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Профиль исполнителя не найден"
+                )
         
         # Валидация паспортных данных
         if 'passport_series' in profile_data and profile_data['passport_series']:
