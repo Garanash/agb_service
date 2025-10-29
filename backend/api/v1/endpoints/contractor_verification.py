@@ -268,7 +268,7 @@ async def update_contractor_profile(
     for field, value in update_data.items():
         setattr(contractor, field, value)
     
-    contractor.updated_at = datetime.utcnow()
+    contractor.updated_at = datetime.now(timezone.utc)
     
     # Проверяем полноту профиля
     await check_profile_completion(contractor_id, db)
@@ -437,7 +437,7 @@ async def upload_document(
     ensure_upload_dir()
     
     # Генерируем уникальное имя файла
-    timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     filename = f"{contractor_id}_{document_type.value}_{timestamp}{file_extension}"
     file_path = os.path.join(UPLOAD_DIR, filename)
     
@@ -534,7 +534,7 @@ async def verify_document(
     document.verification_status = verification_data.verification_status
     document.verification_notes = verification_data.verification_notes
     document.verified_by = current_user.id
-    document.verified_at = datetime.utcnow()
+    document.verified_at = datetime.now(timezone.utc)
     
     db.commit()
     db.refresh(document)
@@ -628,8 +628,6 @@ async def verify_contractor(
     logger.info(f"✅ Исполнитель {contractor_id} проверен {verification_data.verification_type}: {verification_data.approved}")
     
     # Преобразуем verification в словарь для корректного возврата
-    from datetime import date, datetime
-    
     # Получаем overall_status как строку
     overall_status_str = None
     if verification.overall_status:
