@@ -700,15 +700,25 @@ const HRDocumentsPage: React.FC = () => {
                         <strong>Специализации:</strong>
                       </Typography>
                       <Box sx={{ mt: 1 }}>
-                        {selectedContractor.professional_info.specializations.map(
-                          spec => (
-                            <Chip
-                              key={spec}
-                              label={spec}
-                              size='small'
-                              sx={{ mr: 1, mb: 1 }}
-                            />
-                          ),
+                        {selectedContractor.professional_info.specializations && selectedContractor.professional_info.specializations.length > 0 ? (
+                          selectedContractor.professional_info.specializations.map(
+                            (spec: string | {specialization: string; level: string}, idx: number) => {
+                              const specLabel = typeof spec === 'string' ? spec : spec.specialization || '';
+                              const specKey = typeof spec === 'string' ? spec : `${spec.specialization}-${idx}`;
+                              return (
+                                <Chip
+                                  key={specKey}
+                                  label={specLabel}
+                                  size='small'
+                                  sx={{ mr: 1, mb: 1 }}
+                                />
+                              );
+                            }
+                          )
+                        ) : (
+                          <Typography variant='body2' color='text.secondary'>
+                            Не указано
+                          </Typography>
                         )}
                       </Box>
                     </Grid>
