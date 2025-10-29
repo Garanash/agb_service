@@ -523,8 +523,7 @@ class DocumentVerificationRequest(BaseModel):
     verification_notes: Optional[str] = Field(None, max_length=500)
 
 class ContractorVerificationRequest(BaseModel):
-    contractor_id: int
-    verification_type: str = Field(..., regex="^(security|manager)$")
+    verification_type: str = Field(..., pattern="^(security|manager)$")
     approved: bool
     notes: Optional[str] = Field(None, max_length=1000)
 

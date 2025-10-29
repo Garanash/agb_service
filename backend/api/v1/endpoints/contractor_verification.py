@@ -627,7 +627,40 @@ async def verify_contractor(
     
     logger.info(f"✅ Исполнитель {contractor_id} проверен {verification_data.verification_type}: {verification_data.approved}")
     
-    return verification
+    # Преобразуем verification в словарь для корректного возврата
+    from datetime import date, datetime
+    
+    # Получаем overall_status как строку
+    overall_status_str = None
+    if verification.overall_status:
+        if hasattr(verification.overall_status, 'value'):
+            overall_status_str = verification.overall_status.value
+        elif isinstance(verification.overall_status, str):
+            overall_status_str = verification.overall_status.lower()
+        else:
+            overall_status_str = str(verification.overall_status).lower()
+    
+    verification_dict = {
+        "id": verification.id,
+        "contractor_id": verification.contractor_id,
+        "profile_completed": verification.profile_completed,
+        "documents_uploaded": verification.documents_uploaded,
+        "security_check_passed": verification.security_check_passed,
+        "manager_approval": verification.manager_approval,
+        "overall_status": overall_status_str or "incomplete",
+        "security_notes": verification.security_notes,
+        "manager_notes": verification.manager_notes,
+        "security_checked_by": verification.security_checked_by,
+        "manager_checked_by": verification.manager_checked_by,
+        "security_checked_at": verification.security_checked_at.isoformat() if verification.security_checked_at else None,
+        "manager_checked_at": verification.manager_checked_at.isoformat() if verification.manager_checked_at else None,
+        "created_at": verification.created_at.isoformat() if verification.created_at else None,
+        "updated_at": verification.updated_at.isoformat() if verification.updated_at else None,
+        "verification_status": "pending" if not verification.security_check_passed else ("approved" if verification.security_check_passed and verification.manager_approval else "pending_manager"),
+        "security_check_passed": verification.security_check_passed,
+    }
+    
+    return ContractorVerificationResponse(**verification_dict)
 
 @router.get("/pending", response_model=List[ContractorVerificationResponse])
 async def get_pending_verifications(

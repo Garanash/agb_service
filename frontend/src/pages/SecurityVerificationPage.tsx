@@ -296,7 +296,7 @@ const SecurityVerificationPage: React.FC = () => {
 
     try {
       await apiService.approveContractor(selectedContractor.contractor_id, {
-        verification_notes: verificationNotes,
+        verification_notes: verificationNotes || '',
       });
 
       setApprovalDialogOpen(false);
@@ -1380,7 +1380,8 @@ const SecurityVerificationPage: React.FC = () => {
           <TextField
             fullWidth
             multiline
-            rows={3}
+            minRows={3}
+            maxRows={6}
             label='Примечания (необязательно)'
             value={verificationNotes}
             onChange={e => setVerificationNotes(e.target.value)}
@@ -1415,12 +1416,15 @@ const SecurityVerificationPage: React.FC = () => {
           <TextField
             fullWidth
             multiline
-            rows={4}
+            minRows={4}
+            maxRows={8}
             label='Причина отклонения *'
             value={rejectionReason}
             onChange={e => setRejectionReason(e.target.value)}
             placeholder='Укажите причину отклонения профиля...'
             required
+            error={!rejectionReason.trim()}
+            helperText={!rejectionReason.trim() ? 'Это поле обязательно для заполнения' : ''}
             sx={{ mt: 2 }}
           />
         </DialogContent>
