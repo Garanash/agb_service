@@ -53,6 +53,9 @@ import {
   LocationOn,
   Business,
   Build,
+  Help as ClarifyIcon,
+  Close as RejectIcon,
+  CheckCircle as ApproveIcon,
 } from '@mui/icons-material';
 import { useAuth } from 'hooks/useAuth';
 import { apiService } from 'services/api';
@@ -100,6 +103,14 @@ interface ContractorDetails {
     phone: string;
     email: string;
     telegram_username?: string;
+    passport_series?: string;
+    passport_number?: string;
+    passport_issued_by?: string;
+    passport_issued_date?: string;
+    passport_issued_code?: string;
+    birth_date?: string;
+    birth_place?: string;
+    inn?: string;
   };
   professional_info: {
     specializations: string[];
@@ -109,6 +120,21 @@ interface ContractorDetails {
     hourly_rate?: number;
     availability_status: string;
   };
+  education_records?: Array<{
+    id?: number;
+    institution_name: string;
+    specialization?: string;
+    graduation_year?: number;
+    degree?: string;
+    diploma_number?: string;
+  }>;
+  documents?: Array<{
+    id: number;
+    document_name: string;
+    document_type: string;
+    document_path: string;
+    verification_status: string;
+  }>;
   verification_info: {
     status: string;
     created_at?: string;
@@ -160,10 +186,12 @@ const SecurityVerificationPage: React.FC = () => {
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [approvalDialogOpen, setApprovalDialogOpen] = useState(false);
   const [rejectionDialogOpen, setRejectionDialogOpen] = useState(false);
+  const [clarificationDialogOpen, setClarificationDialogOpen] = useState(false);
   const [selectedContractor, setSelectedContractor] =
     useState<ContractorDetails | null>(null);
   const [verificationNotes, setVerificationNotes] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
+  const [clarificationNotes, setClarificationNotes] = useState('');
 
   useEffect(() => {
     loadSecurityData();
@@ -209,6 +237,14 @@ const SecurityVerificationPage: React.FC = () => {
           phone: details.phone || '',
           email: details.email || '',
           telegram_username: details.telegram_username,
+          passport_series: details.passport_series,
+          passport_number: details.passport_number,
+          passport_issued_by: details.passport_issued_by,
+          passport_issued_date: details.passport_issued_date,
+          passport_issued_code: details.passport_issued_code,
+          birth_date: details.birth_date,
+          birth_place: details.birth_place,
+          inn: details.inn,
         },
         professional_info: {
           specializations: (details.specializations || []).map((s: any) => 
@@ -220,13 +256,8 @@ const SecurityVerificationPage: React.FC = () => {
           hourly_rate: details.hourly_rate,
           availability_status: details.availability_status || 'unknown',
         },
-        education_info: Array.isArray(details.education_records) ? details.education_records.map((ed: any) => ({
-          institution_name: ed.institution_name || '',
-          degree: ed.degree || '',
-          field_of_study: ed.specialization || '',
-          graduation_year: ed.graduation_year || 0,
-        })) : [],
-        experience_info: [],
+        education_records: details.education_records || [],
+        documents: details.documents || [],
         verification_info: {
           status: details.verification?.overall_status || 'pending',
           created_at: details.verification?.created_at,
@@ -259,9 +290,11 @@ const SecurityVerificationPage: React.FC = () => {
       });
 
       setApprovalDialogOpen(false);
+      setDetailsDialogOpen(false);
       setVerificationNotes('');
       setSelectedContractor(null);
       await loadSecurityData();
+      setError(null);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Ошибка одобрения исполнителя');
     }
@@ -276,11 +309,32 @@ const SecurityVerificationPage: React.FC = () => {
       });
 
       setRejectionDialogOpen(false);
+      setDetailsDialogOpen(false);
       setRejectionReason('');
       setSelectedContractor(null);
       await loadSecurityData();
+      setError(null);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Ошибка отклонения исполнителя');
+    }
+  };
+
+  const handleClarifyData = async () => {
+    if (!selectedContractor || !clarificationNotes.trim()) return;
+
+    try {
+      await apiService.requestClarification(selectedContractor.contractor_id, {
+        notes: clarificationNotes,
+      });
+
+      setClarificationDialogOpen(false);
+      setDetailsDialogOpen(false);
+      setClarificationNotes('');
+      setSelectedContractor(null);
+      await loadSecurityData();
+      setError(null);
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Ошибка запроса уточнения данных');
     }
   };
 
@@ -460,12 +514,9 @@ const SecurityVerificationPage: React.FC = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Исполнитель</TableCell>
-                <TableCell>Контактная информация</TableCell>
+                <TableCell>ФИО</TableCell>
+                <TableCell>ИНН</TableCell>
                 <TableCell>Специализации</TableCell>
-                <TableCell>Оборудование</TableCell>
-                <TableCell>Регионы работы</TableCell>
-                <TableCell>Статус</TableCell>
                 <TableCell>Дата подачи</TableCell>
                 <TableCell>Действия</TableCell>
               </TableRow>
@@ -475,16 +526,14 @@ const SecurityVerificationPage: React.FC = () => {
                 <TableRow key={verification.id || verification.contractor_id}>
                   <TableCell>
                     <Typography variant='subtitle2'>
+                      {verification.contractor?.last_name || ''}{' '}
                       {verification.contractor?.first_name || 'Не указано'}{' '}
-                      {verification.contractor?.last_name || ''}
+                      {verification.contractor?.patronymic || ''}
                     </Typography>
                   </TableCell>
                   <TableCell>
                     <Typography variant='body2'>
-                      {verification.contractor?.phone || 'Не указан'}
-                    </Typography>
-                    <Typography variant='body2' color='text.secondary'>
-                      {verification.contractor?.email || 'Не указан'}
+                      {verification.contractor?.inn || 'Не указан'}
                     </Typography>
                   </TableCell>
                   <TableCell>
@@ -501,17 +550,17 @@ const SecurityVerificationPage: React.FC = () => {
                       
                       return (
                         <>
-                          {specLabels.slice(0, 2).map((spec: string, idx: number) => (
+                          {specLabels.slice(0, 3).map((spec: string, idx: number) => (
                             <Chip
                               key={idx}
                               label={spec}
                               size='small'
-                              sx={{ mr: 1, mb: 1 }}
+                              sx={{ mr: 0.5, mb: 0.5 }}
                             />
                           ))}
-                          {specLabels.length > 2 && (
+                          {specLabels.length > 3 && (
                             <Chip
-                              label={`+${specLabels.length - 2}`}
+                              label={`+${specLabels.length - 3}`}
                               size='small'
                             />
                           )}
@@ -520,71 +569,21 @@ const SecurityVerificationPage: React.FC = () => {
                     })()}
                   </TableCell>
                   <TableCell>
-                    {verification.contractor?.equipment_brands_experience
-                      ?.slice(0, 2)
-                      .map(brand => (
-                        <Chip
-                          key={brand}
-                          label={brand}
-                          size='small'
-                          color='secondary'
-                          sx={{ mr: 1, mb: 1 }}
-                        />
-                      ))}
-                    {verification.contractor?.equipment_brands_experience &&
-                      verification.contractor.equipment_brands_experience
-                        .length > 2 && (
-                        <Chip
-                          label={`+${verification.contractor.equipment_brands_experience.length - 2}`}
-                          size='small'
-                          color='secondary'
-                        />
-                      )}
-                  </TableCell>
-                  <TableCell>
-                    {verification.contractor?.work_regions
-                      ?.slice(0, 2)
-                      .map(region => (
-                        <Chip
-                          key={region}
-                          label={region}
-                          size='small'
-                          color='info'
-                          sx={{ mr: 1, mb: 1 }}
-                        />
-                      ))}
-                    {verification.contractor?.work_regions &&
-                      verification.contractor.work_regions.length > 2 && (
-                        <Chip
-                          label={`+${verification.contractor.work_regions.length - 2}`}
-                          size='small'
-                          color='info'
-                        />
-                      )}
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={getStatusText(verification.verification_status || verification.overall_status || 'pending')}
-                      color={
-                        getStatusColor(verification.verification_status || verification.overall_status || 'pending') as any
-                      }
-                      size='small'
-                    />
-                  </TableCell>
-                  <TableCell>
                     {verification.created_at ? new Date(verification.created_at).toLocaleDateString('ru-RU') : '-'}
                   </TableCell>
                   <TableCell>
-                    <Tooltip title='Просмотреть детали'>
-                      <IconButton
-                        size='small'
-                        onClick={() =>
-                          handleViewDetails(verification.contractor_id)
-                        }
-                      >
-                        <Visibility />
-                      </IconButton>
-                    </Tooltip>
+                    <Box display="flex" gap={1}>
+                      <Tooltip title='Просмотреть детали'>
+                        <IconButton
+                          size='small'
+                          onClick={() =>
+                            handleViewDetails(verification.contractor_id)
+                          }
+                        >
+                          <Visibility />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
                   </TableCell>
                 </TableRow>
               ))}
@@ -779,9 +778,9 @@ const SecurityVerificationPage: React.FC = () => {
                     <Grid item xs={12} md={6}>
                       <Typography variant='body2'>
                         <strong>ФИО:</strong>{' '}
-                        {selectedContractor.personal_info.first_name}{' '}
                         {selectedContractor.personal_info.last_name}{' '}
-                        {selectedContractor.personal_info.patronymic}
+                        {selectedContractor.personal_info.first_name}{' '}
+                        {selectedContractor.personal_info.patronymic || ''}
                       </Typography>
                     </Grid>
                     <Grid item xs={12} md={6}>
@@ -801,6 +800,68 @@ const SecurityVerificationPage: React.FC = () => {
                         <strong>Telegram:</strong>{' '}
                         {selectedContractor.personal_info.telegram_username ||
                           'Не указан'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <Typography variant='body2'>
+                        <strong>ИНН:</strong>{' '}
+                        {selectedContractor.personal_info.inn || 'Не указан'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <Typography variant='body2'>
+                        <strong>Дата рождения:</strong>{' '}
+                        {selectedContractor.personal_info.birth_date
+                          ? new Date(selectedContractor.personal_info.birth_date).toLocaleDateString('ru-RU')
+                          : 'Не указана'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <Typography variant='body2'>
+                        <strong>Место рождения:</strong>{' '}
+                        {selectedContractor.personal_info.birth_place || 'Не указано'}
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                </AccordionDetails>
+              </Accordion>
+
+              <Accordion>
+                <AccordionSummary expandIcon={<ExpandMore />}>
+                  <Typography variant='h6'>Паспортные данные</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} md={6}>
+                      <Typography variant='body2'>
+                        <strong>Серия:</strong>{' '}
+                        {selectedContractor.personal_info.passport_series || 'Не указана'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <Typography variant='body2'>
+                        <strong>Номер:</strong>{' '}
+                        {selectedContractor.personal_info.passport_number || 'Не указан'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <Typography variant='body2'>
+                        <strong>Выдан:</strong>{' '}
+                        {selectedContractor.personal_info.passport_issued_by || 'Не указано'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <Typography variant='body2'>
+                        <strong>Дата выдачи:</strong>{' '}
+                        {selectedContractor.personal_info.passport_issued_date
+                          ? new Date(selectedContractor.personal_info.passport_issued_date).toLocaleDateString('ru-RU')
+                          : 'Не указана'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <Typography variant='body2'>
+                        <strong>Код подразделения:</strong>{' '}
+                        {selectedContractor.personal_info.passport_issued_code || 'Не указан'}
                       </Typography>
                     </Grid>
                   </Grid>
@@ -946,6 +1007,82 @@ const SecurityVerificationPage: React.FC = () => {
 
               <Accordion>
                 <AccordionSummary expandIcon={<ExpandMore />}>
+                  <Typography variant='h6'>Образование</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  {selectedContractor.education_records && selectedContractor.education_records.length > 0 ? (
+                    <Grid container spacing={2}>
+                      {selectedContractor.education_records.map((edu, idx) => (
+                        <Grid item xs={12} key={idx}>
+                          <Box sx={{ p: 2, border: '1px solid #ddd', borderRadius: 1 }}>
+                            <Typography variant='body1'><strong>{edu.institution_name}</strong></Typography>
+                            <Typography variant='body2'>{edu.specialization || 'Не указана специальность'}</Typography>
+                            <Typography variant='body2' color='text.secondary'>
+                              Год окончания: {edu.graduation_year || 'Не указан'}
+                            </Typography>
+                            {edu.diploma_number && (
+                              <Typography variant='body2' color='text.secondary'>
+                                Номер диплома: {edu.diploma_number}
+                              </Typography>
+                            )}
+                          </Box>
+                        </Grid>
+                      ))}
+                    </Grid>
+                  ) : (
+                    <Typography variant='body2' color='text.secondary'>Нет данных об образовании</Typography>
+                  )}
+                </AccordionDetails>
+              </Accordion>
+
+              <Accordion>
+                <AccordionSummary expandIcon={<ExpandMore />}>
+                  <Typography variant='h6'>Документы</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  {selectedContractor.documents && selectedContractor.documents.length > 0 ? (
+                    <Grid container spacing={2}>
+                      {selectedContractor.documents.map((doc) => (
+                        <Grid item xs={12} key={doc.id}>
+                          <Box sx={{ p: 2, border: '1px solid #ddd', borderRadius: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Box>
+                              <Typography variant='body1'><strong>{doc.document_name}</strong></Typography>
+                              <Typography variant='body2' color='text.secondary'>Тип: {doc.document_type}</Typography>
+                              <Chip
+                                label={doc.verification_status}
+                                size='small'
+                                color={getStatusColor(doc.verification_status) as any}
+                                sx={{ mt: 1 }}
+                              />
+                            </Box>
+                            <Button
+                              variant='outlined'
+                              size='small'
+                              onClick={() => {
+                                let docPath = doc.document_path;
+                                if (docPath.startsWith('/app/uploads/')) {
+                                  docPath = docPath.replace('/app/uploads/', '/uploads/');
+                                } else if (!docPath.startsWith('/uploads/')) {
+                                  docPath = docPath.startsWith('uploads/') ? `/${docPath}` : `/uploads/${docPath}`;
+                                }
+                                const docUrl = `http://91.222.236.58:8000${docPath}`;
+                                window.open(docUrl, '_blank');
+                              }}
+                            >
+                              Просмотреть
+                            </Button>
+                          </Box>
+                        </Grid>
+                      ))}
+                    </Grid>
+                  ) : (
+                    <Typography variant='body2' color='text.secondary'>Документы не загружены</Typography>
+                  )}
+                </AccordionDetails>
+              </Accordion>
+
+              <Accordion>
+                <AccordionSummary expandIcon={<ExpandMore />}>
                   <Typography variant='h6'>Активность</Typography>
                 </AccordionSummary>
                 <AccordionDetails>
@@ -984,26 +1121,72 @@ const SecurityVerificationPage: React.FC = () => {
             <>
               <Button
                 color='error'
+                variant='contained'
                 onClick={() => {
                   setDetailsDialogOpen(false);
                   setRejectionDialogOpen(true);
                 }}
-                startIcon={<Cancel />}
+                startIcon={<RejectIcon />}
               >
                 Отклонить
               </Button>
               <Button
+                color='warning'
+                variant='contained'
+                onClick={() => {
+                  setDetailsDialogOpen(false);
+                  setClarificationDialogOpen(true);
+                }}
+                startIcon={<ClarifyIcon />}
+              >
+                Уточнить данные
+              </Button>
+              <Button
                 color='success'
+                variant='contained'
                 onClick={() => {
                   setDetailsDialogOpen(false);
                   setApprovalDialogOpen(true);
                 }}
-                startIcon={<Check />}
+                startIcon={<ApproveIcon />}
               >
-                Одобрить
+                Согласовать
               </Button>
             </>
           )}
+        </DialogActions>
+      </Dialog>
+
+      {/* Диалог уточнения данных */}
+      <Dialog
+        open={clarificationDialogOpen}
+        onClose={() => setClarificationDialogOpen(false)}
+        maxWidth='sm'
+        fullWidth
+      >
+        <DialogTitle>Уточнить данные</DialogTitle>
+        <DialogContent>
+          <TextField
+            fullWidth
+            multiline
+            rows={5}
+            label='Какие данные необходимо уточнить'
+            value={clarificationNotes}
+            onChange={(e) => setClarificationNotes(e.target.value)}
+            sx={{ mt: 2 }}
+            placeholder='Укажите, какие именно данные необходимо дополнить для проверки СБ...'
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setClarificationDialogOpen(false)}>Отмена</Button>
+          <Button
+            onClick={handleClarifyData}
+            variant='contained'
+            color='warning'
+            disabled={!clarificationNotes.trim()}
+          >
+            Отправить запрос
+          </Button>
         </DialogActions>
       </Dialog>
 
@@ -1014,13 +1197,16 @@ const SecurityVerificationPage: React.FC = () => {
         maxWidth='sm'
         fullWidth
       >
-        <DialogTitle>Одобрить исполнителя</DialogTitle>
+        <DialogTitle>Согласовать исполнителя</DialogTitle>
         <DialogContent>
+          <Alert severity='success' sx={{ mb: 2 }}>
+            Исполнителю будет отправлено письмо с подтверждением о том, что его профиль активен и он может просматривать и откликаться на заявки.
+          </Alert>
           <TextField
             fullWidth
             multiline
             rows={3}
-            label='Примечания к одобрению'
+            label='Примечания (необязательно)'
             value={verificationNotes}
             onChange={e => setVerificationNotes(e.target.value)}
             placeholder='Дополнительные комментарии к одобрению...'
@@ -1034,7 +1220,7 @@ const SecurityVerificationPage: React.FC = () => {
             variant='contained'
             color='success'
           >
-            Одобрить
+            Согласовать
           </Button>
         </DialogActions>
       </Dialog>
@@ -1049,17 +1235,16 @@ const SecurityVerificationPage: React.FC = () => {
         <DialogTitle>Отклонить исполнителя</DialogTitle>
         <DialogContent>
           <Alert severity='warning' sx={{ mb: 2 }}>
-            При отклонении исполнитель будет заблокирован и не сможет отвечать
-            на заявки.
+            После отклонения профиль исполнителя будет заблокирован, и ему будет отправлено уведомление на почту.
           </Alert>
           <TextField
             fullWidth
             multiline
-            rows={3}
+            rows={4}
             label='Причина отклонения *'
             value={rejectionReason}
             onChange={e => setRejectionReason(e.target.value)}
-            placeholder='Укажите причину отклонения...'
+            placeholder='Укажите причину отклонения профиля...'
             required
             sx={{ mt: 2 }}
           />

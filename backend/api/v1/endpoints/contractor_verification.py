@@ -5,7 +5,7 @@ API endpoints для системы верификации исполнител�
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 import logging
 import os
 import shutil
@@ -504,6 +504,11 @@ async def verify_contractor(
         contractor.security_verified_by = current_user.id
         contractor.security_verified_at = datetime.utcnow()
         
+        # Если отклонено - блокируем пользователя
+        if not verification_data.approved:
+            user = db.query(User).filter(User.id == contractor.user_id).first()
+            if user:
+                user.is_active = False
     elif verification_data.verification_type == "manager":
         if current_user.role not in [UserRole.ADMIN, UserRole.MANAGER]:
             raise HTTPException(
@@ -526,6 +531,18 @@ async def verify_contractor(
     
     db.commit()
     db.refresh(verification)
+    
+    # Отправляем email уведомления
+    try:
+        if verification_data.verification_type == "security":
+            if verification_data.approved:
+                # Отправляем уведомление об одобрении СБ
+                await send_security_approval_email(contractor_id, db, verification_data.notes)
+            else:
+                # Отправляем уведомление об отклонении СБ
+                await send_security_rejection_email(contractor_id, db, verification_data.notes)
+    except Exception as e:
+        logger.error(f"❌ Ошибка отправки email уведомления: {e}")
     
     logger.info(f"✅ Исполнитель {contractor_id} проверен {verification_data.verification_type}: {verification_data.approved}")
     
@@ -597,6 +614,7 @@ async def get_pending_verifications(
                     "phone": contractor.phone or (user.phone if user else None),
                     "email": contractor.email or (user.email if user else None),
                     "telegram_username": contractor.telegram_username,
+                    "inn": contractor.inn,
                     "specializations": contractor.specializations if contractor.specializations and isinstance(contractor.specializations, list) else [],
                     "equipment_brands_experience": contractor.equipment_brands_experience if contractor.equipment_brands_experience else [],
                     "certifications": contractor.certifications if contractor.certifications else [],
@@ -631,6 +649,43 @@ async def get_pending_verifications(
             result.append(verification_dict)
     
     return result
+
+@router.post("/contractor/{contractor_id}/request-clarification")
+async def request_clarification(
+    contractor_id: int,
+    clarification_data: Dict[str, Any],
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.SECURITY]))
+):
+    """Запросить уточнение данных у исполнителя"""
+    
+    contractor = db.query(ContractorProfile).filter(ContractorProfile.id == contractor_id).first()
+    if not contractor:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Исполнитель не найден"
+        )
+    
+    notes = clarification_data.get("notes", "")
+    if not notes or not notes.strip():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Необходимо указать, какие данные требуют уточнения"
+        )
+    
+    # Отправляем email уведомление
+    await send_clarification_request_email(contractor_id, db, notes)
+    
+    # Обновляем заметки в верификации
+    verification = db.query(ContractorVerification).filter(
+        ContractorVerification.contractor_id == contractor_id
+    ).first()
+    
+    if verification:
+        verification.security_notes = f"Запрос на уточнение данных: {notes}"
+        db.commit()
+    
+    return {"message": "Запрос на уточнение данных отправлен исполнителю", "contractor_id": contractor_id}
 
 async def check_profile_completion(contractor_id: int, db: Session):
     """Проверяет полноту профиля исполнителя"""

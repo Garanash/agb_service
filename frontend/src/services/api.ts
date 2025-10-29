@@ -917,6 +917,14 @@ class ApiService {
     const response = await this.api.get(`/api/v1/contractor-verification/profile/${contractorId}`);
     return response.data;
   }
+
+  async requestClarification(contractorId: number, data: { notes: string }): Promise<any> {
+    const response = await this.api.post(
+      `/api/v1/contractor-verification/contractor/${contractorId}/request-clarification`,
+      data,
+    );
+    return response.data;
+  }
 }
 
 export const apiService = new ApiService();
