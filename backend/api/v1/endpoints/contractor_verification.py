@@ -9,7 +9,7 @@ from typing import List, Optional, Dict, Any
 import logging
 import os
 import shutil
-from datetime import datetime
+from datetime import datetime, timezone
 
 from database import get_db
 from models import (
@@ -578,12 +578,12 @@ async def verify_contractor(
         verification.security_check_passed = verification_data.approved
         verification.security_notes = verification_data.notes
         verification.security_checked_by = current_user.id
-        verification.security_checked_at = datetime.utcnow()
+        verification.security_checked_at = datetime.now(timezone.utc)
         
         # Обновляем статус в профиле
         contractor.security_verified = verification_data.approved
         contractor.security_verified_by = current_user.id
-        contractor.security_verified_at = datetime.utcnow()
+        contractor.security_verified_at = datetime.now(timezone.utc)
         
         # Если отклонено - блокируем пользователя
         if not verification_data.approved:
@@ -600,12 +600,12 @@ async def verify_contractor(
         verification.manager_approval = verification_data.approved
         verification.manager_notes = verification_data.notes
         verification.manager_checked_by = current_user.id
-        verification.manager_checked_at = datetime.utcnow()
+        verification.manager_checked_at = datetime.now(timezone.utc)
         
         # Обновляем статус в профиле
         contractor.manager_verified = verification_data.approved
         contractor.manager_verified_by = current_user.id
-        contractor.manager_verified_at = datetime.utcnow()
+        contractor.manager_verified_at = datetime.now(timezone.utc)
     
     # Обновляем общий статус
     await update_overall_verification_status(contractor_id, db)
