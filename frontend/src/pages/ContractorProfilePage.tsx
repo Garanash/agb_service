@@ -45,7 +45,6 @@ import { apiService } from 'services/api';
 interface EducationRecord {
   id?: number;
   institution_name: string;
-  degree: string;
   specialization: string;
   graduation_year?: number;
   diploma_number?: string;
@@ -184,6 +183,21 @@ const ContractorProfilePage: React.FC = () => {
       if (profile.bank_account) setValue('bank_account', profile.bank_account);
       if (profile.bank_bik) setValue('bank_bik', profile.bank_bik);
       
+      // Загружаем расширенный профиль для получения образования и документов
+      if (user?.contractor_profile_id) {
+        try {
+          const extendedProfile = await apiService.getContractorProfileExtended(user.contractor_profile_id);
+          if (extendedProfile.education_records) {
+            setEducationRecords(extendedProfile.education_records);
+          }
+          if (extendedProfile.documents) {
+            setDocuments(extendedProfile.documents);
+          }
+        } catch (err) {
+          console.error('Error loading extended profile:', err);
+        }
+      }
+      
     } catch (err: any) {
       console.error('Error loading contractor profile:', err);
       setError(err.response?.data?.detail || 'Ошибка загрузки профиля');
@@ -216,9 +230,26 @@ const ContractorProfilePage: React.FC = () => {
     }
   };
 
+  const saveStepData = async (stepData: any) => {
+    try {
+      if (!user?.contractor_profile_id) {
+        setError('Профиль исполнителя не найден');
+        return;
+      }
+      await apiService.updateContractorProfile(user.contractor_profile_id, stepData);
+    } catch (err: any) {
+      console.error('Error saving step data:', err);
+      setError(err.response?.data?.detail || 'Ошибка сохранения данных');
+    }
+  };
+
   const addEducationRecord = async (educationData: EducationRecord) => {
     try {
-      const newRecord = await apiService.addEducationRecord(user!.contractor_profile!.id, educationData);
+      if (!user?.contractor_profile_id) {
+        setError('Профиль исполнителя не найден');
+        return;
+      }
+      const newRecord = await apiService.addEducationRecord(user.contractor_profile_id, educationData);
       setEducationRecords([...educationRecords, newRecord]);
       setEducationDialogOpen(false);
       setSuccess('Запись об образовании добавлена!');
@@ -239,12 +270,16 @@ const ContractorProfilePage: React.FC = () => {
 
   const uploadDocument = async (documentType: string, documentName: string, file: File) => {
     try {
+      if (!user?.contractor_profile_id) {
+        setError('Профиль исполнителя не найден');
+        return;
+      }
       const formData = new FormData();
       formData.append('document_type', documentType);
       formData.append('document_name', documentName);
       formData.append('file', file);
       
-      const newDocument = await apiService.uploadContractorDocument(user!.contractor_profile!.id, formData);
+      const newDocument = await apiService.uploadContractorDocument(user.contractor_profile_id, formData);
       setDocuments([...documents, newDocument]);
       setDocumentDialogOpen(false);
       setSelectedFile(null);
@@ -412,11 +447,30 @@ const ContractorProfilePage: React.FC = () => {
                       helperText={errors.email?.message as any}
                     />
                   </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Telegram"
+                      {...register('telegram_username')}
+                    />
+                  </Grid>
                 </Grid>
                 <Box sx={{ mt: 2 }}>
                   <Button
                     variant="contained"
-                    onClick={() => setActiveStep(1)}
+                    onClick={async () => {
+                      const formData = watch();
+                      const stepData = {
+                        first_name: formData.first_name,
+                        last_name: formData.last_name,
+                        patronymic: formData.patronymic,
+                        phone: formData.phone,
+                        email: formData.email,
+                        telegram_username: formData.telegram_username,
+                      };
+                      await saveStepData(stepData);
+                      setActiveStep(1);
+                    }}
                   >
                     Далее
                   </Button>
@@ -463,6 +517,8 @@ const ContractorProfilePage: React.FC = () => {
                     <TextField
                       fullWidth
                       label="Дата выдачи *"
+                      type="date"
+                      InputLabelProps={{ shrink: true }}
                       {...register('passport_issued_date', { required: 'Дата выдачи обязательна' })}
                       error={!!errors.passport_issued_date}
                       helperText={errors.passport_issued_date?.message as any}
@@ -481,7 +537,13 @@ const ContractorProfilePage: React.FC = () => {
                     <TextField
                       fullWidth
                       label="ИНН *"
-                      {...register('inn', { required: 'ИНН обязателен' })}
+                      {...register('inn', { 
+                        required: 'ИНН обязателен',
+                        pattern: {
+                          value: /^\d{12}$/,
+                          message: 'ИНН должен состоять из 12 цифр'
+                        }
+                      })}
                       error={!!errors.inn}
                       helperText={errors.inn?.message as any}
                     />
@@ -490,6 +552,8 @@ const ContractorProfilePage: React.FC = () => {
                     <TextField
                       fullWidth
                       label="Дата рождения *"
+                      type="date"
+                      InputLabelProps={{ shrink: true }}
                       {...register('birth_date', { required: 'Дата рождения обязательна' })}
                       error={!!errors.birth_date}
                       helperText={errors.birth_date?.message as any}
@@ -515,7 +579,21 @@ const ContractorProfilePage: React.FC = () => {
                   </Button>
                   <Button
                     variant="contained"
-                    onClick={() => setActiveStep(2)}
+                    onClick={async () => {
+                      const formData = watch();
+                      const stepData = {
+                        passport_series: formData.passport_series,
+                        passport_number: formData.passport_number,
+                        passport_issued_by: formData.passport_issued_by,
+                        passport_issued_date: formData.passport_issued_date,
+                        passport_issued_code: formData.passport_issued_code,
+                        birth_date: formData.birth_date,
+                        birth_place: formData.birth_place,
+                        inn: formData.inn,
+                      };
+                      await saveStepData(stepData);
+                      setActiveStep(2);
+                    }}
                   >
                     Далее
                   </Button>
@@ -542,11 +620,16 @@ const ContractorProfilePage: React.FC = () => {
                     <CardContent>
                       <Typography variant="h6">{record.institution_name}</Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {record.degree} - {record.specialization}
+                        {record.specialization}
                       </Typography>
                       {record.graduation_year && (
                         <Typography variant="body2">
                           Год окончания: {record.graduation_year}
+                        </Typography>
+                      )}
+                      {record.diploma_number && (
+                        <Typography variant="body2">
+                          Номер диплома: {record.diploma_number}
                         </Typography>
                       )}
                     </CardContent>
@@ -714,17 +797,9 @@ const ContractorProfilePage: React.FC = () => {
                   <Grid item xs={12} sm={6}>
                     <TextField
                       fullWidth
-                      label="Почасовая ставка"
+                      label="Ожидаемая почасовая ставка"
                       type="number"
                       {...register('hourly_rate', { valueAsNumber: true })}
-                    />
-                  </Grid>
-                  
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      label="Telegram"
-                      {...register('telegram_username')}
                     />
                   </Grid>
                 </Grid>
@@ -736,6 +811,24 @@ const ContractorProfilePage: React.FC = () => {
                     sx={{ mr: 1 }}
                   >
                     Назад
+                  </Button>
+                  <Button
+                    variant="contained"
+                    onClick={async () => {
+                      const formData = watch();
+                      const stepData = {
+                        specializations: formData.specializations,
+                        equipment_brands_experience: formData.equipment_brands_experience,
+                        certifications: formData.certifications,
+                        work_regions: formData.work_regions,
+                        hourly_rate: formData.hourly_rate,
+                        general_description: formData.general_description,
+                      };
+                      await saveStepData(stepData);
+                    }}
+                    sx={{ mr: 1 }}
+                  >
+                    Сохранить и далее
                   </Button>
                   <Button
                     type="submit"
@@ -786,14 +879,6 @@ const EducationForm: React.FC<{ onSubmit: (data: EducationRecord) => void }> = (
       />
       <TextField
         fullWidth
-        label="Степень/квалификация *"
-        {...register('degree', { required: 'Степень обязательна' })}
-        error={!!errors.degree}
-        helperText={errors.degree?.message as any}
-        sx={{ mb: 2 }}
-      />
-      <TextField
-        fullWidth
         label="Специализация *"
         {...register('specialization', { required: 'Специализация обязательна' })}
         error={!!errors.specialization}
@@ -810,6 +895,7 @@ const EducationForm: React.FC<{ onSubmit: (data: EducationRecord) => void }> = (
       <TextField
         fullWidth
         label="Номер диплома"
+        placeholder="(не обязательно)"
         {...register('diploma_number')}
         sx={{ mb: 2 }}
       />

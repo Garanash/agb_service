@@ -50,7 +50,6 @@ const ProfilePage: React.FC = () => {
       last_name: user?.last_name || '',
       middle_name: user?.middle_name || '',
       phone: user?.phone || '',
-      position: user?.position || '',
     },
   });
 
@@ -61,7 +60,6 @@ const ProfilePage: React.FC = () => {
         last_name: user.last_name || '',
         middle_name: user.middle_name || '',
         phone: user.phone || '',
-        position: user.position || '',
       });
     }
   }, [user, reset]);
@@ -86,7 +84,6 @@ const ProfilePage: React.FC = () => {
       last_name: user?.last_name || '',
       middle_name: user?.middle_name || '',
       phone: user?.phone || '',
-      position: user?.position || '',
     });
     setIsEditing(false);
   };
@@ -181,12 +178,6 @@ const ProfilePage: React.FC = () => {
                       fullWidth
                       label='Телефон'
                       {...register('phone')}
-                      disabled={!isEditing}
-                    />
-                    <TextField
-                      fullWidth
-                      label='Должность'
-                      {...register('position')}
                       disabled={!isEditing}
                     />
                   </Box>

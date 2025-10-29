@@ -365,7 +365,7 @@ class ContractorEducation(Base):
     
     # Данные об образовании
     institution_name = Column(String, nullable=False)  # Название учебного заведения
-    degree = Column(String, nullable=False)  # Степень/квалификация
+    degree = Column(String, nullable=True)  # Степень/квалификация (необязательно)
     specialization = Column(String, nullable=False)  # Специализация
     graduation_year = Column(Integer, nullable=True)  # Год окончания
     diploma_number = Column(String, nullable=True)  # Номер диплома

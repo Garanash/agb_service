@@ -395,7 +395,7 @@ class DocumentType(str, Enum):
 
 class ContractorEducationBase(BaseModel):
     institution_name: str = Field(..., min_length=1, max_length=200)
-    degree: str = Field(..., min_length=1, max_length=100)
+    degree: Optional[str] = Field(None, max_length=100)
     specialization: str = Field(..., min_length=1, max_length=200)
     graduation_year: Optional[int] = Field(None, ge=1950, le=2030)
     diploma_number: Optional[str] = Field(None, max_length=50)
