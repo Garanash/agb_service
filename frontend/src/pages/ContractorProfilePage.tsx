@@ -111,7 +111,9 @@ const ContractorProfilePage: React.FC = () => {
   
   // Диалоги
   const [educationDialogOpen, setEducationDialogOpen] = useState(false);
+  const [editingEducation, setEditingEducation] = useState<EducationRecord | null>(null);
   const [documentDialogOpen, setDocumentDialogOpen] = useState(false);
+  const [viewingDocument, setViewingDocument] = useState<DocumentRecord | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const {
@@ -233,7 +235,7 @@ const ContractorProfilePage: React.FC = () => {
       }
       
       await apiService.updateContractorProfile(user.contractor_profile_id, data);
-      setSuccess('Профиль успешно обновлен!');
+      setSuccess('Данные успешно сохранены. Ваш профиль отправлен на проверку, ожидайте уведомления на почту.');
       
     } catch (err: any) {
       console.error('Error saving profile:', err);
@@ -662,7 +664,14 @@ const ContractorProfilePage: React.FC = () => {
                 </Box>
                 
                 {educationRecords.map((record, index) => (
-                  <Card key={record.id || index} sx={{ mb: 2 }}>
+                  <Card 
+                    key={record.id || index} 
+                    sx={{ mb: 2, cursor: 'pointer' }}
+                    onClick={() => {
+                      setEditingEducation(record);
+                      setEducationDialogOpen(true);
+                    }}
+                  >
                     <CardContent>
                       <Typography variant="h6">{record.institution_name}</Typography>
                       <Typography variant="body2" color="text.secondary">
@@ -679,7 +688,7 @@ const ContractorProfilePage: React.FC = () => {
                         </Typography>
                       )}
                     </CardContent>
-                    <CardActions>
+                    <CardActions onClick={(e) => e.stopPropagation()}>
                       <IconButton
                         color="error"
                         onClick={() => record.id && deleteEducationRecord(record.id)}
@@ -732,7 +741,11 @@ const ContractorProfilePage: React.FC = () => {
                 </Box>
                 
                 {documents.map((doc, index) => (
-                  <Card key={doc.id || index} sx={{ mb: 2 }}>
+                  <Card 
+                    key={doc.id || index} 
+                    sx={{ mb: 2, cursor: 'pointer' }}
+                    onClick={() => setViewingDocument(doc)}
+                  >
                     <CardContent>
                       <Box display="flex" alignItems="center" gap={2}>
                         <Typography variant="h6">{doc.document_name}</Typography>
@@ -751,7 +764,7 @@ const ContractorProfilePage: React.FC = () => {
                         </Typography>
                       )}
                     </CardContent>
-                    <CardActions>
+                    <CardActions onClick={(e) => e.stopPropagation()}>
                       <IconButton
                         color="error"
                         onClick={() => doc.id && deleteDocument(doc.id)}
@@ -909,10 +922,24 @@ const ContractorProfilePage: React.FC = () => {
       </Paper>
 
       {/* Диалог добавления образования */}
-      <Dialog open={educationDialogOpen} onClose={() => setEducationDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Добавить образование</DialogTitle>
+      <Dialog open={educationDialogOpen} onClose={() => {
+        setEducationDialogOpen(false);
+        setEditingEducation(null);
+      }} maxWidth="sm" fullWidth>
+        <DialogTitle>{editingEducation ? 'Редактировать образование' : 'Добавить образование'}</DialogTitle>
         <DialogContent>
-          <EducationForm onSubmit={addEducationRecord} />
+          <EducationForm 
+            onSubmit={editingEducation ? async (data) => {
+              if (editingEducation.id) {
+                await apiService.updateEducationRecord(editingEducation.id, data);
+                setEducationRecords(educationRecords.map(r => r.id === editingEducation.id ? { ...r, ...data } : r));
+                setSuccess('Образование обновлено!');
+              }
+              setEducationDialogOpen(false);
+              setEditingEducation(null);
+            } : addEducationRecord}
+            initialData={editingEducation || undefined}
+          />
         </DialogContent>
       </Dialog>
 
@@ -923,13 +950,110 @@ const ContractorProfilePage: React.FC = () => {
           <DocumentUploadForm onSubmit={uploadDocument} />
         </DialogContent>
       </Dialog>
+
+      {/* Диалог просмотра документа */}
+      <Dialog 
+        open={!!viewingDocument} 
+        onClose={() => setViewingDocument(null)} 
+        maxWidth="md" 
+        fullWidth
+      >
+        <DialogTitle>{viewingDocument?.document_name}</DialogTitle>
+        <DialogContent>
+          {viewingDocument && (
+            <Box>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                Тип: {viewingDocument.document_type}
+              </Typography>
+              <Chip
+                label={viewingDocument.verification_status}
+                color={getStatusColor(viewingDocument.verification_status) as any}
+                size="small"
+                sx={{ mb: 2 }}
+              />
+              {viewingDocument.verification_notes && (
+                <Typography variant="body2" sx={{ mb: 2 }}>
+                  Комментарий: {viewingDocument.verification_notes}
+                </Typography>
+              )}
+              {viewingDocument.document_path && (
+                <Box sx={{ mt: 2 }}>
+                  {(() => {
+                    // Преобразуем путь к файлу в URL
+                    let docPath = viewingDocument.document_path;
+                    if (docPath.startsWith('/app/uploads/')) {
+                      docPath = docPath.replace('/app/uploads/', '/uploads/');
+                    } else if (!docPath.startsWith('/uploads/')) {
+                      // Если путь относительный, добавляем /uploads/
+                      docPath = docPath.startsWith('uploads/') ? `/${docPath}` : `/uploads/${docPath}`;
+                    }
+                    
+                    const docUrl = `http://91.222.236.58:8000${docPath}`;
+                    const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(docPath);
+                    const isPdf = /\.pdf$/i.test(docPath);
+                    
+                    if (isImage) {
+                      return (
+                        <img 
+                          src={docUrl} 
+                          alt={viewingDocument.document_name} 
+                          style={{ maxWidth: '100%', height: 'auto', display: 'block', margin: '0 auto' }} 
+                        />
+                      );
+                    } else if (isPdf) {
+                      return (
+                        <iframe
+                          src={docUrl}
+                          style={{ width: '100%', height: '600px', border: '1px solid #ddd' }}
+                          title={viewingDocument.document_name}
+                        />
+                      );
+                    } else {
+                      return (
+                        <Box sx={{ textAlign: 'center', py: 4 }}>
+                          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                            Просмотр этого типа файла в браузере недоступен
+                          </Typography>
+                          <Button 
+                            variant="contained" 
+                            component="a" 
+                            href={docUrl} 
+                            target="_blank"
+                            download
+                          >
+                            Скачать документ
+                          </Button>
+                        </Box>
+                      );
+                    }
+                  })()}
+                </Box>
+              )}
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setViewingDocument(null)}>Закрыть</Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };
 
 // Компонент формы образования
-const EducationForm: React.FC<{ onSubmit: (data: EducationRecord) => void }> = ({ onSubmit }) => {
-  const { register, handleSubmit, formState: { errors } } = useForm<EducationRecord>();
+const EducationForm: React.FC<{ 
+  onSubmit: (data: EducationRecord) => void | Promise<void>;
+  initialData?: EducationRecord;
+}> = ({ onSubmit, initialData }) => {
+  const { register, handleSubmit, formState: { errors }, reset } = useForm<EducationRecord>({
+    defaultValues: initialData || {}
+  });
+
+  useEffect(() => {
+    if (initialData) {
+      reset(initialData);
+    }
+  }, [initialData, reset]);
 
   return (
     <Box component="form" onSubmit={handleSubmit(onSubmit)}>
@@ -965,7 +1089,7 @@ const EducationForm: React.FC<{ onSubmit: (data: EducationRecord) => void }> = (
       />
       <DialogActions>
         <Button type="submit" variant="contained">
-          Добавить
+          {initialData ? 'Сохранить' : 'Добавить'}
         </Button>
       </DialogActions>
     </Box>

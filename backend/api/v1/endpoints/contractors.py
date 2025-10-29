@@ -180,9 +180,9 @@ def get_contractor_profile(
             "passport_series": profile.passport_series,
             "passport_number": profile.passport_number,
             "passport_issued_by": profile.passport_issued_by,
-            "passport_issued_date": profile.passport_issued_date.isoformat() if profile.passport_issued_date else None,
+            "passport_issued_date": profile.passport_issued_date.isoformat() if profile.passport_issued_date and hasattr(profile.passport_issued_date, 'isoformat') else (profile.passport_issued_date if profile.passport_issued_date else None),
             "passport_issued_code": profile.passport_issued_code,
-            "birth_date": profile.birth_date.isoformat() if profile.birth_date else None,
+            "birth_date": profile.birth_date.isoformat() if profile.birth_date and hasattr(profile.birth_date, 'isoformat') else (profile.birth_date if profile.birth_date else None),
             "birth_place": profile.birth_place,
             "inn": profile.inn,
             "professional_info": profile.professional_info if profile.professional_info and isinstance(profile.professional_info, list) else [],
@@ -198,8 +198,8 @@ def get_contractor_profile(
             "certifications": profile.certifications if profile.certifications else [],
             "work_regions": profile.work_regions if profile.work_regions else [],
             "hourly_rate": float(profile.hourly_rate) if profile.hourly_rate is not None else None,
-            "created_at": profile.created_at.isoformat() if profile.created_at else None,
-            "updated_at": profile.updated_at.isoformat() if profile.updated_at else None
+            "created_at": profile.created_at.isoformat() if profile.created_at and hasattr(profile.created_at, 'isoformat') else (profile.created_at if profile.created_at else None),
+            "updated_at": profile.updated_at.isoformat() if profile.updated_at and hasattr(profile.updated_at, 'isoformat') else (profile.updated_at if profile.updated_at else None)
         }
         
         return profile_dict

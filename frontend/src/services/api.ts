@@ -794,6 +794,14 @@ class ApiService {
     await this.api.delete(`/api/v1/contractor-verification/education/${educationId}`);
   }
 
+  async updateEducationRecord(educationId: number, educationData: any): Promise<any> {
+    const response: AxiosResponse<any> = await this.api.put(
+      `/api/v1/contractor-verification/education/${educationId}`,
+      educationData,
+    );
+    return response.data;
+  }
+
   async uploadContractorDocument(contractorId: number, formData: FormData): Promise<any> {
     const response: AxiosResponse<any> = await this.api.post(
       `/api/v1/contractor-verification/documents/${contractorId}/upload`,

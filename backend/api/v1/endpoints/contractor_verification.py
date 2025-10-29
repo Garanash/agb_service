@@ -235,6 +235,45 @@ async def add_education_record(
     
     return education_record
 
+@router.put("/education/{education_id}", response_model=ContractorEducationResponse)
+async def update_education_record(
+    education_id: int,
+    education_data: ContractorEducationCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Обновить запись об образовании"""
+    
+    education_record = db.query(ContractorEducation).filter(
+        ContractorEducation.id == education_id
+    ).first()
+    
+    if not education_record:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Запись об образовании не найдена"
+        )
+    
+    # Проверяем права доступа
+    if current_user.role not in [UserRole.ADMIN, UserRole.MANAGER]:
+        if current_user.contractor_profile and current_user.contractor_profile.id != education_record.contractor_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Нет прав для редактирования этой записи"
+            )
+    
+    # Обновляем поля
+    update_data = education_data.dict(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(education_record, field, value)
+    
+    db.commit()
+    db.refresh(education_record)
+    
+    logger.info(f"✅ Обновлена запись об образовании {education_id}")
+    
+    return education_record
+
 @router.delete("/education/{education_id}")
 async def delete_education_record(
     education_id: int,
