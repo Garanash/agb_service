@@ -160,7 +160,7 @@ async def get_contractor_profile(
         )
 
 @router.put("/profile", response_model=ContractorProfileResponse)
-def update_contractor_profile(
+async def update_contractor_profile(
     profile_data: dict,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -242,7 +242,7 @@ def update_contractor_profile(
             # Не прерываем сохранение профиля из-за ошибки проверки
         
         # Возвращаем обновленный профиль
-        return get_contractor_profile(current_user, db)
+        return await get_contractor_profile(current_user, db)
         
     except HTTPException:
         raise
