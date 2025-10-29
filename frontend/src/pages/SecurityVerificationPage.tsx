@@ -1344,10 +1344,14 @@ const SecurityVerificationPage: React.FC = () => {
           <TextField
             fullWidth
             multiline
-            rows={5}
-            label='Какие данные необходимо уточнить'
+            minRows={5}
+            maxRows={10}
+            label='Какие данные необходимо уточнить *'
             value={clarificationNotes}
             onChange={(e) => setClarificationNotes(e.target.value)}
+            required
+            error={!clarificationNotes.trim()}
+            helperText={!clarificationNotes.trim() ? 'Это поле обязательно для заполнения' : ''}
             sx={{ mt: 2 }}
             placeholder='Укажите, какие именно данные необходимо дополнить для проверки СБ...'
           />
