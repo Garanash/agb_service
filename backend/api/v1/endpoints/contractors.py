@@ -95,7 +95,7 @@ def register_contractor(
         )
 
 @router.get("/profile", response_model=ContractorProfileResponse)
-def get_contractor_profile(
+async def get_contractor_profile(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -231,6 +231,15 @@ def update_contractor_profile(
         profile.updated_at = datetime.utcnow()
         db.commit()
         db.refresh(profile)
+        
+        # Проверяем полноту профиля и обновляем статус верификации
+        try:
+            from api.v1.endpoints.contractor_verification import check_profile_completion
+            await check_profile_completion(profile.id, db)
+            db.commit()
+        except Exception as e:
+            print(f"Ошибка при проверке полноты профиля: {e}")
+            # Не прерываем сохранение профиля из-за ошибки проверки
         
         # Возвращаем обновленный профиль
         return get_contractor_profile(current_user, db)

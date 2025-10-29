@@ -611,6 +611,159 @@ async def check_profile_completion(contractor_id: int, db: Session):
     # Обновляем общий статус
     await update_overall_verification_status(contractor_id, db)
 
+async def send_verification_notification_to_security(contractor_id: int, db: Session):
+    """Отправка email уведомления сотрудникам службы безопасности"""
+    try:
+        from services.email_service import email_service
+        
+        # Получаем информацию об исполнителе
+        contractor = db.query(ContractorProfile).filter(ContractorProfile.id == contractor_id).first()
+        if not contractor:
+            return
+        
+        user = db.query(User).filter(User.id == contractor.user_id).first()
+        if not user:
+            return
+        
+        contractor_name = f"{contractor.first_name or ''} {contractor.last_name or ''}".strip() or user.username
+        
+        # Получаем всех сотрудников службы безопасности и админов
+        security_users = db.query(User).filter(
+            User.role.in_(["security", "admin"])
+        ).filter(User.email.isnot(None)).all()
+        
+        if not security_users:
+            logger.warning(f"⚠️ Не найдено сотрудников СБ с email для уведомления о проверке исполнителя {contractor_id}")
+            return
+        
+        # Формируем ссылку на страницу проверки
+        base_url = "http://91.222.236.58:3000"
+        verification_url = f"{base_url}/security-verification/{contractor_id}"
+        
+        # Отправляем уведомление каждому сотруднику СБ
+        for security_user in security_users:
+            if security_user.email:
+                subject = f"Новый исполнитель ожидает проверки СБ - {contractor_name}"
+                message_html = f"""
+                <html>
+                <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                        <h2 style="color: #1976d2;">Новый исполнитель ожидает проверки СБ</h2>
+                        <p>В системе появился новый исполнитель, который заполнил профиль и готов к проверке службой безопасности.</p>
+                        <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                            <p><strong>Исполнитель:</strong> {contractor_name}</p>
+                            <p><strong>Email:</strong> {user.email}</p>
+                            <p><strong>Телефон:</strong> {contractor.phone or 'не указан'}</p>
+                        </div>
+                        <p style="margin-top: 30px;">
+                            <a href="{verification_url}" style="background: #1976d2; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                                Перейти к проверке
+                            </a>
+                        </p>
+                        <p style="color: #666; font-size: 12px; margin-top: 30px;">
+                            Если кнопка не работает, скопируйте ссылку: {verification_url}
+                        </p>
+                    </div>
+                </body>
+                </html>
+                """
+                
+                message_text = f"""
+Новый исполнитель ожидает проверки СБ
+
+Исполнитель: {contractor_name}
+Email: {user.email}
+Телефон: {contractor.phone or 'не указан'}
+
+Ссылка на проверку: {verification_url}
+                """
+                
+                await email_service.send_notification_email(
+                    user_email=security_user.email,
+                    subject=subject,
+                    message=message_html
+                )
+                logger.info(f"📧 Уведомление отправлено сотруднику СБ {security_user.email} о проверке исполнителя {contractor_id}")
+    except Exception as e:
+        logger.error(f"❌ Ошибка отправки уведомления сотрудникам СБ: {e}")
+
+async def send_verification_notification_to_managers(contractor_id: int, db: Session):
+    """Отправка email уведомления менеджерам"""
+    try:
+        from services.email_service import email_service
+        
+        # Получаем информацию об исполнителе
+        contractor = db.query(ContractorProfile).filter(ContractorProfile.id == contractor_id).first()
+        if not contractor:
+            return
+        
+        user = db.query(User).filter(User.id == contractor.user_id).first()
+        if not user:
+            return
+        
+        contractor_name = f"{contractor.first_name or ''} {contractor.last_name or ''}".strip() or user.username
+        
+        # Получаем всех менеджеров и админов
+        manager_users = db.query(User).filter(
+            User.role.in_(["manager", "admin"])
+        ).filter(User.email.isnot(None)).all()
+        
+        if not manager_users:
+            logger.warning(f"⚠️ Не найдено менеджеров с email для уведомления о проверке исполнителя {contractor_id}")
+            return
+        
+        # Формируем ссылку на страницу проверки
+        base_url = "http://91.222.236.58:3000"
+        verification_url = f"{base_url}/manager/verification/{contractor_id}"
+        
+        # Отправляем уведомление каждому менеджеру
+        for manager_user in manager_users:
+            if manager_user.email:
+                subject = f"Исполнитель прошел проверку СБ и ожидает одобрения - {contractor_name}"
+                message_html = f"""
+                <html>
+                <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                        <h2 style="color: #1976d2;">Исполнитель ожидает одобрения менеджера</h2>
+                        <p>Исполнитель прошел проверку службой безопасности и готов к одобрению менеджером.</p>
+                        <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                            <p><strong>Исполнитель:</strong> {contractor_name}</p>
+                            <p><strong>Email:</strong> {user.email}</p>
+                            <p><strong>Телефон:</strong> {contractor.phone or 'не указан'}</p>
+                            <p><strong>Специализации:</strong> {', '.join([s.get('specialization', '') if isinstance(s, dict) else str(s) for s in contractor.specializations]) if contractor.specializations and isinstance(contractor.specializations, list) else 'не указаны'}</p>
+                        </div>
+                        <p style="margin-top: 30px;">
+                            <a href="{verification_url}" style="background: #1976d2; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                                Перейти к проверке
+                            </a>
+                        </p>
+                        <p style="color: #666; font-size: 12px; margin-top: 30px;">
+                            Если кнопка не работает, скопируйте ссылку: {verification_url}
+                        </p>
+                    </div>
+                </body>
+                </html>
+                """
+                
+                message_text = f"""
+Исполнитель ожидает одобрения менеджера
+
+Исполнитель: {contractor_name}
+Email: {user.email}
+Телефон: {contractor.phone or 'не указан'}
+
+Ссылка на проверку: {verification_url}
+                """
+                
+                await email_service.send_notification_email(
+                    user_email=manager_user.email,
+                    subject=subject,
+                    message=message_html
+                )
+                logger.info(f"📧 Уведомление отправлено менеджеру {manager_user.email} о проверке исполнителя {contractor_id}")
+    except Exception as e:
+        logger.error(f"❌ Ошибка отправки уведомления менеджерам: {e}")
+
 async def update_overall_verification_status(contractor_id: int, db: Session):
     """Обновляет общий статус верификации исполнителя"""
     
@@ -620,6 +773,9 @@ async def update_overall_verification_status(contractor_id: int, db: Session):
     
     if not verification:
         return
+    
+    # Сохраняем предыдущий статус для определения изменений
+    previous_status = verification.overall_status
     
     # Определяем общий статус
     if not verification.profile_completed or not verification.documents_uploaded:
@@ -639,3 +795,12 @@ async def update_overall_verification_status(contractor_id: int, db: Session):
     contractor = db.query(ContractorProfile).filter(ContractorProfile.id == contractor_id).first()
     if contractor:
         contractor.profile_completion_status = overall_status
+    
+    # Отправляем уведомления при переходе статуса на проверку
+    if previous_status != overall_status:
+        if overall_status == VerificationStatus.PENDING_SECURITY:
+            # Отправляем уведомление сотрудникам СБ
+            await send_verification_notification_to_security(contractor_id, db)
+        elif overall_status == VerificationStatus.PENDING_MANAGER:
+            # Отправляем уведомление менеджерам
+            await send_verification_notification_to_managers(contractor_id, db)
