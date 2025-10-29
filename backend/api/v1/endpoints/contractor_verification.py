@@ -72,9 +72,40 @@ async def get_contractor_profile_extended(
     ).all()
     
     # Получаем верификацию
-    verification = db.query(ContractorVerification).filter(
+    verification_obj = db.query(ContractorVerification).filter(
         ContractorVerification.contractor_id == contractor_id
     ).first()
+    
+    # Преобразуем верификацию в словарь, если она есть
+    verification_dict = None
+    if verification_obj:
+        # Получаем overall_status как строку
+        overall_status_str = None
+        if verification_obj.overall_status:
+            if hasattr(verification_obj.overall_status, 'value'):
+                overall_status_str = verification_obj.overall_status.value
+            elif isinstance(verification_obj.overall_status, str):
+                overall_status_str = verification_obj.overall_status.lower()
+            else:
+                overall_status_str = str(verification_obj.overall_status).lower()
+        
+        verification_dict = {
+            "id": verification_obj.id,
+            "contractor_id": verification_obj.contractor_id,
+            "profile_completed": verification_obj.profile_completed,
+            "documents_uploaded": verification_obj.documents_uploaded,
+            "security_check_passed": verification_obj.security_check_passed,
+            "manager_approval": verification_obj.manager_approval,
+            "overall_status": overall_status_str or (verification_obj.overall_status.value if hasattr(verification_obj.overall_status, 'value') else str(verification_obj.overall_status)),
+            "security_notes": verification_obj.security_notes,
+            "manager_notes": verification_obj.manager_notes,
+            "security_checked_by": verification_obj.security_checked_by,
+            "manager_checked_by": verification_obj.manager_checked_by,
+            "security_checked_at": verification_obj.security_checked_at.isoformat() if verification_obj.security_checked_at else None,
+            "manager_checked_at": verification_obj.manager_checked_at.isoformat() if verification_obj.manager_checked_at else None,
+            "created_at": verification_obj.created_at.isoformat() if verification_obj.created_at else None,
+            "updated_at": verification_obj.updated_at.isoformat() if verification_obj.updated_at else None,
+        }
     
     # Преобразуем даты в строки для корректной сериализации
     from datetime import date, datetime
@@ -124,7 +155,7 @@ async def get_contractor_profile_extended(
         **contractor_dict,
         education_records=education_records,
         documents=documents,
-        verification=verification
+        verification=verification_dict
     )
 
 @router.put("/profile/{contractor_id}", response_model=ContractorProfileExtended)
