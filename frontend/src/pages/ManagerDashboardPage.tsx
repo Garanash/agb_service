@@ -523,19 +523,31 @@ const ManagerDashboardPage: React.FC = () => {
                         </Box>
                       </TableCell>
                       <TableCell>
-                        {contractor.specializations.slice(0, 2).map(spec => (
-                          <Chip
-                            key={spec}
-                            label={spec}
-                            size='small'
-                            sx={{ mr: 1, mb: 1 }}
-                          />
-                        ))}
-                        {contractor.specializations.length > 2 && (
-                          <Chip
-                            label={`+${contractor.specializations.length - 2}`}
-                            size='small'
-                          />
+                        {contractor.specializations && contractor.specializations.length > 0 ? (
+                          <>
+                            {contractor.specializations.slice(0, 2).map((spec: string | {specialization: string; level: string}, idx: number) => {
+                              const specLabel = typeof spec === 'string' ? spec : spec.specialization || '';
+                              const specKey = typeof spec === 'string' ? spec : `${spec.specialization}-${idx}`;
+                              return (
+                                <Chip
+                                  key={specKey}
+                                  label={specLabel}
+                                  size='small'
+                                  sx={{ mr: 1, mb: 1 }}
+                                />
+                              );
+                            })}
+                            {contractor.specializations.length > 2 && (
+                              <Chip
+                                label={`+${contractor.specializations.length - 2}`}
+                                size='small'
+                              />
+                            )}
+                          </>
+                        ) : (
+                          <Typography variant='body2' color='text.secondary'>
+                            Не указано
+                          </Typography>
                         )}
                       </TableCell>
                       <TableCell>{contractor.active_requests}</TableCell>

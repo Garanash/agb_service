@@ -1045,7 +1045,6 @@ async def send_security_approval_email(contractor_id: int, db: Session, notes: O
             <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
                 <h2 style="color: #2e7d32;">Ваш профиль успешно проверен и активирован!</h2>
                 <p>Здравствуйте, {contractor_name}!</p>
-                <p>
                 <p>Поздравляем! Ваш профиль прошел проверку службой безопасности и теперь активен.</p>
                 <div style="background: #e8f5e9; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #2e7d32;">
                     <p><strong>Что это означает:</strong></p>
