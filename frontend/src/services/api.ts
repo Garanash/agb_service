@@ -900,16 +900,26 @@ class ApiService {
 
   // Manager verification methods
   async verifyContractorByManager(contractorId: number, notes: string): Promise<any> {
-    const response = await this.api.post(`/api/v1/manager/verify-contractor/${contractorId}`, {
-      notes,
-    });
+    const response = await this.api.put(
+      `/api/v1/contractor-verification/contractor/${contractorId}/verify`,
+      {
+        verification_type: 'manager',
+        approved: true,
+        notes: notes || '',
+      },
+    );
     return response.data;
   }
 
   async rejectContractorByManager(contractorId: number, reason: string): Promise<any> {
-    const response = await this.api.post(`/api/v1/manager/reject-contractor/${contractorId}`, {
-      reason,
-    });
+    const response = await this.api.put(
+      `/api/v1/contractor-verification/contractor/${contractorId}/verify`,
+      {
+        verification_type: 'manager',
+        approved: false,
+        notes: reason || '',
+      },
+    );
     return response.data;
   }
 

@@ -622,6 +622,13 @@ async def verify_contractor(
             else:
                 # Отправляем уведомление об отклонении СБ
                 await send_security_rejection_email(contractor_id, db, verification_data.notes)
+        elif verification_data.verification_type == "manager":
+            if verification_data.approved:
+                # Отправляем уведомление об одобрении менеджером
+                await send_manager_approval_email(contractor_id, db, verification_data.notes)
+            else:
+                # Отправляем уведомление об отклонении менеджером
+                await send_manager_rejection_email(contractor_id, db, verification_data.notes)
     except Exception as e:
         logger.error(f"❌ Ошибка отправки email уведомления: {e}")
     
@@ -1169,6 +1176,106 @@ async def send_clarification_request_email(contractor_id: int, db: Session, note
         logger.info(f"📧 Email с запросом уточнения данных отправлен исполнителю {contractor_id} ({user.email})")
     except Exception as e:
         logger.error(f"❌ Ошибка отправки email с запросом уточнения: {e}")
+
+async def send_manager_approval_email(contractor_id: int, db: Session, notes: Optional[str] = None):
+    """Отправляет email уведомление об одобрении менеджером"""
+    try:
+        from services.email_service import email_service
+        
+        contractor = db.query(ContractorProfile).filter(ContractorProfile.id == contractor_id).first()
+        if not contractor:
+            return
+        
+        user = db.query(User).filter(User.id == contractor.user_id).first()
+        if not user or not user.email:
+            return
+        
+        contractor_name = f"{contractor.first_name or ''} {contractor.last_name or ''}".strip() or user.username
+        base_url = os.getenv("FRONTEND_URL", "http://91.222.236.58:3000")
+        dashboard_url = f"{base_url}/contractor/dashboard"
+        
+        subject = f"Профиль полностью одобрен - Добро пожаловать в команду!"
+        message_html = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #2e7d32;">Ваш профиль полностью одобрен!</h2>
+                <p>Здравствуйте, {contractor_name}!</p>
+                <p>Поздравляем! Ваш профиль прошел все проверки и получил окончательное одобрение менеджера.</p>
+                <div style="background: #e8f5e9; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #2e7d32;">
+                    <p><strong>Теперь вы можете:</strong></p>
+                    <ul>
+                        <li>Просматривать все доступные заявки</li>
+                        <li>Откликаться на заявки</li>
+                        <li>Получать уведомления о новых заявках</li>
+                        <li>Работать с заказчиками через платформу</li>
+                    </ul>
+                </div>
+                <p style="margin-top: 30px;">
+                    <a href="{dashboard_url}" style="background: #2e7d32; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                        Перейти к заявкам
+                    </a>
+                </p>
+                <p style="color: #666; font-size: 12px; margin-top: 30px;">
+                    Если кнопка не работает, скопируйте ссылку: {dashboard_url}
+                </p>
+            </div>
+        </body>
+        </html>
+        """
+        
+        await email_service.send_notification_email(
+            user_email=user.email,
+            subject=subject,
+            message=message_html
+        )
+        logger.info(f"📧 Email об одобрении менеджером отправлен исполнителю {contractor_id} ({user.email})")
+    except Exception as e:
+        logger.error(f"❌ Ошибка отправки email об одобрении менеджером: {e}")
+
+async def send_manager_rejection_email(contractor_id: int, db: Session, reason: Optional[str] = None):
+    """Отправляет email уведомление об отклонении менеджером"""
+    try:
+        from services.email_service import email_service
+        
+        contractor = db.query(ContractorProfile).filter(ContractorProfile.id == contractor_id).first()
+        if not contractor:
+            return
+        
+        user = db.query(User).filter(User.id == contractor.user_id).first()
+        if not user or not user.email:
+            return
+        
+        contractor_name = f"{contractor.first_name or ''} {contractor.last_name or ''}".strip() or user.username
+        
+        subject = f"Результат проверки профиля"
+        message_html = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #d32f2f;">Результат проверки профиля</h2>
+                <p>Здравствуйте, {contractor_name}!</p>
+                <p>Спасибо за интерес, проявленный к нашей платформе.</p>
+                <p>К сожалению, после проверки менеджером мы не готовы продолжить работу с Вами на данный момент.</p>
+                {f'<div style="background: #ffebee; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #d32f2f;"><p><strong>Причина:</strong> {reason}</p></div>' if reason else ''}
+                <p>Если у Вас возникнут вопросы, пожалуйста, свяжитесь с нашей службой поддержки.</p>
+                <p style="color: #666; font-size: 12px; margin-top: 30px;">
+                    С уважением,<br>
+                    Команда платформы
+                </p>
+            </div>
+        </body>
+        </html>
+        """
+        
+        await email_service.send_notification_email(
+            user_email=user.email,
+            subject=subject,
+            message=message_html
+        )
+        logger.info(f"📧 Email об отклонении менеджером отправлен исполнителю {contractor_id} ({user.email})")
+    except Exception as e:
+        logger.error(f"❌ Ошибка отправки email об отклонении менеджером: {e}")
 
 async def update_overall_verification_status(contractor_id: int, db: Session):
     """Обновляет общий статус верификации исполнителя"""

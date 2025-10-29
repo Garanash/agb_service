@@ -126,10 +126,55 @@ const ManagerVerificationPage: React.FC = () => {
   const handleViewDetails = async (contractorId: number) => {
     try {
       const details = await apiService.getContractorProfileDetails(contractorId);
-      setSelectedContractor(details);
+      
+      // Преобразуем данные в формат ContractorDetails
+      const contractorDetails: ContractorDetails = {
+        contractor_id: contractorId,
+        user_id: details.user_id || details.id,
+        personal_info: {
+          first_name: details.first_name || '',
+          last_name: details.last_name || '',
+          patronymic: details.patronymic || '',
+          phone: details.phone || '',
+          email: details.email || '',
+          telegram_username: details.telegram_username || '',
+        },
+        professional_info: {
+          specializations: (details.specializations || []).map((s: any) => 
+            typeof s === 'string' ? s : s.specialization || ''
+          ),
+          equipment_brands_experience: details.equipment_brands_experience || [],
+          certifications: details.certifications || [],
+          work_regions: details.work_regions || [],
+          hourly_rate: details.hourly_rate,
+          availability_status: details.availability_status || 'unknown',
+        },
+        education_info: (details.education_records || []).map((edu: any) => ({
+          institution_name: edu.institution_name || '',
+          degree: edu.degree || '',
+          field_of_study: edu.field_of_study || '',
+          graduation_year: edu.graduation_year || new Date().getFullYear(),
+        })),
+        experience_info: [],
+        verification_info: {
+          status: details.verification?.overall_status || 'pending',
+          created_at: details.verification?.created_at,
+          checked_at: details.verification?.manager_checked_at,
+          checked_by: details.verification?.manager_checked_by,
+          verification_notes: details.verification?.manager_notes,
+        },
+        activity_info: {
+          requests_count: 0,
+          registration_date: details.created_at || '',
+          is_active: true,
+        },
+      };
+      
+      setSelectedContractor(contractorDetails);
       setDetailsDialogOpen(true);
     } catch (err: any) {
-      setError('Ошибка загрузки деталей исполнителя');
+      console.error('Ошибка загрузки деталей:', err);
+      setError(err.response?.data?.detail || 'Ошибка загрузки деталей исполнителя');
     }
   };
 
