@@ -60,21 +60,22 @@ import { apiService } from 'services/api';
 interface PendingVerification {
   id: number;
   contractor_id: number;
-  verification_status: string;
+  verification_status?: string;
+  overall_status?: string;
   verification_notes?: string;
   checked_by?: number;
   checked_at?: string;
   created_at: string;
   contractor?: {
     id: number;
-    first_name: string;
-    last_name: string;
-    phone: string;
-    email: string;
-    specializations: string[];
-    equipment_brands_experience: string[];
-    certifications: string[];
-    work_regions: string[];
+    first_name?: string;
+    last_name?: string;
+    phone?: string;
+    email?: string;
+    specializations?: string[] | Array<{specialization: string; level: string}>;
+    equipment_brands_experience?: string[];
+    certifications?: string[];
+    work_regions?: string[];
     hourly_rate?: number;
   };
 }
@@ -174,7 +175,7 @@ const SecurityVerificationPage: React.FC = () => {
 
       const [pendingData, verifiedData, rejectedData, statsData] =
         await Promise.all([
-          apiService.getPendingVerifications(),
+          apiService.getPendingVerifications('security'),
           apiService.getVerifiedContractors(),
           apiService.getRejectedContractors(),
           apiService.getSecurityStatistics(),
@@ -196,10 +197,53 @@ const SecurityVerificationPage: React.FC = () => {
 
   const handleViewDetails = async (contractorId: number) => {
     try {
-      const details = await apiService.getContractorDetails(contractorId);
-      setSelectedContractor(details);
+      const details = await apiService.getContractorProfileDetails(contractorId);
+      // Преобразуем данные из ContractorProfileExtended в формат ContractorDetails
+      const contractorDetails: ContractorDetails = {
+        contractor_id: contractorId,
+        user_id: details.user_id || 0,
+        personal_info: {
+          first_name: details.first_name || '',
+          last_name: details.last_name || '',
+          patronymic: details.patronymic,
+          phone: details.phone || '',
+          email: details.email || '',
+          telegram_username: details.telegram_username,
+        },
+        professional_info: {
+          specializations: (details.specializations || []).map((s: any) => 
+            typeof s === 'string' ? s : s.specialization || ''
+          ),
+          equipment_brands_experience: details.equipment_brands_experience || [],
+          certifications: details.certifications || [],
+          work_regions: details.work_regions || [],
+          hourly_rate: details.hourly_rate,
+          availability_status: details.availability_status || 'unknown',
+        },
+        education_info: Array.isArray(details.education_records) ? details.education_records.map((ed: any) => ({
+          institution_name: ed.institution_name || '',
+          degree: ed.degree || '',
+          field_of_study: ed.specialization || '',
+          graduation_year: ed.graduation_year || 0,
+        })) : [],
+        experience_info: [],
+        verification_info: {
+          status: details.verification?.overall_status || 'pending',
+          created_at: details.verification?.created_at,
+          checked_at: details.verification?.security_checked_at,
+          checked_by: details.verification?.security_checked_by,
+          verification_notes: details.verification?.security_notes,
+        },
+        activity_info: {
+          requests_count: 0,
+          registration_date: details.created_at || '',
+          is_active: true,
+        },
+      };
+      setSelectedContractor(contractorDetails);
       setDetailsDialogOpen(true);
     } catch (err: any) {
+      console.error('Ошибка загрузки деталей:', err);
       setError(
         err.response?.data?.detail || 'Ошибка загрузки деталей исполнителя',
       );
@@ -428,39 +472,52 @@ const SecurityVerificationPage: React.FC = () => {
             </TableHead>
             <TableBody>
               {pendingVerifications.map(verification => (
-                <TableRow key={verification.id}>
+                <TableRow key={verification.id || verification.contractor_id}>
                   <TableCell>
                     <Typography variant='subtitle2'>
-                      {verification.contractor?.first_name}{' '}
-                      {verification.contractor?.last_name}
+                      {verification.contractor?.first_name || 'Не указано'}{' '}
+                      {verification.contractor?.last_name || ''}
                     </Typography>
                   </TableCell>
                   <TableCell>
                     <Typography variant='body2'>
-                      {verification.contractor?.phone}
+                      {verification.contractor?.phone || 'Не указан'}
                     </Typography>
                     <Typography variant='body2' color='text.secondary'>
-                      {verification.contractor?.email}
+                      {verification.contractor?.email || 'Не указан'}
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    {verification.contractor?.specializations
-                      ?.slice(0, 2)
-                      .map(spec => (
-                        <Chip
-                          key={spec}
-                          label={spec}
-                          size='small'
-                          sx={{ mr: 1, mb: 1 }}
-                        />
-                      ))}
-                    {verification.contractor?.specializations &&
-                      verification.contractor.specializations.length > 2 && (
-                        <Chip
-                          label={`+${verification.contractor.specializations.length - 2}`}
-                          size='small'
-                        />
-                      )}
+                    {(() => {
+                      const specs = verification.contractor?.specializations;
+                      if (!specs || !Array.isArray(specs) || specs.length === 0) {
+                        return <Typography variant="body2" color="text.secondary">Не указаны</Typography>;
+                      }
+                      
+                      // Преобразуем в массив строк
+                      const specLabels = specs.map((spec: any) => 
+                        typeof spec === 'string' ? spec : (spec.specialization || spec)
+                      );
+                      
+                      return (
+                        <>
+                          {specLabels.slice(0, 2).map((spec: string, idx: number) => (
+                            <Chip
+                              key={idx}
+                              label={spec}
+                              size='small'
+                              sx={{ mr: 1, mb: 1 }}
+                            />
+                          ))}
+                          {specLabels.length > 2 && (
+                            <Chip
+                              label={`+${specLabels.length - 2}`}
+                              size='small'
+                            />
+                          )}
+                        </>
+                      );
+                    })()}
                   </TableCell>
                   <TableCell>
                     {verification.contractor?.equipment_brands_experience
@@ -507,15 +564,15 @@ const SecurityVerificationPage: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <Chip
-                      label={getStatusText(verification.verification_status)}
+                      label={getStatusText(verification.verification_status || verification.overall_status || 'pending')}
                       color={
-                        getStatusColor(verification.verification_status) as any
+                        getStatusColor(verification.verification_status || verification.overall_status || 'pending') as any
                       }
                       size='small'
                     />
                   </TableCell>
                   <TableCell>
-                    {new Date(verification.created_at).toLocaleDateString()}
+                    {verification.created_at ? new Date(verification.created_at).toLocaleDateString('ru-RU') : '-'}
                   </TableCell>
                   <TableCell>
                     <Tooltip title='Просмотреть детали'>

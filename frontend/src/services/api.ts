@@ -276,9 +276,13 @@ class ApiService {
     contractorId: number,
     approvalData: any,
   ): Promise<any> {
-    const response = await this.api.post(
-      `/api/v1/security/contractor/${contractorId}/approve`,
-      approvalData,
+    const response = await this.api.put(
+      `/api/v1/contractor-verification/contractor/${contractorId}/verify`,
+      {
+        verification_type: 'security',
+        approved: true,
+        notes: approvalData.verification_notes || '',
+      },
     );
     return response.data;
   }
@@ -287,9 +291,13 @@ class ApiService {
     contractorId: number,
     rejectionData: any,
   ): Promise<any> {
-    const response = await this.api.post(
-      `/api/v1/security/contractor/${contractorId}/reject`,
-      rejectionData,
+    const response = await this.api.put(
+      `/api/v1/contractor-verification/contractor/${contractorId}/verify`,
+      {
+        verification_type: 'security',
+        approved: false,
+        notes: rejectionData.verification_notes || '',
+      },
     );
     return response.data;
   }
