@@ -121,6 +121,28 @@ async def get_contractor_profile_extended(
     # Преобразуем даты в строки для корректной сериализации
     from datetime import date, datetime
     
+    # Приводим specializations к списку словарей {specialization, level}, если вдруг пришли строки
+    normalized_specializations = []
+    try:
+        if contractor.specializations and isinstance(contractor.specializations, list):
+            for spec in contractor.specializations:
+                if isinstance(spec, dict):
+                    # ожидаемый формат
+                    specialization_value = spec.get("specialization") or ""
+                    level_value = spec.get("level") or ""
+                    normalized_specializations.append({
+                        "specialization": specialization_value,
+                        "level": level_value,
+                    })
+                else:
+                    # строковый формат -> преобразуем
+                    normalized_specializations.append({
+                        "specialization": str(spec),
+                        "level": "",
+                    })
+    except Exception:
+        normalized_specializations = []
+
     contractor_dict = {
         "id": contractor.id,
         "user_id": contractor.user_id,
@@ -145,7 +167,7 @@ async def get_contractor_profile_extended(
         "website": contractor.website,
         "general_description": contractor.general_description,
         "profile_photo_path": contractor.profile_photo_path,
-        "specializations": contractor.specializations if contractor.specializations and isinstance(contractor.specializations, list) else [],
+        "specializations": normalized_specializations,
         "equipment_brands_experience": contractor.equipment_brands_experience if contractor.equipment_brands_experience else [],
         "certifications": contractor.certifications if contractor.certifications else [],
         "work_regions": contractor.work_regions if contractor.work_regions else [],
