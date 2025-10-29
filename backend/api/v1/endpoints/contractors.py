@@ -179,13 +179,18 @@ def get_contractor_profile(
                 detail="Профиль исполнителя не найден"
             )
         
+        # Логирование для отладки
+        print(f"DEBUG: result type: {type(result)}, length: {len(result) if hasattr(result, '__len__') else 'N/A'}")
+        print(f"DEBUG: result: {result}")
+        
         # Безопасное преобразование hourly_rate
         hourly_rate_value = None
-        if len(result) > 27 and result[27] is not None:
-            try:
+        try:
+            if len(result) > 27 and result[27] is not None:
                 hourly_rate_value = float(result[27])
-            except (ValueError, TypeError):
-                hourly_rate_value = None
+        except (ValueError, TypeError, IndexError) as e:
+            print(f"DEBUG: Error converting hourly_rate: {e}")
+            hourly_rate_value = None
         
         profile_dict = {
             "id": result[0],
