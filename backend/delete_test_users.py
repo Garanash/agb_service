@@ -8,7 +8,7 @@ import os
 sys.path.insert(0, os.path.dirname(__file__))
 
 from database import SessionLocal
-from models import User, ContractorProfile, CustomerProfile
+from models import User, ContractorProfile, CustomerProfile, RepairRequest
 from sqlalchemy import or_
 
 def delete_test_users():
@@ -41,6 +41,13 @@ def delete_test_users():
         
         for user in test_users:
             print(f"🗑️ Удаление пользователя: {user.username} (email: {user.email}, роль: {user.role})")
+            
+            # Удаляем связанные заявки для заказчиков
+            if user.role == "customer":
+                requests = db.query(RepairRequest).filter(RepairRequest.customer_id == user.id).all()
+                for req in requests:
+                    db.delete(req)
+                    print(f"  ✓ Удалена заявка {req.id}")
             
             # Удаляем связанные профили
             if user.role == "contractor":
