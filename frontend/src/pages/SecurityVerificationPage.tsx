@@ -767,61 +767,84 @@ const SecurityVerificationPage: React.FC = () => {
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    {contractor.specializations?.slice(0, 2).map(spec => (
-                      <Chip
-                        key={spec}
-                        label={spec}
-                        size='small'
-                        sx={{ mr: 1, mb: 1 }}
-                      />
-                    ))}
-                    {contractor.specializations &&
-                      contractor.specializations.length > 2 && (
-                        <Chip
-                          label={`+${contractor.specializations.length - 2}`}
-                          size='small'
-                        />
-                      )}
+                    {contractor.specializations && contractor.specializations.length > 0 ? (
+                      <>
+                        {contractor.specializations.slice(0, 2).map((spec: string | {specialization: string; level: string}, idx: number) => {
+                          const specLabel = typeof spec === 'string' ? spec : spec.specialization;
+                          const specKey = typeof spec === 'string' ? spec : `${spec.specialization}-${idx}`;
+                          return (
+                            <Chip
+                              key={specKey}
+                              label={specLabel}
+                              size='small'
+                              sx={{ mr: 1, mb: 1 }}
+                            />
+                          );
+                        })}
+                        {contractor.specializations.length > 2 && (
+                          <Chip
+                            label={`+${contractor.specializations.length - 2}`}
+                            size='small'
+                          />
+                        )}
+                      </>
+                    ) : (
+                      <Typography variant='body2' color='text.secondary'>
+                        Не указано
+                      </Typography>
+                    )}
                   </TableCell>
                   <TableCell>
-                    {contractor.equipment_brands_experience
-                      ?.slice(0, 2)
-                      .map(brand => (
-                        <Chip
-                          key={brand}
-                          label={brand}
-                          size='small'
-                          color='secondary'
-                          sx={{ mr: 1, mb: 1 }}
-                        />
-                      ))}
-                    {contractor.equipment_brands_experience &&
-                      contractor.equipment_brands_experience.length > 2 && (
-                        <Chip
-                          label={`+${contractor.equipment_brands_experience.length - 2}`}
-                          size='small'
-                          color='secondary'
-                        />
-                      )}
+                    {contractor.equipment_brands_experience && contractor.equipment_brands_experience.length > 0 ? (
+                      <>
+                        {contractor.equipment_brands_experience.slice(0, 2).map((brand: string) => (
+                          <Chip
+                            key={brand}
+                            label={brand}
+                            size='small'
+                            color='secondary'
+                            sx={{ mr: 1, mb: 1 }}
+                          />
+                        ))}
+                        {contractor.equipment_brands_experience.length > 2 && (
+                          <Chip
+                            label={`+${contractor.equipment_brands_experience.length - 2}`}
+                            size='small'
+                            color='secondary'
+                          />
+                        )}
+                      </>
+                    ) : (
+                      <Typography variant='body2' color='text.secondary'>
+                        Не указано
+                      </Typography>
+                    )}
                   </TableCell>
                   <TableCell>
-                    {contractor.work_regions?.slice(0, 2).map(region => (
-                      <Chip
-                        key={region}
-                        label={region}
-                        size='small'
-                        color='info'
-                        sx={{ mr: 1, mb: 1 }}
-                      />
-                    ))}
-                    {contractor.work_regions &&
-                      contractor.work_regions.length > 2 && (
-                        <Chip
-                          label={`+${contractor.work_regions.length - 2}`}
-                          size='small'
-                          color='info'
-                        />
-                      )}
+                    {contractor.work_regions && contractor.work_regions.length > 0 ? (
+                      <>
+                        {contractor.work_regions.slice(0, 2).map((region: string) => (
+                          <Chip
+                            key={region}
+                            label={region}
+                            size='small'
+                            color='info'
+                            sx={{ mr: 1, mb: 1 }}
+                          />
+                        ))}
+                        {contractor.work_regions.length > 2 && (
+                          <Chip
+                            label={`+${contractor.work_regions.length - 2}`}
+                            size='small'
+                            color='info'
+                          />
+                        )}
+                      </>
+                    ) : (
+                      <Typography variant='body2' color='text.secondary'>
+                        Не указано
+                      </Typography>
+                    )}
                   </TableCell>
                   <TableCell>
                     {contractor.verified_at

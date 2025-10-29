@@ -115,12 +115,23 @@ async def get_verified_contractors(
         
         if contractor:
             user = db.query(User).filter(User.id == contractor.user_id).first()
+            
+            # Обрабатываем specializations (может быть список строк или список объектов)
+            specializations_list = []
+            if contractor.specializations and isinstance(contractor.specializations, list):
+                specializations_list = [
+                    spec.get('specialization', spec) if isinstance(spec, dict) else spec
+                    for spec in contractor.specializations
+                ]
+            
             result.append({
                 "contractor_id": contractor.id,
                 "name": f"{contractor.first_name or ''} {contractor.last_name or ''}".strip() or (user.username if user else 'Неизвестно'),
                 "phone": contractor.phone or (user.phone if user else None),
                 "email": contractor.email or (user.email if user else None),
-                "specializations": contractor.specializations if contractor.specializations and isinstance(contractor.specializations, list) else [],
+                "specializations": specializations_list,
+                "equipment_brands_experience": contractor.equipment_brands_experience if contractor.equipment_brands_experience and isinstance(contractor.equipment_brands_experience, list) else [],
+                "work_regions": contractor.work_regions if contractor.work_regions and isinstance(contractor.work_regions, list) else [],
                 "verified_at": verification.security_checked_at.isoformat() if verification.security_checked_at else None,
                 "verified_by": verification.security_checked_by
             })
