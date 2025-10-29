@@ -81,7 +81,7 @@ interface ContractorProfileForm {
   inn: string;
   
   // Профессиональная информация
-  specializations: string[];
+  specializations: Array<{ specialization: string; level: string }>;
   equipment_brands_experience: string[];
   certifications: string[];
   work_regions: string[];
@@ -127,6 +127,7 @@ const ContractorProfilePage: React.FC = () => {
       equipment_brands_experience: [],
       certifications: [],
       work_regions: [],
+      hourly_rate: undefined,
     },
   });
 
@@ -182,6 +183,17 @@ const ContractorProfilePage: React.FC = () => {
       if (profile.website) setValue('website', profile.website);
       if (profile.bank_account) setValue('bank_account', profile.bank_account);
       if (profile.bank_bik) setValue('bank_bik', profile.bank_bik);
+      if (profile.specializations) {
+        // Преобразуем специализации в нужный формат
+        const specs = Array.isArray(profile.specializations) ? profile.specializations : [];
+        const formattedSpecs = specs.map((spec: any) => 
+          typeof spec === 'string' 
+            ? { specialization: spec, level: '' }
+            : { specialization: spec.specialization || spec, level: spec.level || '' }
+        );
+        setValue('specializations', formattedSpecs);
+      }
+      if (profile.hourly_rate !== undefined) setValue('hourly_rate', profile.hourly_rate);
       
       // Загружаем расширенный профиль для получения образования и документов
       if (user?.contractor_profile_id) {
@@ -490,7 +502,13 @@ const ContractorProfilePage: React.FC = () => {
                     <TextField
                       fullWidth
                       label="Серия паспорта *"
-                      {...register('passport_series', { required: 'Серия паспорта обязательна' })}
+                      {...register('passport_series', { 
+                        required: 'Серия паспорта обязательна',
+                        pattern: {
+                          value: /^\d{4}$/,
+                          message: 'Серия паспорта должна состоять из 4 цифр'
+                        }
+                      })}
                       error={!!errors.passport_series}
                       helperText={errors.passport_series?.message as any}
                     />
@@ -499,7 +517,13 @@ const ContractorProfilePage: React.FC = () => {
                     <TextField
                       fullWidth
                       label="Номер паспорта *"
-                      {...register('passport_number', { required: 'Номер паспорта обязателен' })}
+                      {...register('passport_number', { 
+                        required: 'Номер паспорта обязателен',
+                        pattern: {
+                          value: /^\d{6}$/,
+                          message: 'Номер паспорта должен состоять из 6 цифр'
+                        }
+                      })}
                       error={!!errors.passport_number}
                       helperText={errors.passport_number?.message as any}
                     />
@@ -528,7 +552,13 @@ const ContractorProfilePage: React.FC = () => {
                     <TextField
                       fullWidth
                       label="Код подразделения *"
-                      {...register('passport_issued_code', { required: 'Код подразделения обязателен' })}
+                      {...register('passport_issued_code', { 
+                        required: 'Код подразделения обязателен',
+                        pattern: {
+                          value: /^\d{6}$/,
+                          message: 'Код подразделения должен состоять из 6 цифр'
+                        }
+                      })}
                       error={!!errors.passport_issued_code}
                       helperText={errors.passport_issued_code?.message as any}
                     />
@@ -738,14 +768,40 @@ const ContractorProfilePage: React.FC = () => {
                     <Typography variant="h6" gutterBottom>
                       Специализации
                     </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      Выберите специализации и укажите уровень владения навыком
+                    </Typography>
                     {specializationFields.map((field, index) => (
-                      <Box key={field.id} display="flex" alignItems="center" gap={1} sx={{ mb: 1 }}>
-                        <TextField
-                          fullWidth
-                          {...register(`specializations.${index}` as const)}
-                          placeholder="Введите специализацию"
-                        />
-                        <IconButton onClick={() => removeSpecialization(index)}>
+                      <Box key={field.id} display="flex" alignItems="center" gap={2} sx={{ mb: 2 }}>
+                        <FormControl sx={{ minWidth: 200 }}>
+                          <InputLabel>Специализация</InputLabel>
+                          <Select
+                            value={watch(`specializations.${index}.specialization`) || ''}
+                            onChange={(e) => setValue(`specializations.${index}.specialization`, e.target.value)}
+                            label="Специализация"
+                          >
+                            <MenuItem value="электрика">Электрика</MenuItem>
+                            <MenuItem value="гидравлика">Гидравлика</MenuItem>
+                            <MenuItem value="двс">ДВС</MenuItem>
+                            <MenuItem value="агрегаты">Агрегаты</MenuItem>
+                            <MenuItem value="перфораторы">Перфораторы</MenuItem>
+                            <MenuItem value="другое">Другое</MenuItem>
+                          </Select>
+                        </FormControl>
+                        <FormControl sx={{ minWidth: 150 }}>
+                          <InputLabel>Уровень владения</InputLabel>
+                          <Select
+                            value={watch(`specializations.${index}.level`) || ''}
+                            onChange={(e) => setValue(`specializations.${index}.level`, e.target.value)}
+                            label="Уровень владения"
+                          >
+                            <MenuItem value="начальный">Начальный</MenuItem>
+                            <MenuItem value="средний">Средний</MenuItem>
+                            <MenuItem value="продвинутый">Продвинутый</MenuItem>
+                            <MenuItem value="эксперт">Эксперт</MenuItem>
+                          </Select>
+                        </FormControl>
+                        <IconButton onClick={() => removeSpecialization(index)} color="error">
                           <DeleteIcon />
                         </IconButton>
                       </Box>
@@ -753,7 +809,7 @@ const ContractorProfilePage: React.FC = () => {
                     <Button
                       variant="outlined"
                       startIcon={<AddIcon />}
-                      onClick={() => appendSpecialization('')}
+                      onClick={() => appendSpecialization({ specialization: '', level: '' })}
                     >
                       Добавить специализацию
                     </Button>

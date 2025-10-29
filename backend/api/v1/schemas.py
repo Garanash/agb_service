@@ -474,11 +474,11 @@ class ContractorProfileUpdate(BaseModel):
     email: Optional[str] = Field(None, pattern=r'^[^@]+@[^@]+\.[^@]+$')
     
     # Паспортные данные
-    passport_series: Optional[str] = Field(None, max_length=10)
-    passport_number: Optional[str] = Field(None, max_length=20)
+    passport_series: Optional[str] = Field(None, max_length=4, min_length=4, pattern=r'^\d{4}$')
+    passport_number: Optional[str] = Field(None, max_length=6, min_length=6, pattern=r'^\d{6}$')
     passport_issued_by: Optional[str] = Field(None, max_length=200)
     passport_issued_date: Optional[str] = Field(None, max_length=20)
-    passport_issued_code: Optional[str] = Field(None, max_length=10)
+    passport_issued_code: Optional[str] = Field(None, max_length=6, min_length=6, pattern=r'^\d{6}$')
     birth_date: Optional[str] = Field(None, max_length=20)
     birth_place: Optional[str] = Field(None, max_length=200)
     
@@ -486,7 +486,7 @@ class ContractorProfileUpdate(BaseModel):
     inn: Optional[str] = Field(None, max_length=12)
     
     # Профессиональная информация
-    specializations: Optional[List[str]] = None
+    specializations: Optional[List[Dict[str, str]]] = None  # [{"specialization": "электрика", "level": "эксперт"}]
     equipment_brands_experience: Optional[List[str]] = None
     certifications: Optional[List[str]] = None
     work_regions: Optional[List[str]] = None

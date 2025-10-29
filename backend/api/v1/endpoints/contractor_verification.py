@@ -114,6 +114,76 @@ async def update_contractor_profile(
     
     # Обновляем поля профиля
     update_data = profile_data.dict(exclude_unset=True)
+    
+    # Обрабатываем валидацию паспортных данных
+    if 'passport_series' in update_data and update_data['passport_series']:
+        if not update_data['passport_series'].isdigit() or len(update_data['passport_series']) != 4:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Серия паспорта должна состоять из 4 цифр"
+            )
+    
+    if 'passport_number' in update_data and update_data['passport_number']:
+        if not update_data['passport_number'].isdigit() or len(update_data['passport_number']) != 6:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Номер паспорта должен состоять из 6 цифр"
+            )
+    
+    if 'passport_issued_code' in update_data and update_data['passport_issued_code']:
+        if not update_data['passport_issued_code'].isdigit() or len(update_data['passport_issued_code']) != 6:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Код подразделения должен состоять из 6 цифр"
+            )
+    
+    # Валидация специализаций
+    if 'specializations' in update_data and update_data['specializations'] is not None:
+        valid_specializations = ['электрика', 'гидравлика', 'двс', 'агрегаты', 'перфораторы', 'другое']
+        valid_levels = ['начальный', 'средний', 'продвинутый', 'эксперт']
+        
+        if not isinstance(update_data['specializations'], list):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Специализации должны быть списком"
+            )
+        
+        for spec in update_data['specializations']:
+            if isinstance(spec, dict):
+                if 'specialization' not in spec or 'level' not in spec:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Каждая специализация должна содержать поля 'specialization' и 'level'"
+                    )
+                if spec['specialization'] not in valid_specializations:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Неверная специализация: {spec['specialization']}. Доступные: {', '.join(valid_specializations)}"
+                    )
+                if spec['level'] not in valid_levels:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Неверный уровень владения: {spec['level']}. Доступные: {', '.join(valid_levels)}"
+                    )
+    
+    # Обрабатываем hourly_rate - убеждаемся что это число
+    if 'hourly_rate' in update_data and update_data['hourly_rate'] is not None:
+        try:
+            if isinstance(update_data['hourly_rate'], str):
+                update_data['hourly_rate'] = float(update_data['hourly_rate'])
+            elif not isinstance(update_data['hourly_rate'], (int, float)):
+                raise ValueError("hourly_rate должен быть числом")
+            if update_data['hourly_rate'] < 0:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Почасовая ставка не может быть отрицательной"
+                )
+        except (ValueError, TypeError):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Почасовая ставка должна быть числом"
+            )
+    
     for field, value in update_data.items():
         setattr(contractor, field, value)
     
@@ -224,19 +294,23 @@ async def upload_document(
             detail="Исполнитель не найден"
         )
     
-    # Проверяем размер файла
-    if file.size > MAX_FILE_SIZE:
-        raise HTTPException(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail=f"Файл слишком большой. Максимальный размер: {MAX_FILE_SIZE // (1024*1024)}MB"
-        )
-    
     # Проверяем расширение файла
-    file_extension = os.path.splitext(file.filename)[1].lower()
+    file_extension = os.path.splitext(file.filename)[1].lower() if file.filename else ''
     if file_extension not in ALLOWED_EXTENSIONS:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Неподдерживаемый формат файла. Разрешены: {', '.join(ALLOWED_EXTENSIONS)}"
+        )
+    
+    # Читаем содержимое файла для проверки размера
+    file_content = await file.read()
+    file_size = len(file_content)
+    
+    # Проверяем размер файла
+    if file_size > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=f"Файл слишком большой. Максимальный размер: {MAX_FILE_SIZE // (1024*1024)}MB"
         )
     
     # Создаем директорию для файлов
@@ -250,7 +324,7 @@ async def upload_document(
     # Сохраняем файл
     try:
         with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+            buffer.write(file_content)
     except Exception as e:
         logger.error(f"❌ Ошибка сохранения файла: {e}")
         raise HTTPException(
@@ -264,8 +338,8 @@ async def upload_document(
         document_type=document_type.value,
         document_name=document_name,
         document_path=file_path,
-        file_size=file.size,
-        mime_type=file.content_type
+        file_size=file_size,
+        mime_type=file.content_type or "application/octet-stream"
     )
     
     db.add(document)
