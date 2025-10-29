@@ -39,45 +39,51 @@ def delete_test_users():
         
         deleted_count = 0
         
+        from sqlalchemy import text
+        
         for user in test_users:
             print(f"🗑️ Удаление пользователя: {user.username} (email: {user.email}, роль: {user.role})")
             
-            # Удаляем связанные заявки для заказчиков (через SQL для обхода каскадных ограничений)
+            # Удаляем все связанные данные через SQL
             if user.role == "customer":
-                from sqlalchemy import text
-                db.execute(text("DELETE FROM repair_requests WHERE customer_id = :customer_id"), {"customer_id": user.id})
-                deleted_requests = db.query(RepairRequest).filter(RepairRequest.customer_id == user.id).count()
-                if deleted_requests == 0:
-                    # Проверяем через SQL
-                    result = db.execute(text("SELECT COUNT(*) FROM repair_requests WHERE customer_id = :customer_id"), {"customer_id": user.id})
-                    count = result.scalar()
-                    if count > 0:
-                        db.execute(text("DELETE FROM repair_requests WHERE customer_id = :customer_id"), {"customer_id": user.id})
-                        print(f"  ✓ Удалены заявки заказчика")
-                    else:
-                        print(f"  ℹ Нет связанных заявок")
-                else:
-                    print(f"  ✓ Удалены заявки заказчика")
-                db.flush()
+                # Удаляем заявки заказчика
+                result = db.execute(text("DELETE FROM repair_requests WHERE customer_id = :user_id"), {"user_id": user.id})
+                if result.rowcount > 0:
+                    print(f"  ✓ Удалено заявок: {result.rowcount}")
             
-            # Удаляем связанные профили
             if user.role == "contractor":
-                profile = db.query(ContractorProfile).filter(ContractorProfile.user_id == user.id).first()
-                if profile:
-                    db.delete(profile)
-                    db.flush()
-                    print(f"  ✓ Удален профиль исполнителя {profile.id}")
+                # Удаляем отклики исполнителя
+                result = db.execute(text("DELETE FROM contractor_responses WHERE contractor_id = :user_id"), {"user_id": user.id})
+                if result.rowcount > 0:
+                    print(f"  ✓ Удалено откликов: {result.rowcount}")
+                
+                # Получаем contractor_id для удаления связанных данных
+                profile_result = db.execute(text("SELECT id FROM contractor_profiles WHERE user_id = :user_id"), {"user_id": user.id})
+                profile_row = profile_result.fetchone()
+                if profile_row:
+                    contractor_profile_id = profile_row[0]
+                    # Удаляем связанные данные профиля
+                    db.execute(text("DELETE FROM contractor_documents WHERE contractor_id = :contractor_id"), {"contractor_id": contractor_profile_id})
+                    db.execute(text("DELETE FROM contractor_education WHERE contractor_id = :contractor_id"), {"contractor_id": contractor_profile_id})
+                    db.execute(text("DELETE FROM contractor_verifications WHERE contractor_id = :contractor_id"), {"contractor_id": contractor_profile_id})
+                    print(f"  ✓ Удалены связанные данные профиля")
+            
+            # Удаляем профили
+            if user.role == "contractor":
+                result = db.execute(text("DELETE FROM contractor_profiles WHERE user_id = :user_id"), {"user_id": user.id})
+                if result.rowcount > 0:
+                    print(f"  ✓ Удален профиль исполнителя")
             
             if user.role == "customer":
-                profile = db.query(CustomerProfile).filter(CustomerProfile.user_id == user.id).first()
-                if profile:
-                    db.delete(profile)
-                    db.flush()
-                    print(f"  ✓ Удален профиль заказчика {profile.id}")
+                result = db.execute(text("DELETE FROM customer_profiles WHERE user_id = :user_id"), {"user_id": user.id})
+                if result.rowcount > 0:
+                    print(f"  ✓ Удален профиль заказчика")
             
             # Удаляем пользователя
-            db.delete(user)
-            deleted_count += 1
+            result = db.execute(text("DELETE FROM users WHERE id = :user_id"), {"user_id": user.id})
+            if result.rowcount > 0:
+                deleted_count += 1
+                print(f"  ✓ Пользователь удален")
         
         db.commit()
         print(f"\n✅ Успешно удалено {deleted_count} тестовых пользователей")
