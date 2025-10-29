@@ -208,45 +208,50 @@ class SecurityVerificationService:
     
     def get_security_statistics(self) -> Dict[str, Any]:
         """Получение статистики для службы безопасности"""
+        from models import ContractorVerification
         
         # Общее количество проверок
-        total_verifications = self.db.query(SecurityVerification).count()
+        total_verifications = self.db.query(ContractorVerification).count()
         
         # Проверки по статусам
-        pending_count = self.db.query(SecurityVerification).filter(
-            SecurityVerification.verification_status == "pending"
+        pending_count = self.db.query(ContractorVerification).filter(
+            ContractorVerification.security_check_passed == False,
+            ContractorVerification.profile_completed == True,
+            ContractorVerification.documents_uploaded == True
         ).count()
         
-        approved_count = self.db.query(SecurityVerification).filter(
-            SecurityVerification.verification_status == "approved"
+        approved_count = self.db.query(ContractorVerification).filter(
+            ContractorVerification.security_check_passed == True
         ).count()
         
-        rejected_count = self.db.query(SecurityVerification).filter(
-            SecurityVerification.verification_status == "rejected"
+        rejected_count = self.db.query(ContractorVerification).filter(
+            ContractorVerification.overall_status == "rejected"
         ).count()
         
         # Проверки за последние 30 дней
         thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
-        recent_verifications = self.db.query(SecurityVerification).filter(
-            SecurityVerification.created_at >= thirty_days_ago
+        recent_verifications = self.db.query(ContractorVerification).filter(
+            ContractorVerification.created_at >= thirty_days_ago
         ).count()
         
         # Среднее время обработки проверки
-        processed_verifications = self.db.query(SecurityVerification).filter(
+        processed_verifications = self.db.query(ContractorVerification).filter(
             and_(
-                SecurityVerification.checked_at.isnot(None),
-                SecurityVerification.created_at.isnot(None)
+                ContractorVerification.security_checked_at.isnot(None),
+                ContractorVerification.created_at.isnot(None)
             )
         ).all()
         
         avg_processing_time = 0
         if processed_verifications:
             total_time = sum([
-                (ver.checked_at - ver.created_at).total_seconds() / 3600  # в часах
+                (ver.security_checked_at - ver.created_at).total_seconds() / 3600  # в часах
                 for ver in processed_verifications
-                if ver.checked_at and ver.created_at
+                if ver.security_checked_at and ver.created_at
             ])
-            avg_processing_time = total_time / len(processed_verifications)
+            avg_processing_time = total_time / len(processed_verifications) if processed_verifications else 0
+        
+        approval_rate = (approved_count / total_verifications * 100) if total_verifications > 0 else 0
         
         return {
             "total_verifications": total_verifications,

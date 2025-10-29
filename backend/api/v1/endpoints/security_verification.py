@@ -100,21 +100,30 @@ async def get_verified_contractors(
             detail="Только сотрудники службы безопасности могут просматривать проверенных исполнителей"
         )
     
-    verification_service = get_security_verification_service(db)
-    verified_contractors = verification_service.get_verified_contractors()
+    from models import ContractorVerification
+    
+    # Получаем проверенных исполнителей через новую систему
+    verifications = db.query(ContractorVerification).filter(
+        ContractorVerification.security_check_passed == True
+    ).all()
     
     result = []
-    for contractor in verified_contractors:
-        verification = verification_service.get_verification_by_contractor(contractor.id)
-        result.append({
-            "contractor_id": contractor.id,
-            "name": f"{contractor.first_name} {contractor.last_name}",
-            "phone": contractor.phone,
-            "email": contractor.email,
-            "specializations": contractor.specializations or [],
-            "verified_at": verification.checked_at.isoformat() if verification and verification.checked_at else None,
-            "verified_by": verification.checked_by if verification else None
-        })
+    for verification in verifications:
+        contractor = db.query(ContractorProfile).filter(
+            ContractorProfile.id == verification.contractor_id
+        ).first()
+        
+        if contractor:
+            user = db.query(User).filter(User.id == contractor.user_id).first()
+            result.append({
+                "contractor_id": contractor.id,
+                "name": f"{contractor.first_name or ''} {contractor.last_name or ''}".strip() or (user.username if user else 'Неизвестно'),
+                "phone": contractor.phone or (user.phone if user else None),
+                "email": contractor.email or (user.email if user else None),
+                "specializations": contractor.specializations if contractor.specializations and isinstance(contractor.specializations, list) else [],
+                "verified_at": verification.security_checked_at.isoformat() if verification.security_checked_at else None,
+                "verified_by": verification.security_checked_by
+            })
     
     return result
 
@@ -130,21 +139,31 @@ async def get_rejected_contractors(
             detail="Только сотрудники службы безопасности могут просматривать отклоненных исполнителей"
         )
     
-    verification_service = get_security_verification_service(db)
-    rejected_contractors = verification_service.get_rejected_contractors()
+    from models import ContractorVerification
+    
+    # Получаем отклоненных исполнителей через новую систему
+    verifications = db.query(ContractorVerification).filter(
+        ContractorVerification.security_check_passed == False,
+        ContractorVerification.security_checked_at.isnot(None)
+    ).all()
     
     result = []
-    for contractor in rejected_contractors:
-        verification = verification_service.get_verification_by_contractor(contractor.id)
-        result.append({
-            "contractor_id": contractor.id,
-            "name": f"{contractor.first_name} {contractor.last_name}",
-            "phone": contractor.phone,
-            "email": contractor.email,
-            "rejection_reason": verification.verification_notes if verification else None,
-            "rejected_at": verification.checked_at.isoformat() if verification and verification.checked_at else None,
-            "rejected_by": verification.checked_by if verification else None
-        })
+    for verification in verifications:
+        contractor = db.query(ContractorProfile).filter(
+            ContractorProfile.id == verification.contractor_id
+        ).first()
+        
+        if contractor:
+            user = db.query(User).filter(User.id == contractor.user_id).first()
+            result.append({
+                "contractor_id": contractor.id,
+                "name": f"{contractor.first_name or ''} {contractor.last_name or ''}".strip() or (user.username if user else 'Неизвестно'),
+                "phone": contractor.phone or (user.phone if user else None),
+                "email": contractor.email or (user.email if user else None),
+                "rejection_reason": verification.security_notes,
+                "rejected_at": verification.security_checked_at.isoformat() if verification.security_checked_at else None,
+                "rejected_by": verification.security_checked_by
+            })
     
     return result
 

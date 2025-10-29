@@ -346,8 +346,13 @@ const SecurityVerificationPage: React.FC = () => {
       approved: 'success',
       rejected: 'error',
       not_verified: 'default',
+      incomplete: 'default',
+      pending_security: 'warning',
+      'pending-security': 'warning',
+      pending_manager: 'info',
+      'pending-manager': 'info',
     };
-    return colors[status] || 'default';
+    return colors[status?.toLowerCase()] || 'default';
   };
 
   const getStatusText = (status: string) => {
@@ -356,8 +361,14 @@ const SecurityVerificationPage: React.FC = () => {
       approved: 'Одобрен',
       rejected: 'Отклонен',
       not_verified: 'Не проверен',
+      incomplete: 'Не завершен',
+      pending_security: 'Ожидает проверки СБ',
+      pending_manager: 'Ожидает одобрения менеджера',
+      approved: 'Одобрен',
     };
-    return texts[status] || status;
+    // Если статус в формате "PENDING_SECURITY", преобразуем в lowercase
+    const statusKey = status?.toLowerCase().replace('_', '') || '';
+    return texts[status?.toLowerCase()] || texts[statusKey] || status || 'Неизвестно';
   };
 
   if (loading) {
@@ -574,7 +585,7 @@ const SecurityVerificationPage: React.FC = () => {
                     {verification.created_at ? new Date(verification.created_at).toLocaleDateString('ru-RU') : '-'}
                   </TableCell>
                   <TableCell>
-                    <Box display="flex" gap={1}>
+                    <Box display="flex" gap={1} flexWrap="wrap">
                       <Tooltip title='Просмотреть детали'>
                         <IconButton
                           size='small'
@@ -585,6 +596,119 @@ const SecurityVerificationPage: React.FC = () => {
                           <Visibility />
                         </IconButton>
                       </Tooltip>
+                      {(!verification.security_check_passed && (verification.overall_status === 'pending_security' || verification.verification_status === 'pending')) && (
+                        <>
+                          <Tooltip title='Согласовать'>
+                            <IconButton
+                              size='small'
+                              color='success'
+                              onClick={() => {
+                                setSelectedContractor({
+                                  contractor_id: verification.contractor_id,
+                                  user_id: verification.contractor?.id || 0,
+                                  personal_info: {
+                                    first_name: verification.contractor?.first_name || '',
+                                    last_name: verification.contractor?.last_name || '',
+                                    patronymic: verification.contractor?.patronymic,
+                                    phone: verification.contractor?.phone || '',
+                                    email: verification.contractor?.email || '',
+                                  },
+                                  professional_info: {
+                                    specializations: [],
+                                    equipment_brands_experience: [],
+                                    certifications: [],
+                                    work_regions: [],
+                                    availability_status: 'unknown',
+                                  },
+                                  verification_info: {
+                                    status: verification.overall_status || verification.verification_status || 'pending',
+                                  },
+                                  activity_info: {
+                                    requests_count: 0,
+                                    registration_date: verification.created_at || '',
+                                    is_active: true,
+                                  },
+                                } as ContractorDetails);
+                                setApprovalDialogOpen(true);
+                              }}
+                            >
+                              <ApproveIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title='Уточнить данные'>
+                            <IconButton
+                              size='small'
+                              color='warning'
+                              onClick={() => {
+                                setSelectedContractor({
+                                  contractor_id: verification.contractor_id,
+                                  user_id: verification.contractor?.id || 0,
+                                  personal_info: {
+                                    first_name: verification.contractor?.first_name || '',
+                                    last_name: verification.contractor?.last_name || '',
+                                    phone: verification.contractor?.phone || '',
+                                    email: verification.contractor?.email || '',
+                                  },
+                                  professional_info: {
+                                    specializations: [],
+                                    equipment_brands_experience: [],
+                                    certifications: [],
+                                    work_regions: [],
+                                    availability_status: 'unknown',
+                                  },
+                                  verification_info: {
+                                    status: verification.overall_status || verification.verification_status || 'pending',
+                                  },
+                                  activity_info: {
+                                    requests_count: 0,
+                                    registration_date: verification.created_at || '',
+                                    is_active: true,
+                                  },
+                                } as ContractorDetails);
+                                setClarificationDialogOpen(true);
+                              }}
+                            >
+                              <ClarifyIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title='Отклонить'>
+                            <IconButton
+                              size='small'
+                              color='error'
+                              onClick={() => {
+                                setSelectedContractor({
+                                  contractor_id: verification.contractor_id,
+                                  user_id: verification.contractor?.id || 0,
+                                  personal_info: {
+                                    first_name: verification.contractor?.first_name || '',
+                                    last_name: verification.contractor?.last_name || '',
+                                    phone: verification.contractor?.phone || '',
+                                    email: verification.contractor?.email || '',
+                                  },
+                                  professional_info: {
+                                    specializations: [],
+                                    equipment_brands_experience: [],
+                                    certifications: [],
+                                    work_regions: [],
+                                    availability_status: 'unknown',
+                                  },
+                                  verification_info: {
+                                    status: verification.overall_status || verification.verification_status || 'pending',
+                                  },
+                                  activity_info: {
+                                    requests_count: 0,
+                                    registration_date: verification.created_at || '',
+                                    is_active: true,
+                                  },
+                                } as ContractorDetails);
+                                setRejectionDialogOpen(true);
+                              }}
+                            >
+                              <RejectIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </>
+                      )}
                     </Box>
                   </TableCell>
                 </TableRow>
@@ -764,8 +888,14 @@ const SecurityVerificationPage: React.FC = () => {
       <Dialog
         open={detailsDialogOpen}
         onClose={() => setDetailsDialogOpen(false)}
-        maxWidth='md'
+        maxWidth='lg'
         fullWidth
+        PaperProps={{
+          sx: {
+            maxHeight: '90vh',
+            overflow: 'auto'
+          }
+        }}
       >
         <DialogTitle>Детальная информация об исполнителе</DialogTitle>
         <DialogContent>
@@ -1046,33 +1176,57 @@ const SecurityVerificationPage: React.FC = () => {
                     <Grid container spacing={2}>
                       {selectedContractor.documents.map((doc) => (
                         <Grid item xs={12} key={doc.id}>
-                          <Box sx={{ p: 2, border: '1px solid #ddd', borderRadius: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Box>
-                              <Typography variant='body1'><strong>{doc.document_name}</strong></Typography>
-                              <Typography variant='body2' color='text.secondary'>Тип: {doc.document_type}</Typography>
+                          <Box sx={{ p: 2, border: '1px solid #ddd', borderRadius: 1 }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                              <Box sx={{ flex: 1, minWidth: 0 }}>
+                                <Typography variant='body1'><strong>{doc.document_name}</strong></Typography>
+                                <Typography variant='body2' color='text.secondary'>
+                                Тип: {(() => {
+                                  const typeMap: { [key: string]: string } = {
+                                    'passport': 'Паспорт',
+                                    'inn': 'ИНН',
+                                    'safety_certificate': 'Сертификат ТБ',
+                                    'education_diploma': 'Диплом об образовании',
+                                    'work_experience': 'Справка о стаже',
+                                    'other': 'Другое',
+                                  };
+                                  return typeMap[doc.document_type] || doc.document_type;
+                                })()}
+                              </Typography>
+                              </Box>
+                            </Box>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
                               <Chip
-                                label={doc.verification_status}
+                                label={(() => {
+                                  const statusMap: { [key: string]: string } = {
+                                    'pending': 'Ожидает проверки',
+                                    'approved': 'Одобрен',
+                                    'rejected': 'Отклонен',
+                                    'verified': 'Проверен',
+                                    'not_verified': 'Не проверен',
+                                  };
+                                  return statusMap[doc.verification_status?.toLowerCase()] || doc.verification_status || 'Неизвестно';
+                                })()}
                                 size='small'
                                 color={getStatusColor(doc.verification_status) as any}
-                                sx={{ mt: 1 }}
                               />
+                              <Button
+                                variant='outlined'
+                                size='small'
+                                onClick={() => {
+                                  let docPath = doc.document_path;
+                                  if (docPath.startsWith('/app/uploads/')) {
+                                    docPath = docPath.replace('/app/uploads/', '/uploads/');
+                                  } else if (!docPath.startsWith('/uploads/')) {
+                                    docPath = docPath.startsWith('uploads/') ? `/${docPath}` : `/uploads/${docPath}`;
+                                  }
+                                  const docUrl = `http://91.222.236.58:8000${docPath}`;
+                                  window.open(docUrl, '_blank');
+                                }}
+                              >
+                                Просмотреть
+                              </Button>
                             </Box>
-                            <Button
-                              variant='outlined'
-                              size='small'
-                              onClick={() => {
-                                let docPath = doc.document_path;
-                                if (docPath.startsWith('/app/uploads/')) {
-                                  docPath = docPath.replace('/app/uploads/', '/uploads/');
-                                } else if (!docPath.startsWith('/uploads/')) {
-                                  docPath = docPath.startsWith('uploads/') ? `/${docPath}` : `/uploads/${docPath}`;
-                                }
-                                const docUrl = `http://91.222.236.58:8000${docPath}`;
-                                window.open(docUrl, '_blank');
-                              }}
-                            >
-                              Просмотреть
-                            </Button>
                           </Box>
                         </Grid>
                       ))}

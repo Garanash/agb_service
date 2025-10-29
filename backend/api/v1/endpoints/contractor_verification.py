@@ -76,13 +76,52 @@ async def get_contractor_profile_extended(
         ContractorVerification.contractor_id == contractor_id
     ).first()
     
-    # Создаем словарь из contractor, исключая поля которые передаются отдельно
-    contractor_data = contractor.__dict__.copy()
-    contractor_data.pop('education_records', None)
-    contractor_data.pop('documents', None)
+    # Преобразуем даты в строки для корректной сериализации
+    from datetime import date, datetime
+    
+    contractor_dict = {
+        "id": contractor.id,
+        "user_id": contractor.user_id,
+        "first_name": contractor.first_name,
+        "last_name": contractor.last_name,
+        "patronymic": contractor.patronymic,
+        "phone": contractor.phone,
+        "email": contractor.email,
+        "passport_series": contractor.passport_series,
+        "passport_number": contractor.passport_number,
+        "passport_issued_by": contractor.passport_issued_by,
+        "passport_issued_date": contractor.passport_issued_date.isoformat() if contractor.passport_issued_date and isinstance(contractor.passport_issued_date, (date, datetime)) else contractor.passport_issued_date,
+        "passport_issued_code": contractor.passport_issued_code,
+        "birth_date": contractor.birth_date.isoformat() if contractor.birth_date and isinstance(contractor.birth_date, (date, datetime)) else contractor.birth_date,
+        "birth_place": contractor.birth_place,
+        "inn": contractor.inn,
+        "professional_info": contractor.professional_info if contractor.professional_info and isinstance(contractor.professional_info, list) else [],
+        "bank_name": contractor.bank_name,
+        "bank_account": contractor.bank_account,
+        "bank_bik": contractor.bank_bik,
+        "telegram_username": contractor.telegram_username,
+        "website": contractor.website,
+        "general_description": contractor.general_description,
+        "profile_photo_path": contractor.profile_photo_path,
+        "specializations": contractor.specializations if contractor.specializations and isinstance(contractor.specializations, list) else [],
+        "equipment_brands_experience": contractor.equipment_brands_experience if contractor.equipment_brands_experience else [],
+        "certifications": contractor.certifications if contractor.certifications else [],
+        "work_regions": contractor.work_regions if contractor.work_regions else [],
+        "hourly_rate": float(contractor.hourly_rate) if contractor.hourly_rate is not None else None,
+        "availability_status": contractor.availability_status or "unknown",
+        "profile_completion_status": contractor.profile_completion_status,
+        "security_verified": contractor.security_verified,
+        "manager_verified": contractor.manager_verified,
+        "security_verified_at": contractor.security_verified_at.isoformat() if contractor.security_verified_at and isinstance(contractor.security_verified_at, (date, datetime)) else contractor.security_verified_at,
+        "manager_verified_at": contractor.manager_verified_at.isoformat() if contractor.manager_verified_at and isinstance(contractor.manager_verified_at, (date, datetime)) else contractor.manager_verified_at,
+        "security_verified_by": contractor.security_verified_by,
+        "manager_verified_by": contractor.manager_verified_by,
+        "created_at": contractor.created_at.isoformat() if contractor.created_at and isinstance(contractor.created_at, (date, datetime)) else contractor.created_at,
+        "updated_at": contractor.updated_at.isoformat() if contractor.updated_at and isinstance(contractor.updated_at, (date, datetime)) else contractor.updated_at,
+    }
     
     return ContractorProfileExtended(
-        **contractor_data,
+        **contractor_dict,
         education_records=education_records,
         documents=documents,
         verification=verification
@@ -622,7 +661,9 @@ async def get_pending_verifications(
                     "hourly_rate": float(contractor.hourly_rate) if contractor.hourly_rate is not None else None,
                     "availability_status": contractor.availability_status or "unknown"
                 },
-                "verification_status": "pending" if not verification.security_check_passed else ("approved" if verification.security_check_passed and verification.manager_approval else "pending_manager")
+                "verification_status": "pending" if not verification.security_check_passed else ("approved" if verification.security_check_passed and verification.manager_approval else "pending_manager"),
+                "security_check_passed": verification.security_check_passed,
+                "overall_status": verification.overall_status.value if hasattr(verification.overall_status, 'value') else str(verification.overall_status)
             }
             result.append(verification_dict)
         else:
