@@ -75,7 +75,7 @@ const CreateRequestPage: React.FC = () => {
   const [profileComplete, setProfileComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [mapOpen, setMapOpen] = useState(false);
+  const [mapOpen, setMapOpen] = useState(true);
   const [selectedLocation, setSelectedLocation] = useState<{
     lat: number;
     lng: number;
@@ -147,10 +147,14 @@ const CreateRequestPage: React.FC = () => {
     lat: number;
     lng: number;
     address: string;
+    city?: string;
+    region?: string;
   }) => {
     setSelectedLocation(location);
     // Пробрасываем адрес в форму для отображения и отправки
     setValue('address', location.address, { shouldValidate: true, shouldDirty: true });
+    if (location.city) setValue('city', location.city, { shouldValidate: true, shouldDirty: true });
+    if (location.region) setValue('region', location.region, { shouldValidate: true, shouldDirty: true });
   };
 
   if (profileLoading) {

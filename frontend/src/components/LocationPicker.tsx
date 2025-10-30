@@ -37,6 +37,8 @@ interface LocationPickerProps {
     lat: number;
     lng: number;
     address: string;
+    city?: string;
+    region?: string;
   }) => void;
   initialLocation?: { lat: number; lng: number };
 }
@@ -46,6 +48,8 @@ interface MapClickHandlerProps {
     lat: number;
     lng: number;
     address: string;
+    city?: string;
+    region?: string;
   }) => void;
 }
 
@@ -67,10 +71,12 @@ const MapClickHandler: React.FC<MapClickHandlerProps> = ({
           `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
         );
         const data = await response.json();
-        const address =
-          data.display_name || `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        const address = data.display_name || `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        const addr = data.address || {};
+        const city = addr.city || addr.town || addr.village || addr.hamlet || '';
+        const region = addr.state || addr.region || addr.province || addr.county || '';
 
-        onLocationSelect({ lat, lng, address });
+        onLocationSelect({ lat, lng, address, city, region });
       } catch (error) {
         console.error('Ошибка получения адреса:', error);
         onLocationSelect({
