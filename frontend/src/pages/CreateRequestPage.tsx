@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Card,
@@ -14,8 +14,9 @@ import {
   Alert,
   CircularProgress,
 } from '@mui/material';
-import { Save, Send, LocationOn } from '@mui/icons-material';
+import { Save, Send, LocationOn, Edit } from '@mui/icons-material';
 import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from 'hooks/useAuth';
 import { apiService } from 'services/api';
 import LocationPicker from 'components/LocationPicker';
@@ -68,7 +69,10 @@ const equipmentBrands = [
 
 const CreateRequestPage: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [profileComplete, setProfileComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [mapOpen, setMapOpen] = useState(false);
@@ -86,6 +90,33 @@ const CreateRequestPage: React.FC = () => {
     watch,
     setValue,
   } = useForm<RequestForm>();
+
+  useEffect(() => {
+    if (user?.role === 'customer') {
+      checkProfileComplete();
+    } else {
+      setProfileLoading(false);
+      setProfileComplete(true);
+    }
+  }, [user]);
+
+  const checkProfileComplete = async () => {
+    try {
+      setProfileLoading(true);
+      const profile = await apiService.getCustomerProfile();
+      const isComplete =
+        profile.company_name &&
+        profile.company_name.trim().length >= 1 &&
+        profile.phone &&
+        profile.phone.length >= 10;
+      setProfileComplete(isComplete);
+    } catch (err: any) {
+      setError('Ошибка проверки профиля компании');
+      setProfileComplete(false);
+    } finally {
+      setProfileLoading(false);
+    }
+  };
 
   const onSubmit = async (data: RequestForm) => {
     setLoading(true);
@@ -121,6 +152,35 @@ const CreateRequestPage: React.FC = () => {
     // Пробрасываем адрес в форму для отображения и отправки
     setValue('address', location.address, { shouldValidate: true, shouldDirty: true });
   };
+
+  if (profileLoading) {
+    return (
+      <Box display='flex' justifyContent='center' alignItems='center' minHeight='400px'>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (!profileComplete && user?.role === 'customer') {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Card>
+          <CardContent>
+            <Alert severity='warning' sx={{ mb: 2 }}>
+              Для создания заявок необходимо заполнить профиль компании: название компании и телефон.
+            </Alert>
+            <Button
+              variant='contained'
+              startIcon={<Edit />}
+              onClick={() => navigate('/customer/company-profile')}
+            >
+              Перейти к профилю компании
+            </Button>
+          </CardContent>
+        </Card>
+      </Box>
+    );
+  }
 
   if (success) {
     return (

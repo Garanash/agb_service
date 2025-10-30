@@ -89,7 +89,36 @@ def create_repair_request(
     except Exception:
         pass
 
-    return RepairRequestResponse.from_orm(db_request)
+    # Безопасная сериализация без вложенного customer
+    resp = {
+        "id": db_request.id,
+        "customer_id": db_request.customer_id,
+        "title": getattr(db_request, "title", ""),
+        "description": getattr(db_request, "description", ""),
+        "urgency": getattr(db_request, "urgency", None),
+        "preferred_date": getattr(db_request, "preferred_date", None),
+        "address": getattr(db_request, "address", None),
+        "city": getattr(db_request, "city", None),
+        "region": getattr(db_request, "region", None),
+        "equipment_type": getattr(db_request, "equipment_type", None),
+        "equipment_brand": getattr(db_request, "equipment_brand", None),
+        "equipment_model": getattr(db_request, "equipment_model", None),
+        "problem_description": getattr(db_request, "problem_description", None),
+        "latitude": getattr(db_request, "latitude", None),
+        "longitude": getattr(db_request, "longitude", None),
+        "estimated_cost": getattr(db_request, "estimated_cost", None),
+        "manager_comment": getattr(db_request, "manager_comment", None),
+        "final_price": getattr(db_request, "final_price", None),
+        "sent_to_bot_at": getattr(db_request, "sent_to_bot_at", None),
+        "status": getattr(db_request, "status", "new"),
+        "service_engineer_id": getattr(db_request, "service_engineer_id", None),
+        "assigned_contractor_id": getattr(db_request, "assigned_contractor_id", None),
+        "created_at": getattr(db_request, "created_at", None),
+        "updated_at": getattr(db_request, "updated_at", None),
+        "processed_at": getattr(db_request, "processed_at", None),
+        "assigned_at": getattr(db_request, "assigned_at", None),
+    }
+    return RepairRequestResponse(**resp)
 
 @router.get("/", response_model=List[RepairRequestResponse])
 def get_repair_requests(
@@ -136,7 +165,39 @@ def get_repair_requests(
         # Сортировка и пагинация
         requests = query.order_by(RepairRequest.created_at.desc()).offset(skip).limit(limit).all()
         
-        return [RepairRequestResponse.from_orm(req) for req in requests]
+        # Безопасная сериализация без вложенного customer (избегаем ValidationError на неполных профилях)
+        safe_responses = []
+        for req in requests:
+            resp = {
+                "id": req.id,
+                "customer_id": req.customer_id,
+                "title": getattr(req, "title", ""),
+                "description": getattr(req, "description", ""),
+                "urgency": getattr(req, "urgency", None),
+                "preferred_date": getattr(req, "preferred_date", None),
+                "address": getattr(req, "address", None),
+                "city": getattr(req, "city", None),
+                "region": getattr(req, "region", None),
+                "equipment_type": getattr(req, "equipment_type", None),
+                "equipment_brand": getattr(req, "equipment_brand", None),
+                "equipment_model": getattr(req, "equipment_model", None),
+                "problem_description": getattr(req, "problem_description", None),
+                "latitude": getattr(req, "latitude", None),
+                "longitude": getattr(req, "longitude", None),
+                "estimated_cost": getattr(req, "estimated_cost", None),
+                "manager_comment": getattr(req, "manager_comment", None),
+                "final_price": getattr(req, "final_price", None),
+                "sent_to_bot_at": getattr(req, "sent_to_bot_at", None),
+                "status": getattr(req, "status", "new"),
+                "service_engineer_id": getattr(req, "service_engineer_id", None),
+                "assigned_contractor_id": getattr(req, "assigned_contractor_id", None),
+                "created_at": getattr(req, "created_at", None),
+                "updated_at": getattr(req, "updated_at", None),
+                "processed_at": getattr(req, "processed_at", None),
+                "assigned_at": getattr(req, "assigned_at", None),
+            }
+            safe_responses.append(RepairRequestResponse(**resp))
+        return safe_responses
         
     except Exception as e:
         raise HTTPException(

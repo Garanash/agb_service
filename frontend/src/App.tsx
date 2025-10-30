@@ -28,6 +28,7 @@ import SecurityVerificationPage from './pages/SecurityVerificationPage';
 import HRDocumentsPage from './pages/HRDocumentsPage';
 import TelegramBotPage from './pages/TelegramBotPage';
 import CustomerCabinetPage from './pages/CustomerCabinetPage';
+import CustomerCompanyProfilePage from './pages/CustomerCompanyProfilePage';
 import CreateRequestPage from './pages/CreateRequestPage';
 import AdminPanelPage from './pages/AdminPanelPage';
 import ContractorProfilePage from './pages/ContractorProfilePage';
@@ -249,6 +250,17 @@ const AppRoutes: React.FC = () => {
           <ProtectedRoute>
             <Layout>
               <CustomerCabinetPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path='/customer/company-profile'
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <CustomerCompanyProfilePage />
             </Layout>
           </ProtectedRoute>
         }
