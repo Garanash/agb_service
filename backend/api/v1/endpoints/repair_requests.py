@@ -64,6 +64,31 @@ def create_repair_request(
     db.commit()
     db.refresh(db_request)
     
+    # Уведомляем менеджеров по email (best-effort)
+    try:
+        from models import User
+        from services.email_service import email_service
+        managers = db.query(User).filter(User.role == "manager").all()
+        subject = f"Новая заявка #{db_request.id}: {db_request.title}"
+        location_text = ", ".join(filter(None, [db_request.region, db_request.city, db_request.address]))
+        message = (
+            f"Создана новая заявка #{db_request.id}.\n"
+            f"Название: {db_request.title}\n"
+            f"Срочность: {db_request.urgency or 'не указана'}\n"
+            f"Локация: {location_text or 'не указана'}\n"
+            f"Описание: {db_request.description}"
+        )
+        for m in managers:
+            if m.email:
+                try:
+                    # асинхронный интерфейс сервиса, но текущая функция sync — запускаем fire-and-forget
+                    import asyncio
+                    asyncio.create_task(email_service.send_notification_email(m.email, subject, message))
+                except Exception:
+                    pass
+    except Exception:
+        pass
+
     return RepairRequestResponse.from_orm(db_request)
 
 @router.get("/", response_model=List[RepairRequestResponse])

@@ -84,6 +84,7 @@ const CreateRequestPage: React.FC = () => {
     formState: { errors },
     reset,
     watch,
+    setValue,
   } = useForm<RequestForm>();
 
   const onSubmit = async (data: RequestForm) => {
@@ -117,6 +118,8 @@ const CreateRequestPage: React.FC = () => {
     address: string;
   }) => {
     setSelectedLocation(location);
+    // Пробрасываем адрес в форму для отображения и отправки
+    setValue('address', location.address, { shouldValidate: true, shouldDirty: true });
   };
 
   if (success) {
@@ -303,7 +306,6 @@ const CreateRequestPage: React.FC = () => {
                   {...register('address')}
                   error={!!errors.address}
                   helperText={errors.address?.message as any}
-                  value={selectedLocation?.address || ''}
                 />
               </Grid>
 
