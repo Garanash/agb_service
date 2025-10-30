@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from typing import List, Optional
+import re
+from datetime import datetime
 
 from database import get_db
 from models import CustomerProfile, User, RepairRequest, ContractorResponse
@@ -227,86 +229,80 @@ def update_customer_profile(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Обновление профиля заказчика"""
+    """Обновление профиля заказчика (ORM, безопасная валидация)."""
     try:
         if current_user.role != "customer":
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Доступ запрещен"
-            )
-        
-        # Проверяем, что профиль существует
-        profile_query = "SELECT id FROM customer_profiles WHERE user_id = %s"
-        profile_result = db.execute(text(profile_query), [current_user.id]).fetchone()
-        
-        if not profile_result:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Профиль заказчика не найден"
-            )
-        
-        # Строим запрос обновления
-        update_fields = []
-        params = []
-        
-        if profile_data.company_name is not None:
-            update_fields.append("company_name = %s")
-            params.append(profile_data.company_name)
-        
-        if profile_data.contact_person is not None:
-            update_fields.append("contact_person = %s")
-            params.append(profile_data.contact_person)
-        
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Доступ запрещен")
+
+        profile: Optional[CustomerProfile] = db.query(CustomerProfile).filter(CustomerProfile.user_id == current_user.id).first()
+        if not profile:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Профиль заказчика не найден")
+
+        # Валидация телефона: формат +7 (XXX) XXX - XX - XX
         if profile_data.phone is not None:
-            update_fields.append("phone = %s")
-            params.append(profile_data.phone)
-        
+            phone = profile_data.phone.strip()
+            phone_pattern = re.compile(r"^\+7\s*\(\d{3}\)\s*\d{3}\s*-\s*\d{2}\s*-\s*\d{2}$")
+            if not phone_pattern.match(phone):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Неверный формат телефона. Пример: +7 (929) 544 - 03 - 02"
+                )
+            profile.phone = phone
+
+        # Присваиваем скалярные поля если переданы
+        if profile_data.company_name is not None:
+            profile.company_name = profile_data.company_name
+        if profile_data.contact_person is not None:
+            profile.contact_person = profile_data.contact_person
         if profile_data.email is not None:
-            update_fields.append("email = %s")
-            params.append(profile_data.email)
-        
+            profile.email = profile_data.email
         if profile_data.address is not None:
-            update_fields.append("address = %s")
-            params.append(profile_data.address)
-        
+            profile.address = profile_data.address
         if profile_data.inn is not None:
-            update_fields.append("inn = %s")
-            params.append(profile_data.inn)
-        
+            profile.inn = profile_data.inn
         if profile_data.kpp is not None:
-            update_fields.append("kpp = %s")
-            params.append(profile_data.kpp)
-        
+            profile.kpp = profile_data.kpp
         if profile_data.ogrn is not None:
-            update_fields.append("ogrn = %s")
-            params.append(profile_data.ogrn)
-        
-        if not update_fields:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Нет данных для обновления"
-            )
-        
-        update_query = f"""
-            UPDATE customer_profiles 
-            SET {', '.join(update_fields)}, updated_at = %s
-            WHERE user_id = %s
-        """
-        
-        params.extend(["NOW()", current_user.id])
-        db.execute(text(update_query), params)
+            profile.ogrn = profile_data.ogrn
+
+        # Поля-списки: гарантируем массивы строк (JSON)
+        def ensure_str_list(value):
+            if value is None:
+                return None
+            if isinstance(value, list):
+                return [str(v) for v in value]
+            # если пришла строка через форму
+            return [str(value)]
+
+        eb = ensure_str_list(getattr(profile_data, "equipment_brands", None))
+        et = ensure_str_list(getattr(profile_data, "equipment_types", None))
+        mo = ensure_str_list(getattr(profile_data, "mining_operations", None))
+        if eb is not None:
+            profile.equipment_brands = eb
+        if et is not None:
+            profile.equipment_types = et
+        if mo is not None:
+            profile.mining_operations = mo
+
+        # Прочее
+        if getattr(profile_data, "service_history", None) is not None:
+            profile.service_history = profile_data.service_history or ""
+
+        profile.updated_at = datetime.utcnow()
+
+        db.add(profile)
         db.commit()
-        
-        # Возвращаем обновленный профиль
+        db.refresh(profile)
+
+        # Возвращаем актуальные данные
         return get_customer_profile(current_user, db)
-        
+
+    except HTTPException:
+        raise
     except Exception as e:
         db.rollback()
         print(f"Ошибка в update_customer_profile: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Ошибка при обновлении профиля: {str(e)}"
-        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Ошибка при обновлении профиля: {str(e)}")
 
 @router.get("/requests", response_model=List[dict])
 def get_customer_requests(
