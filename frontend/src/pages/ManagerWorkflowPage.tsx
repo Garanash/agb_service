@@ -44,6 +44,7 @@ import {
   PlayArrow,
   Stop,
   Edit,
+  Delete,
   Visibility,
 } from '@mui/icons-material';
 import { useAuth } from 'hooks/useAuth';
@@ -160,6 +161,28 @@ const ManagerWorkflowPage: React.FC = () => {
       setSelectedRequest(null);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Ошибка редактирования заявки');
+    }
+  };
+
+  const handleAdminEditOpen = (request: RepairRequest) => {
+    setSelectedRequest(request);
+    setEditedTitle(request.title);
+    setEditedDescription(request.description || '');
+    setEditedEquipment(request.equipment_type || '');
+    setEditedAddress(request.address || '');
+    setClarifyDialogOpen(true);
+  };
+
+  const handleAdminDelete = async (requestId: number) => {
+    try {
+      // Простое подтверждение удаления
+      // eslint-disable-next-line no-alert
+      const confirmed = window.confirm('Удалить заявку безвозвратно?');
+      if (!confirmed) return;
+      await apiService.deleteRepairRequest(requestId);
+      await loadRequests();
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Ошибка удаления заявки');
     }
   };
 
@@ -365,6 +388,26 @@ const ManagerWorkflowPage: React.FC = () => {
                           </Button>
                         )}
 
+                        {user?.role === 'admin' && (
+                          <>
+                            <Button
+                              size='small'
+                              startIcon={<Edit />}
+                              onClick={() => handleAdminEditOpen(request)}
+                            >
+                              Редактировать
+                            </Button>
+                            <Button
+                              size='small'
+                              color='error'
+                              startIcon={<Delete />}
+                              onClick={() => handleAdminDelete(request.id)}
+                            >
+                              Удалить
+                            </Button>
+                          </>
+                        )}
+
                         {canSendToContractors(request) && (
                           <Button
                             size='small'
@@ -485,6 +528,25 @@ const ManagerWorkflowPage: React.FC = () => {
                       >
                         Взять
                       </Button>
+                      {user?.role === 'admin' && (
+                        <Box component='span' sx={{ ml: 1, display: 'inline-flex', gap: 1 }}>
+                          <Button
+                            size='small'
+                            startIcon={<Edit />}
+                            onClick={() => handleAdminEditOpen(request)}
+                          >
+                            Редактировать
+                          </Button>
+                          <Button
+                            size='small'
+                            color='error'
+                            startIcon={<Delete />}
+                            onClick={() => handleAdminDelete(request.id)}
+                          >
+                            Удалить
+                          </Button>
+                        </Box>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
