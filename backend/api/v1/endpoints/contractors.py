@@ -404,6 +404,21 @@ def list_contractor_profiles(
 
         result = []
         for p in profiles:
+            # Получаем расширенную верификацию, если она есть
+            verification = db.query(text("select * from contractor_verifications where contractor_id=:cid")).params(cid=p.id).fetchone()
+            verification_dict = {}
+            if verification:
+                verification_dict = {
+                    "manager_approval": verification.manager_approval,
+                    "security_check_passed": verification.security_check_passed,
+                    "overall_status": str(getattr(verification, "overall_status", "")),
+                    "security_notes": verification.security_notes,
+                    "manager_notes": verification.manager_notes,
+                    "security_checked_by": verification.security_checked_by,
+                    "manager_checked_by": verification.manager_checked_by,
+                    "security_checked_at": verification.security_checked_at.isoformat() if verification.security_checked_at else None,
+                    "manager_checked_at": verification.manager_checked_at.isoformat() if verification.manager_checked_at else None,
+                }
             result.append({
                 "id": p.id,
                 "user_id": p.user_id,
@@ -425,6 +440,14 @@ def list_contractor_profiles(
                 "document_files": p.document_files if isinstance(p.document_files, list) else [],
                 "created_at": p.created_at.isoformat() if p.created_at else None,
                 "updated_at": p.updated_at.isoformat() if p.updated_at else None,
+                "manager_verified": getattr(p, "manager_verified", False),
+                "manager_verified_at": p.manager_verified_at.isoformat() if getattr(p, "manager_verified_at", None) else None,
+                "manager_verified_by": getattr(p, "manager_verified_by", None),
+                "profile_completion_status": getattr(p, "profile_completion_status", None),
+                "security_verified": getattr(p, "security_verified", False),
+                "security_verified_at": p.security_verified_at.isoformat() if getattr(p, "security_verified_at", None) else None,
+                "security_verified_by": getattr(p, "security_verified_by", None),
+                "verification": verification_dict
             })
 
         return result
