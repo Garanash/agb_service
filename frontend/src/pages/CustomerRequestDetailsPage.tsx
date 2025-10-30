@@ -54,6 +54,21 @@ const CustomerRequestDetailsPage: React.FC = () => {
   };
 
   const getStatusColor = (status: RequestStatus) => {
+    const colors: { [key: string]: 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' } = {
+      new: 'info',
+      manager_review: 'warning',
+      clarification: 'warning',
+      sent_to_contractors: 'info',
+      contractor_responses: 'info',
+      assigned: 'success',
+      in_progress: 'primary',
+      completed: 'success',
+      cancelled: 'error',
+    };
+    return colors[status] || 'default';
+  };
+
+  const getTimelineDotColor = (status: RequestStatus) => {
     const colors: { [key: string]: 'inherit' | 'grey' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' } = {
       new: 'info',
       manager_review: 'warning',
@@ -304,7 +319,7 @@ const CustomerRequestDetailsPage: React.FC = () => {
                         </Typography>
                       </TimelineOppositeContent>
                       <TimelineSeparator>
-                        <TimelineDot color={getStatusColor(item.status)}>
+                        <TimelineDot color={getTimelineDotColor(item.status)}>
                           {getStatusIcon(item.status)}
                         </TimelineDot>
                         {index < timeline.length - 1 && <TimelineConnector />}
