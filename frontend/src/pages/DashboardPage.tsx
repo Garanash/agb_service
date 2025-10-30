@@ -34,6 +34,12 @@ const DashboardPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Для заказчика редиректим на кабинет с вкладкой профиля компании
+    if (user?.role === UserRole.CUSTOMER) {
+      navigate('/customer/cabinet?tab=1', { replace: true });
+      return;
+    }
+
     const fetchDashboardData = async () => {
       try {
         const [requestsResponse, analyticsData] = await Promise.all([
@@ -53,7 +59,7 @@ const DashboardPage: React.FC = () => {
     };
 
     fetchDashboardData();
-  }, []);
+  }, [user, navigate]);
 
   const getStatusColor = (status: RequestStatus) => {
     switch (status) {

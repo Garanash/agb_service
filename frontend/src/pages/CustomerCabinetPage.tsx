@@ -38,7 +38,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from 'hooks/useAuth';
 import { apiService } from 'services/api';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { RequestStatus } from 'types/api';
 import CustomerCompanyProfilePage from './CustomerCompanyProfilePage';
 
@@ -78,7 +78,12 @@ interface RequestWithStatus {
 const CustomerCabinetPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [tabValue, setTabValue] = useState(0);
+  const [searchParams] = useSearchParams();
+  
+  // Читаем параметр tab из URL, по умолчанию 1 (Профиль компании)
+  const initialTab = parseInt(searchParams.get('tab') || '1', 10);
+  const [tabValue, setTabValue] = useState(initialTab);
+  
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [requests, setRequests] = useState<RequestWithStatus[]>([]);
@@ -93,6 +98,17 @@ const CustomerCabinetPage: React.FC = () => {
   useEffect(() => {
     loadData();
   }, []);
+
+  // Обновляем tabValue при изменении параметра tab в URL
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam !== null) {
+      const tabIndex = parseInt(tabParam, 10);
+      if (!isNaN(tabIndex) && tabIndex >= 0 && tabIndex <= 3) {
+        setTabValue(tabIndex);
+      }
+    }
+  }, [searchParams]);
 
   const loadData = async () => {
     try {
@@ -123,6 +139,8 @@ const CustomerCabinetPage: React.FC = () => {
       return;
     }
     setTabValue(newValue);
+    // Обновляем URL параметр tab
+    navigate(`/customer/cabinet?tab=${newValue}`, { replace: true });
   };
 
   const getStatusColor = (status: RequestStatus) => {
