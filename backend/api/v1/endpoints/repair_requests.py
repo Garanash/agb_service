@@ -35,6 +35,18 @@ def create_repair_request(
             detail="Профиль заказчика не найден. Создайте профиль заказчика."
         )
     
+    # Проверка профиля клиента ДО создания заявки (иначе Pydantic 500)
+    if not customer_profile.company_name or len(customer_profile.company_name.strip()) < 1:
+        raise HTTPException(
+            status_code=400,
+            detail="В профиле заказчика не указано название компании. Перейдите в профиль и заполните поле 'Название организации' полностью."
+        )
+    if not customer_profile.phone or len(customer_profile.phone) < 10:
+        raise HTTPException(
+            status_code=400,
+            detail="В профиле заказчика не указан корректный номер телефона. Перейдите в профиль и заполните телефон полностью."
+        )
+    
     # Создаем заявку
     db_request = RepairRequest(
         customer_id=customer_profile.id,
