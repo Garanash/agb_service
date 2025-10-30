@@ -90,7 +90,38 @@ async def get_requests(
             detail="Недостаточно прав для просмотра заявок"
         )
     
-    return [RepairRequestResponse.from_orm(req) for req in requests]
+    safe_responses = []
+    for req in requests:
+        resp = {
+            "id": req.id,
+            "customer_id": req.customer_id,
+            "title": getattr(req, "title", ""),
+            "description": getattr(req, "description", ""),
+            "urgency": getattr(req, "urgency", None),
+            "preferred_date": getattr(req, "preferred_date", None),
+            "address": getattr(req, "address", None),
+            "city": getattr(req, "city", None),
+            "region": getattr(req, "region", None),
+            "equipment_type": getattr(req, "equipment_type", None),
+            "equipment_brand": getattr(req, "equipment_brand", None),
+            "equipment_model": getattr(req, "equipment_model", None),
+            "problem_description": getattr(req, "problem_description", None),
+            "latitude": getattr(req, "latitude", None),
+            "longitude": getattr(req, "longitude", None),
+            "estimated_cost": getattr(req, "estimated_cost", None),
+            "manager_comment": getattr(req, "manager_comment", None),
+            "final_price": getattr(req, "final_price", None),
+            "sent_to_bot_at": getattr(req, "sent_to_bot_at", None),
+            "status": getattr(req, "status", "new"),
+            "service_engineer_id": getattr(req, "service_engineer_id", None),
+            "assigned_contractor_id": getattr(req, "assigned_contractor_id", None),
+            "created_at": getattr(req, "created_at", None),
+            "updated_at": getattr(req, "updated_at", None),
+            "processed_at": getattr(req, "processed_at", None),
+            "assigned_at": getattr(req, "assigned_at", None),
+        }
+        safe_responses.append(RepairRequestResponse(**resp))
+    return safe_responses
 
 @router.get("/available", response_model=List[RepairRequestResponse])
 async def get_available_requests(
