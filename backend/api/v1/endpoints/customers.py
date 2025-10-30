@@ -30,7 +30,36 @@ def get_all_customer_profiles(
         )
     
     profiles = db.query(CustomerProfile).offset(offset).limit(limit).all()
-    return profiles
+    
+    # Безопасная сериализация с дефолтными значениями для неполных профилей
+    safe_profiles = []
+    for p in profiles:
+        # Заполняем обязательные поля дефолтными значениями если они пустые
+        company_name = p.company_name if p.company_name and len(p.company_name.strip()) >= 1 else "Не указано"
+        contact_person = p.contact_person if p.contact_person and len(p.contact_person.strip()) >= 1 else "Не указано"
+        phone = p.phone if p.phone and len(p.phone) >= 10 else "0000000000"
+        email = p.email if p.email else "unknown@example.com"
+        
+        safe_profiles.append({
+            "id": p.id,
+            "user_id": p.user_id,
+            "company_name": company_name,
+            "contact_person": contact_person,
+            "phone": phone,
+            "email": email,
+            "address": p.address or "",
+            "inn": p.inn or "",
+            "kpp": p.kpp or "",
+            "ogrn": p.ogrn or "",
+            "equipment_brands": p.equipment_brands if isinstance(p.equipment_brands, list) else [],
+            "equipment_types": p.equipment_types if isinstance(p.equipment_types, list) else [],
+            "mining_operations": p.mining_operations if isinstance(p.mining_operations, list) else [],
+            "service_history": p.service_history or "",
+            "created_at": p.created_at.isoformat() if p.created_at else None,
+            "updated_at": p.updated_at.isoformat() if p.updated_at else None,
+        })
+    
+    return [CustomerProfileResponse(**prof) for prof in safe_profiles]
 
 @router.post("/register", response_model=UserResponse)
 def register_customer(
@@ -150,37 +179,40 @@ def get_customer_profile(
                 detail="Доступ запрещен"
             )
         
-        query = """
-            SELECT id, user_id, company_name, contact_person, phone, email,
-                   address, inn, kpp, ogrn, created_at, updated_at
-            FROM customer_profiles
-            WHERE user_id = %s
-        """
+        profile = db.query(CustomerProfile).filter(CustomerProfile.user_id == current_user.id).first()
         
-        result = db.execute(text(query), [current_user.id]).fetchone()
-        
-        if not result:
+        if not profile:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Профиль заказчика не найден"
             )
         
+        # Безопасные значения для соответствия схеме
+        company_name = profile.company_name if profile.company_name and len(profile.company_name.strip()) >= 1 else "Не указано"
+        contact_person = profile.contact_person if profile.contact_person and len(profile.contact_person.strip()) >= 1 else "Не указано"
+        phone = profile.phone if profile.phone and len(profile.phone) >= 10 else "0000000000"
+        email = profile.email if profile.email else (current_user.email or "unknown@example.com")
+        
         profile_dict = {
-            "id": result[0],
-            "user_id": result[1],
-            "company_name": result[2],
-            "contact_person": result[3],
-            "phone": result[4],
-            "email": result[5],
-            "address": result[6],
-            "inn": result[7],
-            "kpp": result[8],
-            "ogrn": result[9],
-            "created_at": result[10].isoformat() if result[10] else None,
-            "updated_at": result[11].isoformat() if result[11] else None
+            "id": profile.id,
+            "user_id": profile.user_id,
+            "company_name": company_name,
+            "contact_person": contact_person,
+            "phone": phone,
+            "email": email,
+            "address": profile.address or "",
+            "inn": profile.inn or "",
+            "kpp": profile.kpp or "",
+            "ogrn": profile.ogrn or "",
+            "equipment_brands": profile.equipment_brands if isinstance(profile.equipment_brands, list) else [],
+            "equipment_types": profile.equipment_types if isinstance(profile.equipment_types, list) else [],
+            "mining_operations": profile.mining_operations if isinstance(profile.mining_operations, list) else [],
+            "service_history": profile.service_history or "",
+            "created_at": profile.created_at.isoformat() if profile.created_at else None,
+            "updated_at": profile.updated_at.isoformat() if profile.updated_at else None,
         }
         
-        return profile_dict
+        return CustomerProfileResponse(**profile_dict)
         
     except Exception as e:
         print(f"Ошибка в get_customer_profile: {e}")
