@@ -125,6 +125,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   // Меню для заказчика
   if (user?.role === UserRole.CUSTOMER) {
     menuItems.push({
+      text: 'Профиль компании',
+      icon: <Business />,
+      path: '/customer/company-profile',
+    });
+    menuItems.push({
       text: 'Личный кабинет',
       icon: <Person />,
       path: '/customer/cabinet',
