@@ -405,8 +405,8 @@ def list_contractor_profiles(
 
         result = []
         for p in profiles:
-            # Получаем ORM объект верификации, если есть
-            verification = db.query(ContractorVerification).filter(ContractorVerification.contractor_id==p.id).first()
+            # ORM способ получения верификации
+            verification = db.query(ContractorVerification).filter(ContractorVerification.contractor_id == p.id).first()
             verification_dict = {}
             if verification:
                 verification_dict = {
