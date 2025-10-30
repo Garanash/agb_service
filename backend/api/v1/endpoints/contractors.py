@@ -20,6 +20,7 @@ from ..schemas import (
 )
 from ..dependencies import get_current_user
 from pathlib import Path as PathLib
+from models import ContractorVerification
 
 router = APIRouter()
 
@@ -404,20 +405,20 @@ def list_contractor_profiles(
 
         result = []
         for p in profiles:
-            # Получаем расширенную верификацию, если она есть
-            verification = db.query(text("select * from contractor_verifications where contractor_id=:cid")).params(cid=p.id).fetchone()
+            # Получаем ORM объект верификации, если есть
+            verification = db.query(ContractorVerification).filter(ContractorVerification.contractor_id==p.id).first()
             verification_dict = {}
             if verification:
                 verification_dict = {
-                    "manager_approval": verification.manager_approval,
-                    "security_check_passed": verification.security_check_passed,
+                    "manager_approval": getattr(verification, "manager_approval", None),
+                    "security_check_passed": getattr(verification, "security_check_passed", None),
                     "overall_status": str(getattr(verification, "overall_status", "")),
-                    "security_notes": verification.security_notes,
-                    "manager_notes": verification.manager_notes,
-                    "security_checked_by": verification.security_checked_by,
-                    "manager_checked_by": verification.manager_checked_by,
-                    "security_checked_at": verification.security_checked_at.isoformat() if verification.security_checked_at else None,
-                    "manager_checked_at": verification.manager_checked_at.isoformat() if verification.manager_checked_at else None,
+                    "security_notes": getattr(verification, "security_notes", None),
+                    "manager_notes": getattr(verification, "manager_notes", None),
+                    "security_checked_by": getattr(verification, "security_checked_by", None),
+                    "manager_checked_by": getattr(verification, "manager_checked_by", None),
+                    "security_checked_at": verification.security_checked_at.isoformat() if getattr(verification, "security_checked_at", None) else None,
+                    "manager_checked_at": verification.manager_checked_at.isoformat() if getattr(verification, "manager_checked_at", None) else None,
                 }
             result.append({
                 "id": p.id,
