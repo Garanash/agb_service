@@ -29,6 +29,7 @@ import HRDocumentsPage from './pages/HRDocumentsPage';
 import TelegramBotPage from './pages/TelegramBotPage';
 import CustomerCabinetPage from './pages/CustomerCabinetPage';
 import CustomerCompanyProfilePage from './pages/CustomerCompanyProfilePage';
+import CustomerRequestDetailsPage from './pages/CustomerRequestDetailsPage';
 import CreateRequestPage from './pages/CreateRequestPage';
 import AdminPanelPage from './pages/AdminPanelPage';
 import ContractorProfilePage from './pages/ContractorProfilePage';
@@ -261,6 +262,17 @@ const AppRoutes: React.FC = () => {
           <ProtectedRoute>
             <Layout>
               <CustomerCompanyProfilePage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path='/customer/requests/:requestId'
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <CustomerRequestDetailsPage />
             </Layout>
           </ProtectedRoute>
         }

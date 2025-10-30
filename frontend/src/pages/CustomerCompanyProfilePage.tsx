@@ -29,7 +29,11 @@ interface CompanyProfile {
   service_history?: string;
 }
 
-const CustomerCompanyProfilePage: React.FC = () => {
+interface CustomerCompanyProfilePageProps {
+  hideTitle?: boolean;
+}
+
+const CustomerCompanyProfilePage: React.FC<CustomerCompanyProfilePageProps> = ({ hideTitle = false }) => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -120,10 +124,12 @@ const CustomerCompanyProfilePage: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant='h4' gutterBottom>
-        Профиль компании
-      </Typography>
+    <Box sx={{ p: hideTitle ? 0 : 3 }}>
+      {!hideTitle && (
+        <Typography variant='h4' gutterBottom>
+          Профиль компании
+        </Typography>
+      )}
 
       {!isProfileComplete() && (
         <Alert severity='warning' sx={{ mb: 2 }}>

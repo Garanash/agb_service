@@ -114,7 +114,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     });
   }
 
-  if (user?.role === UserRole.CUSTOMER || user?.role === UserRole.ADMIN) {
+  // Меню "Заказчики" только для админа (не для заказчика)
+  if (user?.role === UserRole.ADMIN) {
     menuItems.push({
       text: 'Заказчики',
       icon: <Business />,
@@ -122,13 +123,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     });
   }
 
-  // Меню для заказчика
+  // Меню для заказчика - только кабинет
   if (user?.role === UserRole.CUSTOMER) {
-    menuItems.push({
-      text: 'Профиль компании',
-      icon: <Business />,
-      path: '/customer/company-profile',
-    });
     menuItems.push({
       text: 'Личный кабинет',
       icon: <Person />,
