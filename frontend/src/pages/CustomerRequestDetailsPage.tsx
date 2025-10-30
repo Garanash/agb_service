@@ -9,6 +9,10 @@ import {
   Grid,
   Alert,
   CircularProgress,
+  Divider,
+  Paper,
+} from '@mui/material';
+import {
   Timeline,
   TimelineItem,
   TimelineSeparator,
@@ -16,9 +20,7 @@ import {
   TimelineContent,
   TimelineDot,
   TimelineOppositeContent,
-  Divider,
-  Paper,
-} from '@mui/material';
+} from '@mui/lab';
 import { ArrowBack, CheckCircle, Pending, Build, Assignment, Cancel } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from 'hooks/useAuth';

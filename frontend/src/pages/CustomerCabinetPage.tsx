@@ -22,13 +22,6 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  Timeline,
-  TimelineItem,
-  TimelineSeparator,
-  TimelineConnector,
-  TimelineContent,
-  TimelineDot,
-  TimelineOppositeContent,
 } from '@mui/material';
 import {
   Dashboard,
@@ -48,7 +41,6 @@ import { apiService } from 'services/api';
 import { useNavigate } from 'react-router-dom';
 import { RequestStatus } from 'types/api';
 import CustomerCompanyProfilePage from './CustomerCompanyProfilePage';
-import CreateRequestPage from './CreateRequestPage';
 
 interface TabPanelProps {
   children?: React.ReactNode;
