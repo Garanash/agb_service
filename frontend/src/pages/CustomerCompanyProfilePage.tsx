@@ -13,6 +13,7 @@ import {
 import { Save } from '@mui/icons-material';
 import { useAuth } from 'hooks/useAuth';
 import { apiService } from 'services/api';
+import { styled } from '@mui/material/styles';
 
 interface CompanyProfile {
   company_name: string;
@@ -53,6 +54,26 @@ const CustomerCompanyProfilePage: React.FC<CustomerCompanyProfilePageProps> = ({
     mining_operations: [],
     service_history: '',
   });
+
+  // Форматирование телефона для отображения: +7 (XXX) XXX - XX - XX
+  const formatPhoneDisplay = (digitsOnly: string): string => {
+    const d = (digitsOnly || '').replace(/\D/g, '').slice(-11); // берём последние 11 цифр, если вставили с +7/8
+    let normalized = d;
+    if (normalized.length === 10) normalized = '7' + normalized;
+    if (normalized.length === 11 && normalized[0] === '8') normalized = '7' + normalized.slice(1);
+    if (normalized.length !== 11) return digitsOnly; // пока не набрали — показываем как есть
+    const a = normalized.slice(1, 4);
+    const b = normalized.slice(4, 7);
+    const c = normalized.slice(7, 9);
+    const e = normalized.slice(9, 11);
+    return `+7 (${a}) ${b} - ${c} - ${e}`;
+  };
+
+  // Обработчик ввода: разрешаем только цифры, максимум 11
+  const handlePhoneChange = (raw: string) => {
+    const digits = raw.replace(/\D/g, '').slice(0, 11);
+    setProfile(prev => ({ ...prev, phone: digits }));
+  };
 
   useEffect(() => {
     loadProfile();
@@ -191,13 +212,13 @@ const CustomerCompanyProfilePage: React.FC<CustomerCompanyProfilePageProps> = ({
               <TextField
                 fullWidth
                 label='Телефон *'
-                value={profile.phone}
-                onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                value={formatPhoneDisplay(profile.phone)}
+                onChange={(e) => handlePhoneChange(e.target.value)}
                 required
-                error={!profile.phone || profile.phone.length < 10}
+                error={!profile.phone || profile.phone.replace(/\D/g, '').length < 10}
                 helperText={
-                  !profile.phone || profile.phone.length < 10
-                    ? 'Телефон должен содержать не менее 10 символов'
+                  !profile.phone || profile.phone.replace(/\D/g, '').length < 10
+                    ? 'Введите минимум 10 цифр телефона'
                     : ''
                 }
               />

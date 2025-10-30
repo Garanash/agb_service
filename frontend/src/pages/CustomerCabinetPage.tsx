@@ -41,6 +41,7 @@ import { apiService } from 'services/api';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { RequestStatus } from 'types/api';
 import CustomerCompanyProfilePage from './CustomerCompanyProfilePage';
+import CreateRequestPage from './CreateRequestPage';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -133,13 +134,7 @@ const CustomerCabinetPage: React.FC = () => {
   };
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    if (newValue === 2) {
-      // Переход на создание заявки - не меняем вкладку, перенаправляем
-      navigate('/repair-requests/new');
-      return;
-    }
     setTabValue(newValue);
-    // Обновляем URL параметр tab
     navigate(`/customer/cabinet?tab=${newValue}`, { replace: true });
   };
 
@@ -440,6 +435,10 @@ const CustomerCabinetPage: React.FC = () => {
       </TabPanel>
       <TabPanel value={tabValue} index={1}>
         {renderCompanyProfile()}
+      </TabPanel>
+      <TabPanel value={tabValue} index={2}>
+        {/* Встроенная форма создания заявки на той же странице */}
+        <CreateRequestPage />
       </TabPanel>
       <TabPanel value={tabValue} index={3}>
         {renderArchive()}

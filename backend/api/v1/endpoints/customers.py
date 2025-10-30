@@ -238,16 +238,27 @@ def update_customer_profile(
         if not profile:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Профиль заказчика не найден")
 
-        # Валидация телефона: формат +7 (XXX) XXX - XX - XX
-        if profile_data.phone is not None:
-            phone = profile_data.phone.strip()
-            phone_pattern = re.compile(r"^\+7\s*\(\d{3}\)\s*\d{3}\s*-\s*\d{2}\s*-\s*\d{2}$")
-            if not phone_pattern.match(phone):
+        # Телефон: принимаем только цифры, нормализуем к формату +7 (XXX) XXX - XX - XX
+        def normalize_phone_ru(raw: str) -> str:
+            digits = re.sub(r"\D", "", raw or "")
+            if not digits:
+                return ""
+            # допускаем 10 (без кода страны), 11 (7/8 + 10)
+            if len(digits) == 10:
+                digits = "7" + digits
+            elif len(digits) == 11 and digits[0] == "8":
+                digits = "7" + digits[1:]
+            if len(digits) != 11 or digits[0] != "7":
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Неверный формат телефона. Пример: +7 (929) 544 - 03 - 02"
+                    detail="Телефон должен содержать 10-11 цифр РФ. Пример: +7 (929) 544 - 03 - 02"
                 )
-            profile.phone = phone
+            a, b, c, d, e = digits[1:4], digits[4:7], digits[7:9], digits[9:11][:2], digits[9:11][2:]
+            # формируем +7 (AAA) BBB - CC - DD
+            return f"+7 ({a}) {b} - {digits[7:9]} - {digits[9:11]}"
+
+        if profile_data.phone is not None:
+            profile.phone = normalize_phone_ru(profile_data.phone)
 
         # Присваиваем скалярные поля если переданы
         if profile_data.company_name is not None:
