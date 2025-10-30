@@ -54,7 +54,7 @@ const CustomerRequestDetailsPage: React.FC = () => {
   };
 
   const getStatusColor = (status: RequestStatus) => {
-    const colors: { [key: string]: 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' } = {
+    const colors: { [key: string]: 'inherit' | 'grey' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' } = {
       new: 'info',
       manager_review: 'warning',
       clarification: 'warning',
@@ -65,7 +65,7 @@ const CustomerRequestDetailsPage: React.FC = () => {
       completed: 'success',
       cancelled: 'error',
     };
-    return colors[status] || 'default';
+    return colors[status] || 'grey';
   };
 
   const getStatusText = (status: RequestStatus) => {
