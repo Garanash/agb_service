@@ -55,9 +55,14 @@ const CustomerCompanyProfilePage: React.FC<CustomerCompanyProfilePageProps> = ({
     service_history: '',
   });
 
-  // Форматирование телефона для отображения в реальном времени: +7 (XXX) XXX - XX - XX
+  // Извлекаем только цифры из значения (для хранения в state)
+  const normalizePhoneDigits = (value: string): string => {
+    return (value || '').replace(/\D/g, '').slice(0, 11);
+  };
+
+  // Форматирование телефона для отображения: +7 (XXX) XXX - XX - XX
   const formatPhoneDisplay = (digitsOnly: string): string => {
-    const d = (digitsOnly || '').replace(/\D/g, '');
+    const d = normalizePhoneDigits(digitsOnly);
     if (!d) return '';
     
     let normalized = d;
@@ -66,8 +71,6 @@ const CustomerCompanyProfilePage: React.FC<CustomerCompanyProfilePageProps> = ({
       normalized = '7' + normalized;
     } else if (normalized.length === 11 && normalized[0] === '8') {
       normalized = '7' + normalized.slice(1);
-    } else if (normalized.length > 11) {
-      normalized = normalized.slice(0, 11); // Ограничиваем до 11 цифр
     }
     
     // Постепенное форматирование при вводе
@@ -84,17 +87,25 @@ const CustomerCompanyProfilePage: React.FC<CustomerCompanyProfilePageProps> = ({
     return `+${normalized[0]} (${normalized.slice(1, 4)}) ${normalized.slice(4, 7)} - ${normalized.slice(7, 9)} - ${normalized.slice(9, 11)}`;
   };
 
-  // Обработчик ввода: разрешаем только цифры, максимум 11
-  const handlePhoneChange = (raw: string) => {
-    const digits = raw.replace(/\D/g, '').slice(0, 11);
-    setProfile(prev => ({ ...prev, phone: digits }));
-  };
-
   const [phoneError, setPhoneError] = useState<string | null>(null);
+
+  // Обработчик ввода: извлекаем только цифры и обновляем state
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value;
+    const oldDigits = normalizePhoneDigits(profile.phone);
+    const newDigits = normalizePhoneDigits(rawValue);
+    
+    // Если ничего не изменилось (например, пользователь пытается ввести нецифровой символ), игнорируем
+    if (newDigits === oldDigits && rawValue !== formatPhoneDisplay(profile.phone)) {
+      return;
+    }
+    
+    setProfile(prev => ({ ...prev, phone: newDigits }));
+  };
 
   // Валидация телефона при изменении в реальном времени
   useEffect(() => {
-    const digits = (profile.phone || '').replace(/\D/g, '');
+    const digits = normalizePhoneDigits(profile.phone);
     if (digits.length === 0) {
       setPhoneError(null);
     } else if (digits.length < 10) {
@@ -114,10 +125,12 @@ const CustomerCompanyProfilePage: React.FC<CustomerCompanyProfilePageProps> = ({
     try {
       setLoading(true);
       const profileData = await apiService.getCustomerProfile();
+      // Нормализуем телефон при загрузке - оставляем только цифры
+      const phoneDigits = normalizePhoneDigits(profileData.phone || '');
       setProfile({
         company_name: profileData.company_name || '',
         contact_person: profileData.contact_person || '',
-        phone: profileData.phone || '',
+        phone: phoneDigits, // Сохраняем только цифры
         email: profileData.email || '',
         address: profileData.address || '',
         inn: profileData.inn || '',
@@ -244,11 +257,12 @@ const CustomerCompanyProfilePage: React.FC<CustomerCompanyProfilePageProps> = ({
                 fullWidth
                 label='Телефон *'
                 value={formatPhoneDisplay(profile.phone)}
-                onChange={(e) => handlePhoneChange(e.target.value)}
+                onChange={handlePhoneChange}
                 required
-                error={!!phoneError || (!profile.phone || profile.phone.replace(/\D/g, '').length < 10)}
+                placeholder='+7 (XXX) XXX - XX - XX'
+                error={!!phoneError || (!profile.phone || normalizePhoneDigits(profile.phone).length < 10)}
                 helperText={
-                  phoneError || (!profile.phone || profile.phone.replace(/\D/g, '').length < 10
+                  phoneError || (!profile.phone || normalizePhoneDigits(profile.phone).length < 10
                     ? 'Введите минимум 10 цифр телефона'
                     : '')
                 }
