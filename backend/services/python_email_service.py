@@ -128,10 +128,10 @@ class PythonEmailService:
                         <div class="user-info">
                             <h3>Подтвердите ваш email:</h3>
                             <p>Нажмите на ссылку ниже, чтобы подтвердить ваш email адрес:</p>
-                            <a href="http://91.222.236.58:3000/verify-email?token={verification_token}" class="button">Подтвердить email</a>
+                            <a href="http://91.222.236.58/verify-email?token={verification_token}" class="button">Подтвердить email</a>
                             <p>Если ссылка не работает, скопируйте и вставьте её в браузер:</p>
                             <p style="word-break: break-all; background: #f5f5f5; padding: 10px; border-radius: 5px;">
-                                http://91.222.236.58:3000/verify-email?token={verification_token}
+                                http://91.222.236.58/verify-email?token={verification_token}
                             </p>
                         </div>
                         
@@ -166,7 +166,7 @@ AGB SERVICE
 Подтвердите ваш email:
 Нажмите на ссылку ниже, чтобы подтвердить ваш email адрес:
 
-http://91.222.236.58:3000/verify-email?token={verification_token}
+http://91.222.236.58/verify-email?token={verification_token}
 
 Если ссылка не работает, скопируйте и вставьте её в браузер.
 
