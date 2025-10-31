@@ -41,6 +41,7 @@ interface LocationPickerProps {
     region?: string;
   }) => void;
   initialLocation?: { lat: number; lng: number };
+  embedded?: boolean; // Режим встраивания без диалога
 }
 
 interface MapClickHandlerProps {
@@ -53,8 +54,9 @@ interface MapClickHandlerProps {
   }) => void;
 }
 
-const MapClickHandler: React.FC<MapClickHandlerProps> = ({
+const MapClickHandler: React.FC<MapClickHandlerProps & { autoSelect?: boolean }> = ({
   onLocationSelect,
+  autoSelect = false,
 }) => {
   const [position, setPosition] = useState<{ lat: number; lng: number } | null>(
     null,
@@ -68,7 +70,12 @@ const MapClickHandler: React.FC<MapClickHandlerProps> = ({
       // Получаем адрес через обратное геокодирование (используем Nominatim API)
       try {
         const response = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+          {
+            headers: {
+              'User-Agent': 'AgregatorService/1.0',
+            },
+          }
         );
         const data = await response.json();
         const address = data.display_name || `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
@@ -76,14 +83,27 @@ const MapClickHandler: React.FC<MapClickHandlerProps> = ({
         const city = addr.city || addr.town || addr.village || addr.hamlet || '';
         const region = addr.state || addr.region || addr.province || addr.county || '';
 
-        onLocationSelect({ lat, lng, address, city, region });
+        const locationData = { lat, lng, address, city, region };
+        
+        // Если autoSelect = true, сразу вызываем onLocationSelect без подтверждения
+        if (autoSelect) {
+          onLocationSelect(locationData);
+        } else {
+          // Иначе сохраняем для подтверждения в диалоге
+          onLocationSelect(locationData);
+        }
       } catch (error) {
         console.error('Ошибка получения адреса:', error);
-        onLocationSelect({
+        const locationData = {
           lat,
           lng,
           address: `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
-        });
+        };
+        if (autoSelect) {
+          onLocationSelect(locationData);
+        } else {
+          onLocationSelect(locationData);
+        }
       }
     },
   });
@@ -102,19 +122,28 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   onClose,
   onLocationSelect,
   initialLocation = { lat: 55.7558, lng: 37.6176 }, // Москва по умолчанию
+  embedded = false,
 }) => {
   const [selectedLocation, setSelectedLocation] = useState<{
     lat: number;
     lng: number;
     address: string;
+    city?: string;
+    region?: string;
   } | null>(null);
 
   const handleLocationSelect = (location: {
     lat: number;
     lng: number;
     address: string;
+    city?: string;
+    region?: string;
   }) => {
     setSelectedLocation(location);
+    // В embedded режиме сразу передаём выбор
+    if (embedded) {
+      onLocationSelect(location);
+    }
   };
 
   const handleConfirm = () => {
@@ -130,6 +159,24 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
     onClose();
   };
 
+  // Embedded режим: карта без диалога
+  if (embedded) {
+    return (
+      <MapContainer
+        center={initialLocation}
+        zoom={13}
+        style={{ height: '100%', width: '100%' }}
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+        />
+        <MapClickHandler onLocationSelect={handleLocationSelect} autoSelect={true} />
+      </MapContainer>
+    );
+  }
+
+  // Режим диалога
   return (
     <Dialog open={open} onClose={handleCancel} maxWidth='md' fullWidth>
       <DialogTitle>

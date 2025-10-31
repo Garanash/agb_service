@@ -75,11 +75,12 @@ const CreateRequestPage: React.FC = () => {
   const [profileComplete, setProfileComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [mapOpen, setMapOpen] = useState(true);
   const [selectedLocation, setSelectedLocation] = useState<{
     lat: number;
     lng: number;
     address: string;
+    city?: string;
+    region?: string;
   } | null>(null);
 
   const {
@@ -151,10 +152,14 @@ const CreateRequestPage: React.FC = () => {
     region?: string;
   }) => {
     setSelectedLocation(location);
-    // Пробрасываем адрес в форму для отображения и отправки
-    setValue('address', location.address, { shouldValidate: true, shouldDirty: true });
-    if (location.city) setValue('city', location.city, { shouldValidate: true, shouldDirty: true });
-    if (location.region) setValue('region', location.region, { shouldValidate: true, shouldDirty: true });
+    // Автоматически заполняем поля адреса при выборе на карте
+    setValue('address', location.address || '', { shouldValidate: true, shouldDirty: true });
+    if (location.city) {
+      setValue('city', location.city, { shouldValidate: true, shouldDirty: true });
+    }
+    if (location.region) {
+      setValue('region', location.region, { shouldValidate: true, shouldDirty: true });
+    }
   };
 
   if (profileLoading) {
@@ -343,10 +348,37 @@ const CreateRequestPage: React.FC = () => {
                 </Typography>
               </Grid>
 
+              {/* Встроенная карта сразу на странице */}
+              <Grid item xs={12}>
+                <Card variant='outlined' sx={{ mb: 2 }}>
+                  <CardContent>
+                    <Typography variant='subtitle2' gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                      <LocationOn color='primary' />
+                      Выберите место на карте
+                    </Typography>
+                    <Box sx={{ height: 400, width: '100%', borderRadius: 1, overflow: 'hidden' }}>
+                      <LocationPicker
+                        open={true}
+                        onClose={() => {}}
+                        onLocationSelect={handleLocationSelect}
+                        embedded={true}
+                      />
+                    </Box>
+                    {selectedLocation && (
+                      <Alert severity='success' sx={{ mt: 2 }}>
+                        Место выбрано: {selectedLocation.address}
+                        {selectedLocation.city && `, ${selectedLocation.city}`}
+                        {selectedLocation.region && `, ${selectedLocation.region}`}
+                      </Alert>
+                    )}
+                  </CardContent>
+                </Card>
+              </Grid>
+
               <Grid item xs={12} md={4}>
                 <TextField
                   fullWidth
-                  label='Регион'
+                  label='Регион *'
                   {...register('region', { required: 'Регион обязателен' })}
                   error={!!errors.region}
                   helperText={errors.region?.message as any}
@@ -371,31 +403,6 @@ const CreateRequestPage: React.FC = () => {
                   error={!!errors.address}
                   helperText={errors.address?.message as any}
                 />
-              </Grid>
-
-              <Grid item xs={12} md={4}>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1,
-                    height: '100%',
-                  }}
-                >
-                  <Button
-                    variant='outlined'
-                    startIcon={<LocationOn />}
-                    onClick={() => setMapOpen(true)}
-                    sx={{ height: '56px' }}
-                  >
-                    Выбрать на карте
-                  </Button>
-                  {selectedLocation && (
-                    <Typography variant='caption' color='text.secondary'>
-                      Место выбрано
-                    </Typography>
-                  )}
-                </Box>
               </Grid>
 
               {/* Дополнительные параметры */}
@@ -445,13 +452,6 @@ const CreateRequestPage: React.FC = () => {
           </form>
         </CardContent>
       </Card>
-
-      {/* Компонент выбора места на карте */}
-      <LocationPicker
-        open={mapOpen}
-        onClose={() => setMapOpen(false)}
-        onLocationSelect={handleLocationSelect}
-      />
     </Box>
   );
 };

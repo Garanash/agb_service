@@ -55,18 +55,33 @@ const CustomerCompanyProfilePage: React.FC<CustomerCompanyProfilePageProps> = ({
     service_history: '',
   });
 
-  // Форматирование телефона для отображения: +7 (XXX) XXX - XX - XX
+  // Форматирование телефона для отображения в реальном времени: +7 (XXX) XXX - XX - XX
   const formatPhoneDisplay = (digitsOnly: string): string => {
-    const d = (digitsOnly || '').replace(/\D/g, '').slice(-11); // берём последние 11 цифр, если вставили с +7/8
+    const d = (digitsOnly || '').replace(/\D/g, '');
+    if (!d) return '';
+    
     let normalized = d;
-    if (normalized.length === 10) normalized = '7' + normalized;
-    if (normalized.length === 11 && normalized[0] === '8') normalized = '7' + normalized.slice(1);
-    if (normalized.length !== 11) return digitsOnly; // пока не набрали — показываем как есть
-    const a = normalized.slice(1, 4);
-    const b = normalized.slice(4, 7);
-    const c = normalized.slice(7, 9);
-    const e = normalized.slice(9, 11);
-    return `+7 (${a}) ${b} - ${c} - ${e}`;
+    // Нормализация: 10 цифр -> добавляем 7, 8XXXXXXXXXX -> заменяем на 7
+    if (normalized.length === 10) {
+      normalized = '7' + normalized;
+    } else if (normalized.length === 11 && normalized[0] === '8') {
+      normalized = '7' + normalized.slice(1);
+    } else if (normalized.length > 11) {
+      normalized = normalized.slice(0, 11); // Ограничиваем до 11 цифр
+    }
+    
+    // Постепенное форматирование при вводе
+    if (normalized.length < 1) return '';
+    if (normalized.length === 1) return `+${normalized}`;
+    if (normalized.length <= 4) return `+${normalized[0]} (${normalized.slice(1)}`;
+    if (normalized.length <= 7) {
+      return `+${normalized[0]} (${normalized.slice(1, 4)}) ${normalized.slice(4)}`;
+    }
+    if (normalized.length <= 9) {
+      return `+${normalized[0]} (${normalized.slice(1, 4)}) ${normalized.slice(4, 7)} - ${normalized.slice(7)}`;
+    }
+    // Полный формат: +7 (XXX) XXX - XX - XX
+    return `+${normalized[0]} (${normalized.slice(1, 4)}) ${normalized.slice(4, 7)} - ${normalized.slice(7, 9)} - ${normalized.slice(9, 11)}`;
   };
 
   // Обработчик ввода: разрешаем только цифры, максимум 11
@@ -74,6 +89,22 @@ const CustomerCompanyProfilePage: React.FC<CustomerCompanyProfilePageProps> = ({
     const digits = raw.replace(/\D/g, '').slice(0, 11);
     setProfile(prev => ({ ...prev, phone: digits }));
   };
+
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+
+  // Валидация телефона при изменении в реальном времени
+  useEffect(() => {
+    const digits = (profile.phone || '').replace(/\D/g, '');
+    if (digits.length === 0) {
+      setPhoneError(null);
+    } else if (digits.length < 10) {
+      setPhoneError('Введите минимум 10 цифр');
+    } else if (digits.length === 10 || digits.length === 11) {
+      setPhoneError(null);
+    } else {
+      setPhoneError('Телефон должен содержать 10-11 цифр');
+    }
+  }, [profile.phone]);
 
   useEffect(() => {
     loadProfile();
@@ -215,11 +246,11 @@ const CustomerCompanyProfilePage: React.FC<CustomerCompanyProfilePageProps> = ({
                 value={formatPhoneDisplay(profile.phone)}
                 onChange={(e) => handlePhoneChange(e.target.value)}
                 required
-                error={!profile.phone || profile.phone.replace(/\D/g, '').length < 10}
+                error={!!phoneError || (!profile.phone || profile.phone.replace(/\D/g, '').length < 10)}
                 helperText={
-                  !profile.phone || profile.phone.replace(/\D/g, '').length < 10
+                  phoneError || (!profile.phone || profile.phone.replace(/\D/g, '').length < 10
                     ? 'Введите минимум 10 цифр телефона'
-                    : ''
+                    : '')
                 }
               />
             </Grid>
