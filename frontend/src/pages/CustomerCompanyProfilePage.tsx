@@ -60,33 +60,47 @@ const CustomerCompanyProfilePage: React.FC<CustomerCompanyProfilePageProps> = ({
   const [phoneFocused, setPhoneFocused] = useState(false);
 
   // Нормализация: извлекаем только цифры и нормализуем формат
+  // Эта функция используется только для нормализации уже существующих номеров (при загрузке)
   const normalizePhoneDigits = (value: string): string => {
     if (!value) return '';
     
     // Извлекаем только цифры
     let digits = value.replace(/\D/g, '');
     
-    // Если начинается с 8, заменяем на 7
+    // Если первая цифра 8, заменяем на 7
     if (digits.length > 0 && digits[0] === '8') {
       digits = '7' + digits.slice(1);
     }
     
-    // Если 10 цифр, добавляем 7 в начало
-    if (digits.length === 10) {
+    // Если 10 цифр (без кода страны), добавляем 7 в начало
+    if (digits.length === 10 && digits[0] !== '7') {
       digits = '7' + digits;
     }
     
-    // Ограничиваем до 11 цифр
+    // Если не начинается с 7 и больше 10 цифр, убираем лишние и добавляем 7
+    if (digits.length > 0 && digits[0] !== '7') {
+      // Если больше 10 цифр, оставляем только последние 10 и добавляем 7
+      if (digits.length > 10) {
+        digits = '7' + digits.slice(-10);
+      } else {
+        digits = '7' + digits;
+      }
+    }
+    
+    // Ограничиваем до 11 цифр (7 + 10 цифр номера)
     return digits.slice(0, 11);
   };
 
   // Форматирование телефона для отображения: +7 (XXX) XXX - XX - XX
   const formatPhoneDisplay = (digits: string): string => {
+    // Если поле пустое, возвращаем пустую строку (без +7)
+    if (!digits || digits.trim() === '') return '';
+    
     const d = normalizePhoneDigits(digits);
-    if (!d) return '';
+    if (!d || d.length === 0) return '';
     
     // Форматируем по мере ввода
-    if (d.length === 0) return '';
+    // Всегда должно быть +7 в начале после нормализации
     if (d.length === 1) return `+${d}`;
     if (d.length <= 4) return `+${d[0]} (${d.slice(1)}`;
     if (d.length <= 7) return `+${d[0]} (${d.slice(1, 4)}) ${d.slice(4)}`;
@@ -151,13 +165,30 @@ const CustomerCompanyProfilePage: React.FC<CustomerCompanyProfilePageProps> = ({
     const oldDigits = normalizePhoneDigits(profile.phone || '');
     const oldFormatted = formatPhoneDisplay(profile.phone || '');
     
-    // Извлекаем новые цифры
-    let newDigits = normalizePhoneDigits(inputValue);
+    // Если поле было полностью очищено, сбрасываем телефон
+    if (inputValue === '' || inputValue.trim() === '') {
+      setProfile(prev => ({ ...prev, phone: '' }));
+      return;
+    }
+    
+    // Извлекаем только цифры из ввода
+    let rawDigits = inputValue.replace(/\D/g, '');
+    
+    // Если первая цифра 8, удаляем её (будет заменена на 7)
+    if (rawDigits.length > 0 && rawDigits[0] === '8') {
+      rawDigits = rawDigits.slice(1);
+    }
+    
+    // Добавляем 7 в начало, если есть хотя бы одна цифра
+    // Но только если ещё нет 7 в начале
+    if (rawDigits.length > 0) {
+      if (rawDigits[0] !== '7') {
+        rawDigits = '7' + rawDigits;
+      }
+    }
     
     // Ограничиваем до 11 цифр
-    if (newDigits.length > 11) {
-      newDigits = newDigits.slice(0, 11);
-    }
+    const newDigits = rawDigits.slice(0, 11);
     
     // Обновляем state
     setProfile(prev => ({ ...prev, phone: newDigits }));
@@ -244,11 +275,16 @@ const CustomerCompanyProfilePage: React.FC<CustomerCompanyProfilePageProps> = ({
       setLoading(true);
       const profileData = await apiService.getCustomerProfile();
       // Нормализуем телефон при загрузке - оставляем только цифры
-      const phoneDigits = normalizePhoneDigits(profileData.phone || '');
+      // Если телефон есть, нормализуем его, иначе оставляем пустым
+      let phoneDigits = '';
+      if (profileData.phone && profileData.phone.trim()) {
+        phoneDigits = normalizePhoneDigits(profileData.phone);
+      }
+      
       setProfile({
         company_name: profileData.company_name || '',
         contact_person: profileData.contact_person || '',
-        phone: phoneDigits, // Сохраняем только цифры
+        phone: phoneDigits, // Сохраняем только цифры или пустую строку
         email: profileData.email || '',
         address: profileData.address || '',
         inn: profileData.inn || '',
