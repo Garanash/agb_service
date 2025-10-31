@@ -85,7 +85,7 @@ class UserResponse(UserBase):
 class CustomerProfileBase(BaseModel):
     company_name: str = Field(..., min_length=1, max_length=200)
     contact_person: str = Field(..., min_length=1, max_length=200)
-    phone: str = Field(..., min_length=10, max_length=20)
+    phone: str = Field(..., min_length=10, max_length=25)
     email: str = Field(..., pattern=r'^[^@]+@[^@]+\.[^@]+$')
     address: Optional[str] = Field(None, max_length=500)
     inn: Optional[str] = Field(None, max_length=12)
