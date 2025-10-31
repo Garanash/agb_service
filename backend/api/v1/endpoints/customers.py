@@ -269,12 +269,48 @@ def update_customer_profile(
             profile.email = profile_data.email
         if profile_data.address is not None:
             profile.address = profile_data.address
+        # Валидация ИНН, КПП, ОГРН
         if profile_data.inn is not None:
-            profile.inn = profile_data.inn
+            inn_value = str(profile_data.inn).strip() if profile_data.inn else ""
+            if inn_value:
+                # Извлекаем только цифры
+                inn_digits = re.sub(r"\D", "", inn_value)
+                if len(inn_digits) not in [10, 12]:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="ИНН должен содержать 10 (для ЮЛ) или 12 (для ИП) цифр"
+                    )
+                profile.inn = inn_digits
+            else:
+                profile.inn = None
+        
         if profile_data.kpp is not None:
-            profile.kpp = profile_data.kpp
+            kpp_value = str(profile_data.kpp).strip() if profile_data.kpp else ""
+            if kpp_value:
+                # Извлекаем только цифры
+                kpp_digits = re.sub(r"\D", "", kpp_value)
+                if len(kpp_digits) != 9:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="КПП должен содержать 9 цифр"
+                    )
+                profile.kpp = kpp_digits
+            else:
+                profile.kpp = None
+        
         if profile_data.ogrn is not None:
-            profile.ogrn = profile_data.ogrn
+            ogrn_value = str(profile_data.ogrn).strip() if profile_data.ogrn else ""
+            if ogrn_value:
+                # Извлекаем только цифры
+                ogrn_digits = re.sub(r"\D", "", ogrn_value)
+                if len(ogrn_digits) not in [13, 15]:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="ОГРН должен содержать 13 (для ЮЛ) или 15 (для ИП) цифр"
+                    )
+                profile.ogrn = ogrn_digits
+            else:
+                profile.ogrn = None
 
         # Поля-списки: гарантируем массивы строк (JSON)
         def ensure_str_list(value):
