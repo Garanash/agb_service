@@ -302,24 +302,158 @@ const CustomerCompanyProfilePage: React.FC<CustomerCompanyProfilePageProps> = ({
     }
   };
 
+  // Валидация ИНН
+  const validateINN = (inn: string): string | null => {
+    if (!inn || inn.trim() === '') return null; // ИНН не обязателен
+    const digits = inn.replace(/\D/g, '');
+    if (digits.length !== 10 && digits.length !== 12) {
+      return 'ИНН должен содержать 10 или 12 цифр';
+    }
+    if (!/^\d+$/.test(digits)) {
+      return 'ИНН должен содержать только цифры';
+    }
+    return null;
+  };
+
+  // Валидация КПП
+  const validateKPP = (kpp: string): string | null => {
+    if (!kpp || kpp.trim() === '') return null; // КПП не обязателен
+    const digits = kpp.replace(/\D/g, '');
+    if (digits.length !== 9) {
+      return 'КПП должен содержать 9 цифр';
+    }
+    if (!/^\d+$/.test(digits)) {
+      return 'КПП должен содержать только цифры';
+    }
+    return null;
+  };
+
+  // Валидация ОГРН
+  const validateOGRN = (ogrn: string): string | null => {
+    if (!ogrn || ogrn.trim() === '') return null; // ОГРН не обязателен
+    const digits = ogrn.replace(/\D/g, '');
+    if (digits.length !== 13 && digits.length !== 15) {
+      return 'ОГРН должен содержать 13 (для ЮЛ) или 15 (для ИП) цифр';
+    }
+    if (!/^\d+$/.test(digits)) {
+      return 'ОГРН должен содержать только цифры';
+    }
+    return null;
+  };
+
+  const [innError, setInnError] = useState<string | null>(null);
+  const [kppError, setKppError] = useState<string | null>(null);
+  const [ogrnError, setOgrnError] = useState<string | null>(null);
+
   const handleSave = async () => {
+    // Валидация обязательных полей
     if (!profile.company_name || profile.company_name.trim().length < 1) {
       setError('Название компании обязательно для заполнения');
       return;
     }
-    if (!profile.phone || profile.phone.length < 10) {
-      setError('Телефон должен содержать не менее 10 символов');
+    
+    const phoneDigits = normalizePhoneDigits(profile.phone || '');
+    if (!phoneDigits || phoneDigits.length < 11) {
+      setError('Телефон должен содержать 11 цифр (включая код страны 7)');
       return;
     }
 
+    // Валидация ИНН, КПП, ОГРН
+    const innValidation = validateINN(profile.inn || '');
+    const kppValidation = validateKPP(profile.kpp || '');
+    const ogrnValidation = validateOGRN(profile.ogrn || '');
+
+    if (innValidation) {
+      setInnError(innValidation);
+      setError(innValidation);
+      return;
+    }
+    if (kppValidation) {
+      setKppError(kppValidation);
+      setError(kppValidation);
+      return;
+    }
+    if (ogrnValidation) {
+      setOgrnError(ogrnValidation);
+      setError(ogrnValidation);
+      return;
+    }
+
+    // Очищаем ошибки валидации
+    setInnError(null);
+    setKppError(null);
+    setOgrnError(null);
+    setError(null);
+
     try {
       setSaving(true);
-      setError(null);
-      await apiService.updateCustomerProfile(profile as any);
+      setSuccess(null);
+      
+      // Подготавливаем данные для отправки
+      const dataToSend: any = {
+        company_name: profile.company_name.trim(),
+        contact_person: profile.contact_person?.trim() || '',
+        phone: phoneDigits, // Отправляем только цифры, бэкенд сам отформатирует
+        email: profile.email || '',
+        address: profile.address?.trim() || '',
+        inn: profile.inn?.replace(/\D/g, '') || null,
+        kpp: profile.kpp?.replace(/\D/g, '') || null,
+        ogrn: profile.ogrn?.replace(/\D/g, '') || null,
+        equipment_brands: profile.equipment_brands || [],
+        equipment_types: profile.equipment_types || [],
+        mining_operations: profile.mining_operations || [],
+        service_history: profile.service_history || '',
+      };
+
+      // Убираем null значения для необязательных полей
+      if (!dataToSend.inn) delete dataToSend.inn;
+      if (!dataToSend.kpp) delete dataToSend.kpp;
+      if (!dataToSend.ogrn) delete dataToSend.ogrn;
+
+      await apiService.updateCustomerProfile(dataToSend);
       setSuccess('Профиль компании успешно сохранен');
-      await loadProfile();
+      
+      // Перезагружаем профиль после сохранения
+      setTimeout(async () => {
+        await loadProfile();
+      }, 500);
+      
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Ошибка сохранения профиля');
+      console.error('Ошибка сохранения профиля:', err);
+      
+      // Обрабатываем разные форматы ошибок FastAPI
+      let errorMessage = 'Ошибка сохранения профиля';
+      
+      if (err.response) {
+        const errorData = err.response.data;
+        
+        // Если это объект с полями валидации (422)
+        if (errorData && typeof errorData === 'object') {
+          if (errorData.detail) {
+            // Если detail - это массив ошибок валидации
+            if (Array.isArray(errorData.detail)) {
+              const validationErrors = errorData.detail
+                .map((item: any) => {
+                  if (typeof item === 'object' && item.msg) {
+                    return `${item.loc?.join('.') || 'Поле'}: ${item.msg}`;
+                  }
+                  return String(item);
+                })
+                .join(', ');
+              errorMessage = validationErrors || 'Ошибка валидации данных';
+            } else {
+              // Если detail - строка
+              errorMessage = String(errorData.detail);
+            }
+          } else if (errorData.message) {
+            errorMessage = String(errorData.message);
+          }
+        }
+      } else if (err.message) {
+        errorMessage = String(err.message);
+      }
+      
+      setError(errorMessage);
     } finally {
       setSaving(false);
     }
@@ -474,7 +608,19 @@ const CustomerCompanyProfilePage: React.FC<CustomerCompanyProfilePageProps> = ({
                 fullWidth
                 label='ИНН'
                 value={profile.inn || ''}
-                onChange={(e) => setProfile({ ...profile, inn: e.target.value })}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, ''); // Только цифры
+                  // Ограничиваем до 12 цифр (максимум для ИНН)
+                  const limitedValue = value.slice(0, 12);
+                  setProfile({ ...profile, inn: limitedValue });
+                  setInnError(validateINN(limitedValue));
+                }}
+                error={!!innError}
+                helperText={innError || '10 цифр (ЮЛ) или 12 цифр (ИП)'}
+                inputProps={{
+                  inputMode: 'numeric' as const,
+                  maxLength: 12,
+                }}
               />
             </Grid>
 
@@ -483,7 +629,19 @@ const CustomerCompanyProfilePage: React.FC<CustomerCompanyProfilePageProps> = ({
                 fullWidth
                 label='КПП'
                 value={profile.kpp || ''}
-                onChange={(e) => setProfile({ ...profile, kpp: e.target.value })}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, ''); // Только цифры
+                  // Ограничиваем до 9 цифр
+                  const limitedValue = value.slice(0, 9);
+                  setProfile({ ...profile, kpp: limitedValue });
+                  setKppError(validateKPP(limitedValue));
+                }}
+                error={!!kppError}
+                helperText={kppError || '9 цифр'}
+                inputProps={{
+                  inputMode: 'numeric' as const,
+                  maxLength: 9,
+                }}
               />
             </Grid>
 
@@ -492,7 +650,19 @@ const CustomerCompanyProfilePage: React.FC<CustomerCompanyProfilePageProps> = ({
                 fullWidth
                 label='ОГРН'
                 value={profile.ogrn || ''}
-                onChange={(e) => setProfile({ ...profile, ogrn: e.target.value })}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, ''); // Только цифры
+                  // Ограничиваем до 15 цифр (максимум для ОГРН)
+                  const limitedValue = value.slice(0, 15);
+                  setProfile({ ...profile, ogrn: limitedValue });
+                  setOgrnError(validateOGRN(limitedValue));
+                }}
+                error={!!ogrnError}
+                helperText={ogrnError || '13 цифр (ЮЛ) или 15 цифр (ИП)'}
+                inputProps={{
+                  inputMode: 'numeric' as const,
+                  maxLength: 15,
+                }}
               />
             </Grid>
 
