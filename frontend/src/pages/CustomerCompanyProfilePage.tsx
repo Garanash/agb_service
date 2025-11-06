@@ -9,6 +9,8 @@ import {
   Grid,
   Alert,
   CircularProgress,
+  Autocomplete,
+  Chip,
 } from '@mui/material';
 import { Save } from '@mui/icons-material';
 import { useAuth } from 'hooks/useAuth';
@@ -33,6 +35,30 @@ interface CompanyProfile {
 interface CustomerCompanyProfilePageProps {
   hideTitle?: boolean;
 }
+
+// Список брендов горнодобывающей техники на иностранном языке
+const EQUIPMENT_BRANDS = [
+  'Caterpillar',
+  'Komatsu',
+  'Hitachi',
+  'Volvo',
+  'Liebherr',
+  'Atlas Copco',
+  'Sandvik',
+  'Epiroc',
+  'Boart Longyear',
+  'JCB',
+  'Case',
+  'John Deere',
+  'Terex',
+  'Bucyrus',
+  'P&H',
+  'Joy Global',
+  'Sany',
+  'XCMG',
+  'Zoomlion',
+  'Liebherr Mining',
+];
 
 const CustomerCompanyProfilePage: React.FC<CustomerCompanyProfilePageProps> = ({ hideTitle = false }) => {
   const { user } = useAuth();
@@ -273,6 +299,7 @@ const CustomerCompanyProfilePage: React.FC<CustomerCompanyProfilePageProps> = ({
   const loadProfile = async () => {
     try {
       setLoading(true);
+      setError(null); // Очищаем предыдущие ошибки
       const profileData = await apiService.getCustomerProfile();
       // Нормализуем телефон при загрузке - оставляем только цифры
       // Если телефон есть, нормализуем его, иначе оставляем пустым
@@ -296,7 +323,13 @@ const CustomerCompanyProfilePage: React.FC<CustomerCompanyProfilePageProps> = ({
         service_history: profileData.service_history || '',
       });
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Ошибка загрузки профиля');
+      // Игнорируем ошибки, связанные с профилем исполнителя (это не относится к заказчику)
+      const errorMessage = err.response?.data?.detail || err.message || 'Ошибка загрузки профиля';
+      if (!errorMessage.includes('исполнителя') && !errorMessage.includes('contractor')) {
+        setError(errorMessage);
+      } else {
+        console.warn('Игнорируем ошибку, не относящуюся к профилю заказчика:', errorMessage);
+      }
     } finally {
       setLoading(false);
     }
@@ -415,7 +448,12 @@ const CustomerCompanyProfilePage: React.FC<CustomerCompanyProfilePageProps> = ({
       
       // Перезагружаем профиль после сохранения
       setTimeout(async () => {
-        await loadProfile();
+        try {
+          await loadProfile();
+        } catch (loadErr: any) {
+          // Игнорируем ошибки при перезагрузке профиля после сохранения
+          console.warn('Ошибка при перезагрузке профиля после сохранения:', loadErr);
+        }
       }, 500);
       
     } catch (err: any) {
@@ -594,6 +632,39 @@ const CustomerCompanyProfilePage: React.FC<CustomerCompanyProfilePageProps> = ({
                 onChange={(e) => setProfile({ ...profile, address: e.target.value })}
                 multiline
                 rows={2}
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <Typography variant='h6' gutterBottom sx={{ mt: 2 }}>
+                Техника и оборудование
+              </Typography>
+            </Grid>
+
+            <Grid item xs={12}>
+              <Autocomplete
+                multiple
+                options={EQUIPMENT_BRANDS}
+                value={profile.equipment_brands || []}
+                onChange={(event, newValue) => {
+                  setProfile({ ...profile, equipment_brands: newValue });
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label='Бренды техники'
+                    placeholder='Выберите бренды'
+                  />
+                )}
+                renderTags={(value, getTagProps) =>
+                  value.map((option, index) => (
+                    <Chip
+                      label={option}
+                      {...getTagProps({ index })}
+                      key={option}
+                    />
+                  ))
+                }
               />
             </Grid>
 
