@@ -57,14 +57,27 @@ const equipmentTypes = [
 ];
 
 const equipmentBrands = [
-  'Алмазгеобур',
-  'Эпирог',
-  'Бортлангир',
-  'Катерпиллар',
-  'Компани',
-  'Либхерр',
-  'Вольво',
-  'Другие',
+  'Caterpillar',
+  'Komatsu',
+  'Hitachi',
+  'Volvo',
+  'Liebherr',
+  'Atlas Copco',
+  'Sandvik',
+  'Epiroc',
+  'Boart Longyear',
+  'JCB',
+  'Case',
+  'John Deere',
+  'Terex',
+  'Bucyrus',
+  'P&H',
+  'Joy Global',
+  'Sany',
+  'XCMG',
+  'Zoomlion',
+  'Liebherr Mining',
+  'Other',
 ];
 
 const CreateRequestPage: React.FC = () => {
