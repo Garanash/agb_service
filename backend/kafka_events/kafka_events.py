@@ -1,6 +1,7 @@
 """
 Схемы событий Kafka
 """
+import uuid
 from datetime import datetime
 from typing import Optional, Dict, Any, List
 from pydantic import BaseModel, Field
@@ -49,7 +50,7 @@ class EventType(str, Enum):
 class BaseEvent(BaseModel):
     """Базовый класс для всех событий"""
     event_type: EventType
-    event_id: str = Field(..., description="Уникальный ID события")
+    event_id: str = Field(default_factory=lambda: str(uuid.uuid4()), description="Уникальный ID события")
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     version: str = "1.0"
     source: str = "agregator-service"
